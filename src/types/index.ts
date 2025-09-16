@@ -1,0 +1,119 @@
+// User types
+export interface User {
+  id: string
+  email: string
+  name?: string
+  phone_number?: string
+  address?: string
+  user_type: 'farmer' | 'wholesaler' | 'admin'
+  createdAt: string
+  updatedAt: string
+}
+
+// Legacy alias for compatibility
+export interface UserProfile extends User {
+  role: User['user_type']
+}
+
+// Farm types
+export interface Farm {
+  id: string
+  name: string
+  location: string
+  coordinates: {
+    latitude: number
+    longitude: number
+  }
+  area: number
+  ownerId: string
+  createdAt: string
+  updatedAt: string
+  syncStatus: 'synced' | 'pending' | 'failed'
+}
+
+// Photo types
+export interface Photo {
+  id: string
+  farmId: string
+  uri: string
+  description?: string
+  timestamp: string
+  syncStatus: 'synced' | 'pending' | 'failed'
+}
+
+// Auth types
+export interface AuthState {
+  isAuthenticated: boolean
+  user: User | null
+  token: string | null
+}
+
+// Backend Auth Request/Response Types
+export interface LoginRequest {
+  username: string
+  password: string
+}
+
+export interface LoginResponse {
+  access_token: string
+  id_token: string
+  refresh_token: string
+  user: User
+}
+
+export interface RegisterRequest {
+  email: string
+  password: string
+  phone_number?: string
+  user_type: 'farmer' | 'wholesaler' | 'admin'
+  name?: string
+  address?: string
+}
+
+export interface RegisterResponse {
+  user: User
+  message: string
+}
+
+export interface PasswordResetRequest {
+  email: string
+}
+
+export interface PasswordResetResponse {
+  message: string
+  delivery_medium?: string
+  destination?: string
+}
+
+export interface ConfirmPasswordResetRequest {
+  email: string
+  confirmation_code: string
+  new_password: string
+}
+
+export interface ConfirmPasswordResetResponse {
+  message: string
+}
+
+// API types
+export interface ApiResponse<T> {
+  success: boolean
+  data: T
+  message?: string
+}
+
+// Backend API Response (different format)
+export interface BackendApiResponse<T> {
+  data?: T
+  message?: string
+  error?: string
+}
+
+// Offline action types
+export interface OfflineAction {
+  id: string
+  type: 'CREATE_FARM' | 'UPDATE_FARM' | 'UPLOAD_PHOTO' | 'DELETE_FARM'
+  payload: any
+  timestamp: string
+  retryCount: number
+}
