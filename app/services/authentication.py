@@ -2,7 +2,10 @@ import boto3
 import logging
 from typing import Dict, Any, Optional
 from botocore.exceptions import ClientError
+from sqlalchemy.orm import Session
+
 from app.core.config import settings
+from app.services.user_service import UserService
 
 logger = logging.getLogger(__name__)
 
@@ -28,17 +31,20 @@ class UserAlreadyExistsError(AuthenticationError):
 
 
 class AuthenticationService:
-    """Abstract authentication service layer"""
-    
-    def __init__(self):
-        self.client = boto3.client(
-            'cognito-idp',
-            region_name=settings.AUTH_REGION or settings.AWS_REGION,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY
-        )
+    """Authentication service layer with Cognito and local DB sync"""
+
+    def __init__(self, db: Optional[Session] = None):
+        client_config = {
+            'region_name': settings.AUTH_REGION or settings.AWS_REGION,
+            'aws_access_key_id': settings.AWS_ACCESS_KEY_ID,
+            'aws_secret_access_key': settings.AWS_SECRET_ACCESS_KEY
+        }
+
+        self.client = boto3.client('cognito-idp', **client_config)
         self.user_pool_id = settings.AUTH_USER_POOL_ID
         self.client_id = settings.AUTH_CLIENT_ID
+        self.db = db
+        self.user_service = UserService(db) if db else None
     
     async def register_user(
         self, 
@@ -55,7 +61,7 @@ class AuthenticationService:
             email: User's email address
             password: User's password
             phone_number: Optional phone number
-            user_type: User type (farmer/wholesaler)
+            user_type: User type (farmer/wholesaler/admin)
             **additional_attributes: Additional user attributes
             
         Returns:
@@ -66,20 +72,27 @@ class AuthenticationService:
             AuthenticationError: For other registration errors
         """
         try:
+            # Based on your User Pool schema, these are the required fields:
+            # address, phone_number, zoneinfo, name are REQUIRED
             user_attributes = [
                 {'Name': 'email', 'Value': email},
-                {'Name': 'custom:user_type', 'Value': user_type}
+                {'Name': 'name', 'Value': additional_attributes.get('name', email.split('@')[0])},
+                {'Name': 'address', 'Value': additional_attributes.get('address', 'N/A')},
+                {'Name': 'zoneinfo', 'Value': additional_attributes.get('zoneinfo', 'Africa/Johannesburg')},
+                # Store user_type in profile field since no custom attributes are defined
+                {'Name': 'profile', 'Value': f'{{"user_type": "{user_type}"}}'}
             ]
             
             if phone_number:
                 user_attributes.append({'Name': 'phone_number', 'Value': phone_number})
+            else:
+                # Phone number is required, provide a placeholder
+                user_attributes.append({'Name': 'phone_number', 'Value': '+27000000000'})
             
-            # Add any additional custom attributes
+            # Add any additional standard attributes
             for key, value in additional_attributes.items():
-                if key.startswith('custom:'):
+                if key in ['given_name', 'family_name', 'middle_name', 'nickname', 'gender', 'birthdate', 'locale', 'website', 'picture']:
                     user_attributes.append({'Name': key, 'Value': str(value)})
-                else:
-                    user_attributes.append({'Name': f'custom:{key}', 'Value': str(value)})
             
             response = self.client.admin_create_user(
                 UserPoolId=self.user_pool_id,
@@ -98,12 +111,27 @@ class AuthenticationService:
                 Permanent=True
             )
             
+            # Extract user_sub from attributes
+            user_sub = next(
+                attr['Value'] for attr in response['User']['Attributes'] 
+                if attr['Name'] == 'sub'
+            )
+            
+            # Create local user record if database is available
+            if self.user_service:
+                try:
+                    self.user_service.create_user_from_cognito(
+                        cognito_sub=user_sub,
+                        email=email,
+                        user_type=user_type,
+                        **additional_attributes
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to create local user record: {e}")
+
             return {
                 'user_id': response['User']['Username'],
-                'user_sub': next(
-                    attr['Value'] for attr in response['User']['Attributes'] 
-                    if attr['Name'] == 'sub'
-                ),
+                'user_sub': user_sub,
                 'email': email,
                 'user_type': user_type,
                 'status': response['User']['UserStatus']
@@ -159,6 +187,26 @@ class AuthenticationService:
                 for attr in user_response['UserAttributes']
             }
             
+            # Extract user_type from profile field
+            profile_data = user_attributes.get('profile', '{}')
+            try:
+                import json
+                profile_json = json.loads(profile_data)
+                user_type = profile_json.get('user_type', 'unknown')
+            except:
+                user_type = 'unknown'
+
+            # Update last login in local database if available
+            if self.user_service:
+                try:
+                    local_user = self.user_service.get_user_by_cognito_sub(
+                        user_attributes.get('sub')
+                    )
+                    if local_user:
+                        self.user_service.update_last_login(local_user)
+                except Exception as e:
+                    logger.warning(f"Failed to update last login: {e}")
+
             return {
                 'access_token': response['AuthenticationResult']['AccessToken'],
                 'id_token': response['AuthenticationResult']['IdToken'],
@@ -168,7 +216,7 @@ class AuthenticationService:
                 'user_id': user_response['Username'],
                 'user_sub': user_attributes.get('sub'),
                 'email': user_attributes.get('email'),
-                'user_type': user_attributes.get('custom:user_type'),
+                'user_type': user_type,
                 'phone_number': user_attributes.get('phone_number')
             }
             
@@ -270,11 +318,20 @@ class AuthenticationService:
                 for attr in response['UserAttributes']
             }
             
+            # Extract user_type from profile field
+            profile_data = user_attributes.get('profile', '{}')
+            try:
+                import json
+                profile_json = json.loads(profile_data)
+                user_type = profile_json.get('user_type', 'unknown')
+            except:
+                user_type = 'unknown'
+            
             return {
                 'user_id': response['Username'],
                 'user_sub': user_attributes.get('sub'),
                 'email': user_attributes.get('email'),
-                'user_type': user_attributes.get('custom:user_type'),
+                'user_type': user_type,
                 'phone_number': user_attributes.get('phone_number')
             }
             
@@ -283,5 +340,18 @@ class AuthenticationService:
             raise AuthenticationError(f"Token validation failed: {e}")
 
 
-# Singleton instance
+# Singleton instance (without DB for backward compatibility)
 auth_service = AuthenticationService()
+
+
+def get_auth_service_with_db(db: Session) -> AuthenticationService:
+    """
+    Get authentication service instance with database session.
+
+    Args:
+        db: Database session
+
+    Returns:
+        AuthenticationService instance with database support
+    """
+    return AuthenticationService(db)

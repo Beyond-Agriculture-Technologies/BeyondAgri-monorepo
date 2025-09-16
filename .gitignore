@@ -148,3 +148,4 @@ alembic.ini
 *.db
 
 .env.aws
+.env

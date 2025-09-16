@@ -15,8 +15,8 @@ class Settings(BaseSettings):
     # Database
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "password"
-    POSTGRES_DB: str = "beyondagri"
+    POSTGRES_PASSWORD: str = "1234"
+    POSTGRES_DB: str = "postgres"
     DATABASE_URL: Optional[str] = None
 
     @field_validator("DATABASE_URL", mode="before")
@@ -30,7 +30,8 @@ class Settings(BaseSettings):
     # AWS Configuration
     AWS_ACCESS_KEY_ID: Optional[str] = None
     AWS_SECRET_ACCESS_KEY: Optional[str] = None
-    AWS_REGION: str = "us-east-1"
+    AWS_SESSION_TOKEN: Optional[str] = None
+    AWS_REGION: str = "af-south-1"
     AWS_S3_BUCKET: Optional[str] = None
     
     # JWT Configuration
