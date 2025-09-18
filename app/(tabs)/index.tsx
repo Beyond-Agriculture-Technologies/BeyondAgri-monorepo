@@ -6,15 +6,16 @@ import {
   ScrollView,
   RefreshControl,
   TouchableOpacity,
-  SafeAreaView,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
-import { useAuthStore } from '../../src/store/authStore'
-import { useAppStore } from '../../src/store/appStore'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useAuthStore } from '../../src/store/auth-store'
+import { useAppStore } from '../../src/store/app-store'
 import { APP_COLORS } from '../../src/utils/constants'
 import { dbService } from '../../src/services/database'
 
 export default function DashboardScreen() {
+  const insets = useSafeAreaInsets()
   const user = useAuthStore((state) => state.user)
   const { isOnline, farms, isSyncing } = useAppStore()
   const [refreshing, setRefreshing] = useState(false)
@@ -64,7 +65,7 @@ export default function DashboardScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView
         style={styles.scrollView}
         refreshControl={
@@ -76,12 +77,12 @@ export default function DashboardScreen() {
           <View>
             <Text style={styles.greeting}>Good day,</Text>
             <Text style={styles.userName}>{user?.name || 'Welcome'}</Text>
-            <Text style={styles.userRole}>{getRoleDisplayName(user?.role || '')}</Text>
+            <Text style={styles.userRole}>{getRoleDisplayName(user?.user_type || '')}</Text>
           </View>
           <View style={styles.statusContainer}>
             <View style={[styles.statusIndicator, isOnline ? styles.online : styles.offline]}>
               <Ionicons
-                name={isOnline ? "wifi" : "wifi-off"}
+                name={isOnline ? "wifi" : "cloud-offline"}
                 size={16}
                 color="white"
               />
@@ -162,7 +163,7 @@ export default function DashboardScreen() {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   )
 }
 

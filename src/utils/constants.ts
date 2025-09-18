@@ -3,6 +3,8 @@ export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api
 export const API_VERSION = process.env.EXPO_PUBLIC_API_VERSION || 'v1'
 export const API_FULL_URL = `${API_BASE_URL}/api/${API_VERSION}`
 
+// Development Features
+export const ENABLE_HIDDEN_FEATURES = process.env.EXPO_PUBLIC_ENABLE_HIDDEN_FEATURES === 'true'
 
 // App Constants
 export const APP_COLORS = {

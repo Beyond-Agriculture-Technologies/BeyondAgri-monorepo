@@ -10,9 +10,9 @@ import {
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
-import { useAuthStore } from '../../src/store/authStore'
-import { useAppStore } from '../../src/store/appStore'
-import { BackendAuthService } from '../../src/services/backendAuth'
+import { useAuthStore } from '../../src/store/auth-store'
+import { useAppStore } from '../../src/store/app-store'
+import { BackendAuthService } from '../../src/services/auth'
 import { dbService } from '../../src/services/database'
 import { APP_COLORS } from '../../src/utils/constants'
 

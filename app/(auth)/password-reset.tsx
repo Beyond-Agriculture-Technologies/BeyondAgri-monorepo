@@ -8,14 +8,15 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
 } from 'react-native'
 import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { BackendAuthService } from '../../src/services/backendAuth'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { BackendAuthService } from '../../src/services/auth'
 import { APP_COLORS } from '../../src/utils/constants'
 
 export default function PasswordResetScreen() {
+  const insets = useSafeAreaInsets()
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -54,7 +55,7 @@ export default function PasswordResetScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -108,7 +109,7 @@ export default function PasswordResetScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   )
 }
 

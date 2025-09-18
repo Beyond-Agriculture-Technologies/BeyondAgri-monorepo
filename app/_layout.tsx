@@ -2,9 +2,10 @@ import { useEffect } from 'react'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import NetInfo from '@react-native-community/netinfo'
-import { useAppStore } from '../src/store/appStore'
-import { useAuthStore } from '../src/store/authStore'
-import { BackendAuthService } from '../src/services/backendAuth'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { useAppStore } from '../src/store/app-store'
+import { useAuthStore } from '../src/store/auth-store'
+import { BackendAuthService } from '../src/services/auth'
 import { dbService } from '../src/services/database'
 
 export default function RootLayout() {
@@ -29,12 +30,12 @@ export default function RootLayout() {
   }, [])
 
   return (
-    <>
+    <SafeAreaProvider>
       <StatusBar style="auto" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
       </Stack>
-    </>
+    </SafeAreaProvider>
   )
 }

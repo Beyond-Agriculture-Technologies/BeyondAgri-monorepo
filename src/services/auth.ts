@@ -1,5 +1,5 @@
 import { API_FULL_URL } from '../utils/constants'
-import { useAuthStore } from '../store/authStore'
+import { useAuthStore } from '../store/auth-store'
 import * as SecureStore from 'expo-secure-store'
 import {
   LoginRequest,

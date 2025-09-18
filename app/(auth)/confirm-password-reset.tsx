@@ -12,7 +12,7 @@ import {
 } from 'react-native'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
-import { BackendAuthService } from '../../src/services/backendAuth'
+import { BackendAuthService } from '../../src/services/auth'
 import { APP_COLORS } from '../../src/utils/constants'
 
 export default function ConfirmPasswordResetScreen() {

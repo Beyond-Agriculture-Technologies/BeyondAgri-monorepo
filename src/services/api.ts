@@ -1,5 +1,5 @@
 import { API_FULL_URL } from '../utils/constants'
-import { BackendAuthService } from './backendAuth'
+import { BackendAuthService } from './auth'
 import { Farm, ApiResponse, BackendApiResponse } from '../types'
 
 class ApiClient {

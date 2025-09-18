@@ -28,7 +28,7 @@ interface AppStore {
   setIsSyncing: (isSyncing: boolean) => void
 }
 
-export const useAppStore = create<AppStore>((set, get) => ({
+export const useAppStore = create<AppStore>((set) => ({
   // Network state
   isOnline: true,
   setIsOnline: (isOnline) => set({ isOnline }),

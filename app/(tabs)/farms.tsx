@@ -6,15 +6,16 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  SafeAreaView,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Farm } from '../../src/types'
 import { APP_COLORS } from '../../src/utils/constants'
 import { dbService } from '../../src/services/database'
-import { useAppStore } from '../../src/store/appStore'
+import { useAppStore } from '../../src/store/app-store'
 
 export default function FarmsScreen() {
+  const insets = useSafeAreaInsets()
   const [farms, setFarms] = useState<Farm[]>([])
   const [refreshing, setRefreshing] = useState(false)
   const { isOnline } = useAppStore()
@@ -99,7 +100,7 @@ export default function FarmsScreen() {
   )
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <View style={styles.headerInfo}>
           <Text style={styles.headerTitle}>My Farms</Text>
@@ -114,7 +115,7 @@ export default function FarmsScreen() {
 
       {!isOnline && (
         <View style={styles.offlineBar}>
-          <Ionicons name="wifi-off" size={16} color={APP_COLORS.warning} />
+          <Ionicons name="cloud-offline" size={16} color={APP_COLORS.warning} />
           <Text style={styles.offlineText}>
             You're offline. Changes will sync when connection is restored.
           </Text>
@@ -132,7 +133,7 @@ export default function FarmsScreen() {
         }
         showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
+    </View>
   )
 }
 

@@ -8,13 +8,14 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
 } from 'react-native'
 import { router } from 'expo-router'
-import { BackendAuthService } from '../../src/services/backendAuth'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { BackendAuthService } from '../../src/services/auth'
 import { APP_COLORS } from '../../src/utils/constants'
 
 export default function LoginScreen() {
+  const insets = useSafeAreaInsets()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -42,7 +43,7 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -107,7 +108,7 @@ export default function LoginScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   )
 }
 

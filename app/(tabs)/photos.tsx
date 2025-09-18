@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { Photo } from '../../src/types'
 import { APP_COLORS } from '../../src/utils/constants'
 import { dbService } from '../../src/services/database'
-import { useAppStore } from '../../src/store/appStore'
+import { useAppStore } from '../../src/store/app-store'
 
 const { width } = Dimensions.get('window')
 const imageSize = (width - 48) / 2
