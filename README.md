@@ -76,7 +76,7 @@ app/
 
 ```bash
 # Option 1: Run commands directly (Recommended)
-poetry run uvicorn app.main:app --reload
+poetry run uvicorn app.main:app --reload --port 8001
 
 # Option 2: Manual activation
 # First, get your virtual environment path:

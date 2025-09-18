@@ -9,23 +9,14 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "BeyondAgri"
     VERSION: str = "0.1.0"
     
-    # CORS origins
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
-
-    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
-    @classmethod
-    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    # CORS origins (temporarily disabled for setup)
+    BACKEND_CORS_ORIGINS: List[str] = []
 
     # Database
     POSTGRES_SERVER: str = "localhost"
     POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "password"
-    POSTGRES_DB: str = "beyondagri"
+    POSTGRES_PASSWORD: str = "1234"
+    POSTGRES_DB: str = "postgres"
     DATABASE_URL: Optional[str] = None
 
     @field_validator("DATABASE_URL", mode="before")
@@ -39,7 +30,8 @@ class Settings(BaseSettings):
     # AWS Configuration
     AWS_ACCESS_KEY_ID: Optional[str] = None
     AWS_SECRET_ACCESS_KEY: Optional[str] = None
-    AWS_REGION: str = "us-east-1"
+    AWS_SESSION_TOKEN: Optional[str] = None
+    AWS_REGION: str = "af-south-1"
     AWS_S3_BUCKET: Optional[str] = None
     
     # JWT Configuration
@@ -47,10 +39,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # AWS Cognito
-    COGNITO_USER_POOL_ID: Optional[str] = None
-    COGNITO_CLIENT_ID: Optional[str] = None
-    COGNITO_REGION: Optional[str] = None
+    # Authentication Provider
+    AUTH_USER_POOL_ID: Optional[str] = None
+    AUTH_CLIENT_ID: Optional[str] = None
+    AUTH_REGION: Optional[str] = None
 
     # Environment
     ENVIRONMENT: str = "development"
