@@ -4,7 +4,7 @@ A React Native mobile application built with Expo for agricultural farm manageme
 
 ## Features
 
-- 🔐 **AWS Cognito Authentication** - Secure user authentication
+- 🔐 **Backend API Authentication** - Secure user authentication with JWT tokens
 - 📱 **React Native with Expo** - Cross-platform mobile development
 - 🗄️ **Offline-First Database** - SQLite with automatic sync
 - 📷 **Camera Integration** - Farm photo documentation
@@ -18,7 +18,7 @@ A React Native mobile application built with Expo for agricultural farm manageme
 - **Language**: TypeScript
 - **Navigation**: Expo Router (file-based routing)
 - **Database**: Expo SQLite for offline storage
-- **Authentication**: AWS Amplify with Cognito
+- **Authentication**: Backend API with JWT tokens
 - **State Management**: Zustand
 - **Icons**: Expo Vector Icons (Ionicons)
 
@@ -39,7 +39,7 @@ npm install
 
 ### 2. Environment Configuration
 
-Copy the environment template and configure your AWS Cognito settings:
+Copy the environment template and configure your backend API settings:
 
 ```bash
 cp .env.example .env
@@ -48,10 +48,8 @@ cp .env.example .env
 Edit `.env` with your configuration:
 
 ```env
-EXPO_PUBLIC_API_URL=https://your-api-endpoint.com
-EXPO_PUBLIC_AWS_REGION=us-east-1
-EXPO_PUBLIC_USER_POOL_ID=your_user_pool_id
-EXPO_PUBLIC_USER_POOL_CLIENT_ID=your_client_id
+EXPO_PUBLIC_API_BASE_URL=https://api.beyondagri.com
+EXPO_PUBLIC_API_VERSION=v1
 ```
 
 ### 3. Start Development Server
@@ -107,8 +105,9 @@ src/
 ## Key Features
 
 ### Authentication
-- AWS Cognito integration with secure token storage
+- Backend API authentication with JWT tokens
 - Role-based access control (farmer/wholesaler/admin)
+- Secure token storage with Expo SecureStore
 - Automatic session restoration
 
 ### Offline Capabilities
@@ -151,10 +150,8 @@ Required environment variables:
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `EXPO_PUBLIC_API_URL` | Backend API base URL | `https://api.beyondagri.com` |
-| `EXPO_PUBLIC_AWS_REGION` | AWS region | `us-east-1` |
-| `EXPO_PUBLIC_USER_POOL_ID` | Cognito User Pool ID | `us-east-1_xxxxxxxxx` |
-| `EXPO_PUBLIC_USER_POOL_CLIENT_ID` | Cognito App Client ID | `xxxxxxxxxxxxxxxxxx` |
+| `EXPO_PUBLIC_API_BASE_URL` | Backend API base URL | `https://api.beyondagri.com` |
+| `EXPO_PUBLIC_API_VERSION` | API version | `v1` |
 
 ## Deployment
 

@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@react-native-community/netinfo": "11.4.1",
-    "aws-amplify": "^6.15.6",
     "expo": "~54.0.7",
     "expo-camera": "~17.0.8",
     "expo-location": "~19.0.7",

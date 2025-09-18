@@ -3,12 +3,6 @@ export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api
 export const API_VERSION = process.env.EXPO_PUBLIC_API_VERSION || 'v1'
 export const API_FULL_URL = `${API_BASE_URL}/api/${API_VERSION}`
 
-// AWS Cognito Configuration (Optional - for hybrid auth if needed)
-export const AWS_CONFIG = {
-  region: process.env.EXPO_PUBLIC_AWS_REGION || '',
-  userPoolId: process.env.EXPO_PUBLIC_USER_POOL_ID || '',
-  userPoolWebClientId: process.env.EXPO_PUBLIC_USER_POOL_CLIENT_ID || '',
-}
 
 // App Constants
 export const APP_COLORS = {
