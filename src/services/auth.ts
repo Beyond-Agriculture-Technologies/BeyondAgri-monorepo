@@ -1,4 +1,4 @@
-import { API_FULL_URL } from '../utils/constants'
+import { API_FULL_URL, ENABLE_HIDDEN_FEATURES } from '../utils/constants'
 import { useAuthStore } from '../store/auth-store'
 import * as SecureStore from 'expo-secure-store'
 import {
@@ -23,13 +23,33 @@ export class BackendAuthService {
         password,
       }
 
-      const response = await fetch(`${API_FULL_URL}/auth/login`, {
+      const url = `${API_FULL_URL}/auth/login`
+
+      if (ENABLE_HIDDEN_FEATURES) {
+        console.log('🔐 Auth Login Request:', {
+          url,
+          email,
+          timestamp: new Date().toISOString()
+        })
+      }
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(loginData),
       })
+
+      if (ENABLE_HIDDEN_FEATURES) {
+        console.log('📥 Auth Login Response:', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          timestamp: new Date().toISOString()
+        })
+      }
 
       const data: BackendApiResponse<LoginResponse> = await response.json()
 
@@ -73,13 +93,34 @@ export class BackendAuthService {
 
   static async register(userData: RegisterRequest) {
     try {
-      const response = await fetch(`${API_FULL_URL}/auth/register`, {
+      const url = `${API_FULL_URL}/auth/register`
+
+      if (ENABLE_HIDDEN_FEATURES) {
+        console.log('📝 Auth Register Request:', {
+          url,
+          email: userData.email,
+          user_type: userData.user_type,
+          timestamp: new Date().toISOString()
+        })
+      }
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(userData),
       })
+
+      if (ENABLE_HIDDEN_FEATURES) {
+        console.log('📥 Auth Register Response:', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          timestamp: new Date().toISOString()
+        })
+      }
 
       const data: BackendApiResponse<RegisterResponse> = await response.json()
 

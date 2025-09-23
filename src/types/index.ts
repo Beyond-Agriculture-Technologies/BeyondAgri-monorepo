@@ -6,6 +6,8 @@ export interface User {
   phone_number?: string
   address?: string
   user_type: 'farmer' | 'wholesaler' | 'admin'
+  verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected'
+  is_active?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -116,4 +118,42 @@ export interface OfflineAction {
   payload: any
   timestamp: string
   retryCount: number
+}
+
+// Account Management Types
+export interface VerificationData {
+  document_type: 'id_card' | 'passport' | 'driver_license' | 'business_license'
+  document_number: string
+  document_image_url?: string
+  additional_info?: string
+}
+
+export interface VerificationStatus {
+  status: 'unverified' | 'pending' | 'verified' | 'rejected'
+  submitted_at?: string
+  reviewed_at?: string
+  reviewer_notes?: string
+  document_type?: string
+}
+
+export interface UserRole {
+  role_name: string
+  granted_at: string
+  granted_by?: string
+}
+
+export interface Permission {
+  name: string
+  description?: string
+  resource?: string
+  action?: string
+}
+
+export interface AccountActivity {
+  id: string
+  action: string
+  details?: string
+  ip_address?: string
+  user_agent?: string
+  timestamp: string
 }

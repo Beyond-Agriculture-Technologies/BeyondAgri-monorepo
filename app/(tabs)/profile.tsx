@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -14,12 +14,53 @@ import { useAuthStore } from '../../src/store/auth-store'
 import { useAppStore } from '../../src/store/app-store'
 import { BackendAuthService } from '../../src/services/auth'
 import { dbService } from '../../src/services/database'
+import { apiClient } from '../../src/services/api'
 import { APP_COLORS } from '../../src/utils/constants'
+import { VerificationStatus, UserRole, Permission } from '../../src/types'
 
 export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user)
   const { isOnline, isSyncing, offlineActions } = useAppStore()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [verificationStatus, setVerificationStatus] = useState<VerificationStatus | null>(null)
+  const [userRoles, setUserRoles] = useState<UserRole[]>([])
+  const [permissions, setPermissions] = useState<Permission[]>([])
+  const [loadingAccountData, setLoadingAccountData] = useState(false)
+
+  useEffect(() => {
+    if (isOnline && user) {
+      loadAccountData()
+    }
+  }, [isOnline, user])
+
+  const loadAccountData = async () => {
+    if (!isOnline) return
+
+    setLoadingAccountData(true)
+    try {
+      // Load verification status
+      const verificationResult = await apiClient.getVerificationStatus()
+      if (verificationResult.success) {
+        setVerificationStatus(verificationResult.data)
+      }
+
+      // Load user roles
+      const rolesResult = await apiClient.getUserRoles()
+      if (rolesResult.success) {
+        setUserRoles(rolesResult.data || [])
+      }
+
+      // Load permissions
+      const permissionsResult = await apiClient.getUserPermissions()
+      if (permissionsResult.success) {
+        setPermissions(permissionsResult.data || [])
+      }
+    } catch (error) {
+      console.error('Failed to load account data:', error)
+    } finally {
+      setLoadingAccountData(false)
+    }
+  }
 
   const handleLogout = async () => {
     Alert.alert(
@@ -94,6 +135,32 @@ export default function ProfileScreen() {
     }
   }
 
+  const getVerificationStatusColor = (status: string) => {
+    switch (status) {
+      case 'verified':
+        return APP_COLORS.success
+      case 'pending':
+        return APP_COLORS.warning
+      case 'rejected':
+        return APP_COLORS.error
+      default:
+        return APP_COLORS.textSecondary
+    }
+  }
+
+  const getVerificationStatusIcon = (status: string) => {
+    switch (status) {
+      case 'verified':
+        return 'checkmark-circle'
+      case 'pending':
+        return 'time'
+      case 'rejected':
+        return 'close-circle'
+      default:
+        return 'help-circle'
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -111,6 +178,60 @@ export default function ProfileScreen() {
             </Text>
           </View>
         </View>
+
+        {/* Verification Status Section */}
+        {isOnline && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account Verification</Text>
+            <View style={styles.verificationCard}>
+              {loadingAccountData ? (
+                <View style={styles.loadingContainer}>
+                  <Text style={styles.loadingText}>Loading verification status...</Text>
+                </View>
+              ) : verificationStatus ? (
+                <View style={styles.verificationRow}>
+                  <View style={styles.verificationLeft}>
+                    <Ionicons
+                      name={getVerificationStatusIcon(verificationStatus.status)}
+                      size={20}
+                      color={getVerificationStatusColor(verificationStatus.status)}
+                    />
+                    <Text style={styles.verificationLabel}>Status</Text>
+                  </View>
+                  <Text style={[
+                    styles.verificationValue,
+                    { color: getVerificationStatusColor(verificationStatus.status) }
+                  ]}>
+                    {verificationStatus.status
+                      ? verificationStatus.status.charAt(0).toUpperCase() + verificationStatus.status.slice(1)
+                      : 'Unknown'
+                    }
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.verificationRow}>
+                  <View style={styles.verificationLeft}>
+                    <Ionicons name="information-circle" size={20} color={APP_COLORS.textSecondary} />
+                    <Text style={styles.verificationLabel}>Status</Text>
+                  </View>
+                  <Text style={styles.verificationValue}>Not Available</Text>
+                </View>
+              )}
+
+              {userRoles.length > 0 && (
+                <View style={styles.verificationRow}>
+                  <View style={styles.verificationLeft}>
+                    <Ionicons name="shield-checkmark" size={20} color={APP_COLORS.primary} />
+                    <Text style={styles.verificationLabel}>Roles</Text>
+                  </View>
+                  <Text style={styles.verificationValue}>
+                    {userRoles.map(role => role.role_name).join(', ')}
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
         {/* Status Section */}
         <View style={styles.section}>
@@ -184,6 +305,22 @@ export default function ProfileScreen() {
         {/* Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Actions</Text>
+
+          {isOnline && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={loadAccountData}
+              disabled={loadingAccountData}
+            >
+              <View style={styles.actionLeft}>
+                <Ionicons name="refresh" size={20} color={APP_COLORS.primary} />
+                <Text style={styles.actionText}>
+                  {loadingAccountData ? 'Refreshing Account...' : 'Refresh Account Data'}
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity style={styles.actionButton}>
             <View style={styles.actionLeft}>
@@ -389,5 +526,43 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
+  },
+  verificationCard: {
+    backgroundColor: APP_COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  verificationRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  verificationLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  verificationLabel: {
+    fontSize: 14,
+    color: APP_COLORS.text,
+    marginLeft: 12,
+  },
+  verificationValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: APP_COLORS.text,
+  },
+  loadingContainer: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 14,
+    color: APP_COLORS.textSecondary,
   },
 })

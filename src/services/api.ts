@@ -1,4 +1,4 @@
-import { API_FULL_URL } from '../utils/constants'
+import { API_FULL_URL, ENABLE_HIDDEN_FEATURES } from '../utils/constants'
 import { BackendAuthService } from './auth'
 import { Farm, ApiResponse, BackendApiResponse } from '../types'
 
@@ -7,6 +7,14 @@ class ApiClient {
 
   constructor() {
     this.baseURL = API_FULL_URL
+
+    // Log API configuration in development
+    if (ENABLE_HIDDEN_FEATURES) {
+      console.log('🔗 API Client initialized:', {
+        baseURL: this.baseURL,
+        timestamp: new Date().toISOString()
+      })
+    }
   }
 
   private async getHeaders(): Promise<HeadersInit> {
@@ -26,9 +34,21 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
+    const url = `${this.baseURL}${endpoint}`
+
     try {
       const headers = await this.getHeaders()
-      const url = `${this.baseURL}${endpoint}`
+
+      // Log request details in development
+      if (ENABLE_HIDDEN_FEATURES) {
+        console.log('🚀 API Request:', {
+          method: options.method || 'GET',
+          url,
+          endpoint,
+          hasAuth: !!headers.Authorization,
+          timestamp: new Date().toISOString()
+        })
+      }
 
       const response = await fetch(url, {
         ...options,
@@ -38,10 +58,22 @@ class ApiClient {
         },
       })
 
+      // Log response details in development
+      if (ENABLE_HIDDEN_FEATURES) {
+        console.log('📥 API Response:', {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          timestamp: new Date().toISOString()
+        })
+      }
+
       const data: BackendApiResponse<T> = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || 'API request failed')
+        const errorMessage = data.error || data.message || `HTTP ${response.status}: ${response.statusText}`
+        throw new Error(errorMessage)
       }
 
       return {
@@ -50,11 +82,33 @@ class ApiClient {
         message: data.message,
       }
     } catch (error: any) {
-      console.error('API request error:', error)
+      // Enhanced error logging
+      const errorInfo = {
+        url,
+        endpoint,
+        error: error.message,
+        type: error.name,
+        timestamp: new Date().toISOString()
+      }
+
+      if (ENABLE_HIDDEN_FEATURES) {
+        console.error('❌ API Request Failed:', errorInfo)
+      } else {
+        console.error('API request error:', error.message)
+      }
+
+      // Provide more specific error messages
+      let userMessage = error.message || 'Network error'
+      if (error.message?.includes('Network request failed') || error.message?.includes('fetch')) {
+        userMessage = 'Unable to connect to server. Please check your internet connection and try again.'
+      } else if (error.message?.includes('timeout')) {
+        userMessage = 'Request timed out. Please try again.'
+      }
+
       return {
         success: false,
         data: null as any,
-        message: error.message || 'Network error',
+        message: userMessage,
       }
     }
   }
@@ -94,9 +148,54 @@ class ApiClient {
   }
 
   async updateUserProfile(updates: any) {
-    return this.request('/user/profile', {
+    return this.request('/accounts/profile', {
       method: 'PUT',
       body: JSON.stringify(updates),
+    })
+  }
+
+  // Account management endpoints
+  async getAccountProfile() {
+    return this.request('/accounts/profile', {
+      method: 'GET',
+    })
+  }
+
+  async submitVerification(verificationData: any) {
+    return this.request('/accounts/verification/submit', {
+      method: 'POST',
+      body: JSON.stringify(verificationData),
+    })
+  }
+
+  async getVerificationStatus() {
+    return this.request('/accounts/verification/status', {
+      method: 'GET',
+    })
+  }
+
+  async getUserRoles() {
+    return this.request('/accounts/roles', {
+      method: 'GET',
+    })
+  }
+
+  async getUserPermissions() {
+    return this.request('/accounts/permissions', {
+      method: 'GET',
+    })
+  }
+
+  async getAccountActivity(limit?: number) {
+    const params = limit ? `?limit=${limit}` : ''
+    return this.request(`/accounts/activity${params}`, {
+      method: 'GET',
+    })
+  }
+
+  async deactivateAccount() {
+    return this.request('/accounts/deactivate', {
+      method: 'DELETE',
     })
   }
 
