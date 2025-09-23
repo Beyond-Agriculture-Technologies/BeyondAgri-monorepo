@@ -1,15 +1,15 @@
 from fastapi import APIRouter, Depends
 from typing import Any
 
-from app.schemas.user import UserProfile
-from app.core.deps import get_current_farmer
+from app.schemas.account import AccountProfile
+from app.core.deps import get_current_farmer_account
 
 router = APIRouter()
 
 
 @router.get("/")
 async def get_inventory(
-    current_user: UserProfile = Depends(get_current_farmer)
+    current_account: AccountProfile = Depends(get_current_farmer_account)
 ) -> Any:
     """
     Get farmer's inventory items.
@@ -18,14 +18,14 @@ async def get_inventory(
     """
     return {
         "message": "Get inventory items - to be implemented",
-        "farmer_id": current_user.user_id,
+        "farmer_id": current_account.id,
         "note": "Returns inventory for authenticated farmer"
     }
 
 
 @router.post("/")
 async def add_inventory(
-    current_user: UserProfile = Depends(get_current_farmer)
+    current_account: AccountProfile = Depends(get_current_farmer_account)
 ) -> Any:
     """
     Add new inventory item.
@@ -34,7 +34,7 @@ async def add_inventory(
     """
     return {
         "message": "Add inventory item - to be implemented",
-        "farmer_id": current_user.user_id,
+        "farmer_id": current_account.id,
         "note": "Only farmers can add inventory items"
     }
 
@@ -42,7 +42,7 @@ async def add_inventory(
 @router.put("/{item_id}")
 async def update_inventory(
     item_id: str,
-    current_user: UserProfile = Depends(get_current_farmer)
+    current_account: AccountProfile = Depends(get_current_farmer_account)
 ) -> Any:
     """
     Update inventory item.
@@ -52,14 +52,14 @@ async def update_inventory(
     return {
         "message": "Update inventory item - to be implemented",
         "item_id": item_id,
-        "farmer_id": current_user.user_id,
+        "farmer_id": current_account.id,
         "note": "Only farmers can update their inventory items"
     }
 
 
 @router.get("/alerts")
 async def get_alerts(
-    current_user: UserProfile = Depends(get_current_farmer)
+    current_account: AccountProfile = Depends(get_current_farmer_account)
 ) -> Any:
     """
     Get inventory alerts for the farmer.
@@ -68,6 +68,6 @@ async def get_alerts(
     """
     return {
         "message": "Get inventory alerts - to be implemented",
-        "farmer_id": current_user.user_id,
+        "farmer_id": current_account.id,
         "note": "Returns alerts for authenticated farmer's inventory"
     }

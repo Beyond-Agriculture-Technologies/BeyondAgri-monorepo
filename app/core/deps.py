@@ -6,23 +6,22 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.schemas.auth import TokenData
-from app.schemas.user import UserProfile
+from app.schemas.account import AccountProfile
 from app.services.authentication import auth_service, get_auth_service_with_db, AuthenticationError
-from app.services.user_service import UserService
+from app.services.account_service import AccountService
 from app.db.session import get_db
 
 security = HTTPBearer()
 
 
-async def get_current_user(
+# Account-based dependencies
+async def get_current_account(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
-) -> UserProfile:
+) -> AccountProfile:
     """
-    Dependency to get the current authenticated user from JWT token.
-
-    This function validates the JWT token and returns the user information,
-    preferring local database data when available.
+    Dependency to get the current authenticated account from JWT token.
+    Uses the new account structure with enhanced profiles.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -33,127 +32,114 @@ async def get_current_user(
     token = credentials.credentials
 
     try:
-        # Validate token with Cognito
-        user_info = await auth_service.validate_token(token)
+        # Validate token with auth service
+        auth_service_instance = get_auth_service_with_db(db)
+        user_info = await auth_service_instance.validate_token(token)
 
-        # Try to get enhanced user data from local database
-        user_service = UserService(db)
-        local_user = user_service.get_user_by_cognito_sub(user_info["user_sub"])
+        # Get account data from local database
+        account_service = AccountService(db)
+        account = account_service.get_account_by_cognito_sub(user_info["user_sub"])
 
-        if local_user:
-            # Return enhanced profile from local database
-            return user_service.to_user_profile(local_user)
+        if account:
+            return AccountProfile.from_account(account)
         else:
-            # Fallback to Cognito data only
-            return UserProfile(
-                user_id=user_info["user_id"],
-                user_sub=user_info["user_sub"],
-                email=user_info["email"],
-                user_type=user_info["user_type"],
-                phone_number=user_info.get("phone_number"),
-                status="CONFIRMED"  # If token is valid, user is confirmed
+            # Account not found in local database
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Account not found in local database"
             )
 
     except AuthenticationError:
-        # If Cognito token validation fails, try local JWT validation
-        try:
-            payload = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-            )
-            username: str = payload.get("sub")
-            if username is None:
-                raise credentials_exception
-            token_data = TokenData(username=username)
-        except JWTError:
-            raise credentials_exception
-
-        # For local JWT tokens, we would need to fetch user from database
-        # For now, since we're using Cognito, this is a fallback
         raise credentials_exception
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving account: {str(e)}"
+        )
 
 
-async def get_current_active_user(
-    current_user: UserProfile = Depends(get_current_user)
-) -> UserProfile:
+async def get_current_active_account(
+    current_account: AccountProfile = Depends(get_current_account)
+) -> AccountProfile:
     """
-    Dependency to get the current active user.
-    Ensures the user account is confirmed and active.
+    Dependency to get the current active account.
+    Ensures the account is active and not disabled.
     """
-    if current_user.status != "CONFIRMED":
+    if not current_account.is_active or current_account.status in ["disabled", "suspended"]:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inactive user account"
+            detail="Account is inactive or disabled"
         )
-    return current_user
+    return current_account
 
 
-async def get_current_farmer(
-    current_user: UserProfile = Depends(get_current_active_user)
-) -> UserProfile:
+async def get_current_farmer_account(
+    current_account: AccountProfile = Depends(get_current_active_account)
+) -> AccountProfile:
     """
-    Dependency to ensure the current user is a farmer.
+    Dependency to ensure the current account is a farmer.
     """
-    if current_user.user_type != "farmer":
+    if current_account.account_type != "farmer":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. Farmer account required."
         )
-    return current_user
+    return current_account
 
 
-async def get_current_wholesaler(
-    current_user: UserProfile = Depends(get_current_active_user)
-) -> UserProfile:
+async def get_current_wholesaler_account(
+    current_account: AccountProfile = Depends(get_current_active_account)
+) -> AccountProfile:
     """
-    Dependency to ensure the current user is a wholesaler.
+    Dependency to ensure the current account is a wholesaler.
     """
-    if current_user.user_type != "wholesaler":
+    if current_account.account_type != "wholesaler":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. Wholesaler account required."
         )
-    return current_user
+    return current_account
 
 
-async def get_current_admin(
-    current_user: UserProfile = Depends(get_current_active_user)
-) -> UserProfile:
+async def get_current_admin_account(
+    current_account: AccountProfile = Depends(get_current_active_account)
+) -> AccountProfile:
     """
-    Dependency to ensure the current user is an admin.
+    Dependency to ensure the current account is an admin.
     """
-    if current_user.user_type != "admin":
+    if current_account.account_type != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. Admin account required."
         )
-    return current_user
+    return current_account
 
 
-async def get_current_admin_or_wholesaler(
-    current_user: UserProfile = Depends(get_current_active_user)
-) -> UserProfile:
+async def get_current_business_account(
+    current_account: AccountProfile = Depends(get_current_active_account)
+) -> AccountProfile:
     """
-    Dependency to ensure the current user is an admin or wholesaler.
+    Dependency to ensure the current account is a business (wholesaler or admin).
     """
-    if current_user.user_type not in ["admin", "wholesaler"]:
+    if current_account.account_type not in ["wholesaler", "admin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Access denied. Admin or wholesaler account required."
+            detail="Access denied. Business account required."
         )
-    return current_user
+    return current_account
 
 
-async def get_optional_current_user(
+async def get_optional_current_account(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security)
-) -> Optional[UserProfile]:
+) -> Optional[AccountProfile]:
     """
-    Dependency to optionally get the current user.
+    Dependency to optionally get the current account.
     Returns None if no valid token is provided.
     """
     if not credentials:
         return None
 
     try:
-        return await get_current_user(credentials)
+        return await get_current_account(credentials)
     except HTTPException:
         return None
