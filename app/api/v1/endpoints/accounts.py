@@ -215,14 +215,6 @@ async def deactivate_account(
         account.is_active = False
         account.status = AccountStatusEnum.DISABLED
 
-        # Log the deactivation
-        from app.models import AccountActivityLog, ActivityTypeEnum
-        activity_log = AccountActivityLog(
-            account_id=account.id,
-            activity_type=ActivityTypeEnum.ACCOUNT_DISABLED,
-            description="Account deactivated by user"
-        )
-        db.add(activity_log)
         db.commit()
 
         return {"message": "Account deactivated successfully"}

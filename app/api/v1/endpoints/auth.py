@@ -234,35 +234,11 @@ async def logout(
     db: Session = Depends(get_db)
 ) -> Any:
     """
-    Logout user with activity logging.
+    Logout user.
 
     For complete security, implement token blacklisting if needed.
     """
-    try:
-        # Log logout activity
-        from app.services.account_service import AccountService
-        from app.models import AccountActivityLog, ActivityTypeEnum
-
-        account_service = AccountService(db)
-        account = account_service.get_account_by_cognito_sub(current_account.cognito_sub)
-
-        if account:
-            activity_log = AccountActivityLog(
-                account_id=account.id,
-                activity_type=ActivityTypeEnum.LOGOUT,
-                description="User logged out"
-            )
-            db.add(activity_log)
-            db.commit()
-
-        return AuthResponse(
-            message="Logout successful. Please remove tokens from client storage.",
-            data=None
-        )
-
-    except Exception:
-        # Don't fail logout if logging fails
-        return AuthResponse(
-            message="Logout successful. Please remove tokens from client storage.",
-            data=None
-        )
+    return AuthResponse(
+        message="Logout successful. Please remove tokens from client storage.",
+        data=None
+    )
