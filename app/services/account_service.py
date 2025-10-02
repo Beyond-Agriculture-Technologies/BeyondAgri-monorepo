@@ -7,7 +7,6 @@ from app.models import (
     Account, AccountTypeEnum, AccountStatusEnum,
     UserProfile, FarmerProfile, BusinessProfile,
     VerificationRecord, VerificationTypeEnum, VerificationStatusEnum,
-    AccountActivityLog, ActivityTypeEnum,
     Role, AccountRole
 )
 
@@ -20,18 +19,18 @@ class AccountService:
     def __init__(self, db: Session):
         self.db = db
 
-    def create_account_from_cognito(
+    def create_account_from_auth_provider(
         self,
-        cognito_sub: str,
+        external_auth_id: str,
         email: str,
         account_type: str,
         **additional_data
     ) -> Account:
         """
-        Create a new account with associated profiles from Cognito registration data.
+        Create a new account with associated profiles from authentication provider registration data.
 
         Args:
-            cognito_sub: User's Cognito sub (unique identifier)
+            external_auth_id: User's external auth provider ID (unique identifier)
             email: User's email address
             account_type: Account type (farmer/wholesaler/admin)
             **additional_data: Additional profile data
@@ -45,10 +44,10 @@ class AccountService:
         try:
             # Create the main account
             account = Account(
-                cognito_sub=cognito_sub,
+                external_auth_id=external_auth_id,
                 email=email,
                 account_type=AccountTypeEnum(account_type),
-                status=AccountStatusEnum.ACTIVE,  # Cognito account is already confirmed
+                status=AccountStatusEnum.ACTIVE,  # Auth provider account is already confirmed
                 is_verified=False,  # Requires separate verification process
                 is_active=True,
                 login_count=0
@@ -106,14 +105,6 @@ class AccountService:
                 )
                 self.db.add(account_role)
 
-            # Log account creation
-            activity_log = AccountActivityLog(
-                account_id=account.id,
-                activity_type=ActivityTypeEnum.ACCOUNT_CREATED,
-                description=f"Account created with type: {account_type}",
-                activity_metadata={"source": "cognito_registration"}
-            )
-            self.db.add(activity_log)
 
             self.db.commit()
             self.db.refresh(account)
@@ -123,9 +114,9 @@ class AccountService:
             self.db.rollback()
             raise
 
-    def get_account_by_cognito_sub(self, cognito_sub: str) -> Optional[Account]:
-        """Get account by Cognito sub."""
-        return self.db.query(Account).filter(Account.cognito_sub == cognito_sub).first()
+    def get_account_by_external_auth_id(self, external_auth_id: str) -> Optional[Account]:
+        """Get account by external auth provider ID."""
+        return self.db.query(Account).filter(Account.external_auth_id == external_auth_id).first()
 
     def get_account_by_email(self, email: str) -> Optional[Account]:
         """Get account by email address."""
@@ -137,20 +128,10 @@ class AccountService:
 
     def update_last_login(self, account: Account, ip_address: str = None, user_agent: str = None) -> Account:
         """
-        Update account's last login timestamp and log the activity.
+        Update account's last login timestamp.
         """
         account.last_login_at = datetime.utcnow()
         account.login_count += 1
-
-        # Log the login activity
-        activity_log = AccountActivityLog(
-            account_id=account.id,
-            activity_type=ActivityTypeEnum.LOGIN,
-            description="User logged in",
-            ip_address=ip_address,
-            user_agent=user_agent
-        )
-        self.db.add(activity_log)
 
         self.db.commit()
         self.db.refresh(account)
@@ -177,15 +158,6 @@ class AccountService:
                 if field in profile_data:
                     setattr(account.business_profile, field, profile_data[field])
 
-        # Log the update
-        activity_log = AccountActivityLog(
-            account_id=account.id,
-            activity_type=ActivityTypeEnum.PROFILE_UPDATE,
-            description="Profile updated",
-            activity_metadata={"updated_fields": list(profile_data.keys())}
-        )
-        self.db.add(activity_log)
-
         self.db.commit()
         self.db.refresh(account)
         return account
@@ -210,22 +182,13 @@ class AccountService:
         )
         self.db.add(verification)
 
-        # Log the submission
-        activity_log = AccountActivityLog(
-            account_id=account.id,
-            activity_type=ActivityTypeEnum.VERIFICATION_SUBMITTED,
-            description=f"Verification submitted: {verification_type.value}",
-            activity_metadata={"verification_type": verification_type.value}
-        )
-        self.db.add(activity_log)
-
         self.db.commit()
         self.db.refresh(verification)
         return verification
 
     def get_account_roles(self, account: Account) -> List[Role]:
         """Get all roles assigned to an account."""
-        return [ar.role for ar in account.account_roles if ar.role.is_active == "Y"]
+        return [ar.role for ar in account.account_roles if ar.role.is_active]
 
     def get_account_permissions(self, account: Account) -> Dict[str, bool]:
         """Get consolidated permissions for an account."""
@@ -250,8 +213,3 @@ class AccountService:
 
         return status_map
 
-    def get_activity_log(self, account: Account, limit: int = 50) -> List[AccountActivityLog]:
-        """Get recent activity log for an account."""
-        return self.db.query(AccountActivityLog).filter(
-            AccountActivityLog.account_id == account.id
-        ).order_by(AccountActivityLog.created_at.desc()).limit(limit).all()

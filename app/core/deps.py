@@ -38,7 +38,7 @@ async def get_current_account(
 
         # Get account data from local database
         account_service = AccountService(db)
-        account = account_service.get_account_by_cognito_sub(user_info["user_sub"])
+        account = account_service.get_account_by_external_auth_id(user_info["user_sub"])
 
         if account:
             return AccountProfile.from_account(account)

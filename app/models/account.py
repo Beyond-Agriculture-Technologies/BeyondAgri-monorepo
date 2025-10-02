@@ -1,8 +1,5 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Enum, Integer, ForeignKey, Text
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy import Column, String, Boolean, DateTime, Enum, Integer
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-import uuid
 import enum
 
 from app.db.base import BaseModel
@@ -30,8 +27,9 @@ class Account(BaseModel):
     """
     __tablename__ = "accounts"
 
-    # Cognito integration
-    cognito_sub = Column(String(255), unique=True, index=True, nullable=False)
+    # External authentication provider integration
+    external_auth_id = Column(String(255), unique=True, index=True, nullable=False)
+    external_username = Column(String(255), nullable=True)
 
     # Core account information
     email = Column(String(255), unique=True, index=True, nullable=False)
@@ -39,8 +37,14 @@ class Account(BaseModel):
     status = Column(Enum(AccountStatusEnum), nullable=False, default=AccountStatusEnum.PENDING_VERIFICATION)
 
     # Verification and access control
-    is_verified = Column(Boolean, default=False)
-    is_active = Column(Boolean, default=True)
+    is_verified = Column(Boolean, default=False, nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+    email_verified_at = Column(DateTime(timezone=True), nullable=True)
+    phone_verified_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Soft delete support
+    is_deleted = Column(Boolean, default=False, nullable=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     # Login tracking
     last_login_at = Column(DateTime(timezone=True), nullable=True)
@@ -51,7 +55,6 @@ class Account(BaseModel):
     farmer_profile = relationship("FarmerProfile", back_populates="account", uselist=False, cascade="all, delete-orphan")
     business_profile = relationship("BusinessProfile", back_populates="account", uselist=False, cascade="all, delete-orphan")
     verification_records = relationship("VerificationRecord", back_populates="account", cascade="all, delete-orphan")
-    activity_logs = relationship("AccountActivityLog", back_populates="account", cascade="all, delete-orphan")
     account_roles = relationship("AccountRole", back_populates="account", cascade="all, delete-orphan")
 
     def __repr__(self):

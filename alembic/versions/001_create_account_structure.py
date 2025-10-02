@@ -23,12 +23,17 @@ def upgrade() -> None:
 
     # 1. Create accounts table
     op.create_table('accounts',
-        sa.Column('cognito_sub', sa.String(length=255), nullable=False),
+        sa.Column('external_auth_id', sa.String(length=255), nullable=False),
+        sa.Column('external_username', sa.String(length=255), nullable=True),
         sa.Column('email', sa.String(length=255), nullable=False),
         sa.Column('account_type', sa.Enum('FARMER', 'WHOLESALER', 'ADMIN', name='accounttypeenum'), nullable=False),
         sa.Column('status', sa.Enum('ACTIVE', 'SUSPENDED', 'DISABLED', 'PENDING_VERIFICATION', name='accountstatusenum'), nullable=False),
-        sa.Column('is_verified', sa.Boolean(), nullable=True),
-        sa.Column('is_active', sa.Boolean(), nullable=True),
+        sa.Column('is_verified', sa.Boolean(), nullable=False, server_default='false'),
+        sa.Column('is_active', sa.Boolean(), nullable=False, server_default='true'),
+        sa.Column('email_verified_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('phone_verified_at', sa.DateTime(timezone=True), nullable=True),
+        sa.Column('is_deleted', sa.Boolean(), nullable=False, server_default='false'),
+        sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('last_login_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('login_count', sa.Integer(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
@@ -36,7 +41,7 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(op.f('ix_accounts_cognito_sub'), 'accounts', ['cognito_sub'], unique=True)
+    op.create_index(op.f('ix_accounts_external_auth_id'), 'accounts', ['external_auth_id'], unique=True)
     op.create_index(op.f('ix_accounts_email'), 'accounts', ['email'], unique=True)
     op.create_index(op.f('ix_accounts_id'), 'accounts', ['id'], unique=False)
 
@@ -166,9 +171,9 @@ def upgrade() -> None:
     # 9. Insert default roles
     op.execute("""
         INSERT INTO roles (name, description, permissions, is_system_role, is_active) VALUES
-        ('farmer', 'Basic farmer role', '{"read_products": true, "create_listings": true, "manage_profile": true}', 'Y', 'Y'),
-        ('wholesaler', 'Wholesaler role', '{"read_products": true, "create_orders": true, "manage_profile": true, "view_analytics": true}', 'Y', 'Y'),
-        ('admin', 'Administrator role', '{"read_all": true, "write_all": true, "manage_users": true, "manage_roles": true}', 'Y', 'Y');
+        ('farmer', 'Basic farmer role', '{"read_products": true, "create_listings": true, "manage_profile": true}', true, true),
+        ('wholesaler', 'Wholesaler role', '{"read_products": true, "create_orders": true, "manage_profile": true, "view_analytics": true}', true, true),
+        ('admin', 'Administrator role', '{"read_all": true, "write_all": true, "manage_users": true, "manage_roles": true}', true, true);
     """)
 
 
@@ -191,5 +196,5 @@ def downgrade() -> None:
     op.drop_table('user_profiles')
     op.drop_index(op.f('ix_accounts_id'), table_name='accounts')
     op.drop_index(op.f('ix_accounts_email'), table_name='accounts')
-    op.drop_index(op.f('ix_accounts_cognito_sub'), table_name='accounts')
+    op.drop_index(op.f('ix_accounts_external_auth_id'), table_name='accounts')
     op.drop_table('accounts')

@@ -7,7 +7,6 @@ from app.schemas.account import (
     AccountProfileUpdate,
     VerificationSubmission,
     VerificationResponse,
-    ActivityLogResponse,
     RoleResponse
 )
 from app.core.deps import get_current_account
@@ -39,7 +38,7 @@ async def update_account_profile(
     """
     try:
         account_service = AccountService(db)
-        account = account_service.get_account_by_cognito_sub(current_account.cognito_sub)
+        account = account_service.get_account_by_external_auth_id(current_account.external_auth_id)
 
         if not account:
             raise HTTPException(
@@ -74,7 +73,7 @@ async def submit_verification(
     """
     try:
         account_service = AccountService(db)
-        account = account_service.get_account_by_cognito_sub(current_account.cognito_sub)
+        account = account_service.get_account_by_external_auth_id(current_account.external_auth_id)
 
         if not account:
             raise HTTPException(
@@ -114,7 +113,7 @@ async def get_verification_status(
     """
     try:
         account_service = AccountService(db)
-        account = account_service.get_account_by_cognito_sub(current_account.cognito_sub)
+        account = account_service.get_account_by_external_auth_id(current_account.external_auth_id)
 
         if not account:
             raise HTTPException(
@@ -141,7 +140,7 @@ async def get_account_roles(
     """
     try:
         account_service = AccountService(db)
-        account = account_service.get_account_by_cognito_sub(current_account.cognito_sub)
+        account = account_service.get_account_by_external_auth_id(current_account.external_auth_id)
 
         if not account:
             raise HTTPException(
@@ -177,7 +176,7 @@ async def get_account_permissions(
     """
     try:
         account_service = AccountService(db)
-        account = account_service.get_account_by_cognito_sub(current_account.cognito_sub)
+        account = account_service.get_account_by_external_auth_id(current_account.external_auth_id)
 
         if not account:
             raise HTTPException(
@@ -194,46 +193,6 @@ async def get_account_permissions(
         )
 
 
-@router.get("/activity", response_model=List[ActivityLogResponse])
-async def get_account_activity(
-    limit: int = 50,
-    current_account: AccountProfile = Depends(get_current_account),
-    db: Session = Depends(get_db)
-) -> Any:
-    """
-    Get recent activity log for the account.
-    """
-    try:
-        account_service = AccountService(db)
-        account = account_service.get_account_by_cognito_sub(current_account.cognito_sub)
-
-        if not account:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Account not found"
-            )
-
-        activity_logs = account_service.get_activity_log(account, limit)
-        return [
-            ActivityLogResponse(
-                id=log.id,
-                activity_type=log.activity_type.value,
-                description=log.description,
-                metadata=log.activity_metadata,
-                ip_address=log.ip_address,
-                user_agent=log.user_agent,
-                created_at=log.created_at
-            )
-            for log in activity_logs
-        ]
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to get activity log: {str(e)}"
-        )
-
-
 @router.delete("/deactivate", response_model=Dict[str, str])
 async def deactivate_account(
     current_account: AccountProfile = Depends(get_current_account),
@@ -244,7 +203,7 @@ async def deactivate_account(
     """
     try:
         account_service = AccountService(db)
-        account = account_service.get_account_by_cognito_sub(current_account.cognito_sub)
+        account = account_service.get_account_by_external_auth_id(current_account.external_auth_id)
 
         if not account:
             raise HTTPException(

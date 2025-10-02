@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, UniqueConstraint
+from sqlalchemy import Column, String, Integer, ForeignKey, DateTime, UniqueConstraint, Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -20,8 +20,8 @@ class Role(BaseModel):
     permissions = Column(JSONB, nullable=False, default=dict)
 
     # Metadata
-    is_system_role = Column(String(1), default="N")  # System roles can't be deleted
-    is_active = Column(String(1), default="Y")
+    is_system_role = Column(Boolean, default=False, nullable=False)  # System roles can't be deleted
+    is_active = Column(Boolean, default=True, nullable=False)
 
     # Relationships
     account_roles = relationship("AccountRole", back_populates="role", cascade="all, delete-orphan")

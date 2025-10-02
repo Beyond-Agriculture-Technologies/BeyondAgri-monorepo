@@ -38,7 +38,7 @@ class BusinessProfileData(BaseModel):
 class AccountProfile(BaseModel):
     """Complete account profile with all associated data."""
     id: int = Field(..., description="Account ID")
-    cognito_sub: str = Field(..., description="Cognito sub identifier")
+    external_auth_id: str = Field(..., description="External authentication provider ID")
     email: EmailStr = Field(..., description="Email address")
     account_type: str = Field(..., description="Account type")
     status: str = Field(..., description="Account status")
@@ -58,7 +58,7 @@ class AccountProfile(BaseModel):
         json_schema_extra = {
             "example": {
                 "id": 1,
-                "cognito_sub": "abc-123-def",
+                "external_auth_id": "abc-123-def",
                 "email": "farmer@example.com",
                 "account_type": "farmer",
                 "status": "active",
@@ -116,7 +116,7 @@ class AccountProfile(BaseModel):
 
         return cls(
             id=account.id,
-            cognito_sub=account.cognito_sub,
+            external_auth_id=account.external_auth_id,
             email=account.email,
             account_type=account.account_type.value,
             status=account.status.value,
@@ -196,14 +196,3 @@ class RoleResponse(BaseModel):
     name: str = Field(..., description="Role name")
     description: Optional[str] = Field(None, description="Role description")
     permissions: Dict[str, Any] = Field(..., description="Role permissions")
-
-
-class ActivityLogResponse(BaseModel):
-    """Response for activity log entry."""
-    id: int = Field(..., description="Activity log ID")
-    activity_type: str = Field(..., description="Type of activity")
-    description: Optional[str] = Field(None, description="Activity description")
-    metadata: Optional[Dict[str, Any]] = Field(None, description="Activity metadata")
-    ip_address: Optional[str] = Field(None, description="IP address")
-    user_agent: Optional[str] = Field(None, description="User agent")
-    created_at: datetime = Field(..., description="Activity timestamp")

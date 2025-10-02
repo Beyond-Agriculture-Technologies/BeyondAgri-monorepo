@@ -107,8 +107,8 @@ class AuthenticationService:
             account = None
             if self.account_service:
                 try:
-                    account = self.account_service.create_account_from_cognito(
-                        cognito_sub=user_sub,
+                    account = self.account_service.create_account_from_auth_provider(
+                        external_auth_id=user_sub,
                         email=email,
                         account_type=account_type,
                         **additional_attributes
@@ -180,7 +180,7 @@ class AuthenticationService:
             account = None
             if self.account_service:
                 try:
-                    account = self.account_service.get_account_by_cognito_sub(
+                    account = self.account_service.get_account_by_external_auth_id(
                         user_attributes.get('sub')
                     )
                     if account:
@@ -250,22 +250,6 @@ class AuthenticationService:
                 Password=new_password
             )
 
-            # Log password reset activity if account service is available
-            if self.account_service:
-                try:
-                    account = self.account_service.get_account_by_email(username)
-                    if account:
-                        from app.models import AccountActivityLog, ActivityTypeEnum
-                        activity_log = AccountActivityLog(
-                            account_id=account.id,
-                            activity_type=ActivityTypeEnum.PASSWORD_RESET,
-                            description="Password reset completed"
-                        )
-                        self.account_service.db.add(activity_log)
-                        self.account_service.db.commit()
-                except Exception as e:
-                    logger.warning(f"Failed to log password reset: {e}")
-
             return {'status': 'success'}
 
         except ClientError as e:
@@ -295,7 +279,7 @@ class AuthenticationService:
             account = None
             if self.account_service:
                 try:
-                    account = self.account_service.get_account_by_cognito_sub(
+                    account = self.account_service.get_account_by_external_auth_id(
                         user_attributes.get('sub')
                     )
                 except Exception as e:

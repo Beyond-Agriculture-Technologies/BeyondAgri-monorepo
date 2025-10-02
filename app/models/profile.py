@@ -1,9 +1,15 @@
-from sqlalchemy import Column, String, Text, Integer, ForeignKey, DateTime
+from sqlalchemy import Column, String, Text, Integer, ForeignKey, DateTime, Numeric, Enum
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 import enum
 
 from app.db.base import BaseModel
+
+
+class LandUnitEnum(str, enum.Enum):
+    HECTARES = "hectares"
+    ACRES = "acres"
+    SQUARE_METERS = "square_meters"
 
 
 class UserProfile(BaseModel):
@@ -40,7 +46,13 @@ class FarmerProfile(BaseModel):
     # Farm information
     farm_name = Column(String(255), nullable=True)
     farm_location = Column(String(255), nullable=True)
-    farm_size = Column(String(100), nullable=True)  # e.g., "10 hectares"
+    farm_size = Column(String(100), nullable=True)  # e.g., "10 hectares" (kept for backward compatibility)
+
+    # Enhanced farm details
+    total_land_area = Column(Numeric(10, 2), nullable=True)  # Numeric area
+    land_unit = Column(Enum(LandUnitEnum), default=LandUnitEnum.HECTARES, nullable=True)
+    farm_coordinates = Column(String(255), nullable=True)  # GPS coordinates as "lat,long" (e.g., "-25.7479,28.2293")
+    farm_registration_number = Column(String(100), nullable=True)  # Official farm registration
 
     # Farming details (stored as JSON for flexibility)
     certifications = Column(JSONB, nullable=True)  # Organic, Fair Trade, etc.

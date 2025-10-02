@@ -56,38 +56,3 @@ class VerificationRecord(BaseModel):
         return f"<VerificationRecord(account_id={self.account_id}, type='{self.verification_type}', status='{self.status}')>"
 
 
-class ActivityTypeEnum(str, enum.Enum):
-    LOGIN = "login"
-    LOGOUT = "logout"
-    PROFILE_UPDATE = "profile_update"
-    VERIFICATION_SUBMITTED = "verification_submitted"
-    PASSWORD_RESET = "password_reset"
-    ACCOUNT_CREATED = "account_created"
-    ACCOUNT_DISABLED = "account_disabled"
-    ROLE_CHANGED = "role_changed"
-
-
-class AccountActivityLog(BaseModel):
-    """
-    Audit trail for account activities.
-    """
-    __tablename__ = "account_activity_logs"
-
-    account_id = Column(Integer, ForeignKey("accounts.id"), nullable=False)
-
-    # Activity details
-    activity_type = Column(Enum(ActivityTypeEnum), nullable=False)
-    description = Column(Text, nullable=True)
-
-    # Request metadata
-    activity_metadata = Column(JSONB, nullable=True)  # Additional context data
-    ip_address = Column(String(45), nullable=True)  # IPv4 or IPv6
-    user_agent = Column(Text, nullable=True)
-
-    # Timestamp is inherited from BaseModel (created_at)
-
-    # Relationships
-    account = relationship("Account", back_populates="activity_logs")
-
-    def __repr__(self):
-        return f"<AccountActivityLog(account_id={self.account_id}, activity='{self.activity_type}')>"
