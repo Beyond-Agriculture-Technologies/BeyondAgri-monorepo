@@ -199,9 +199,15 @@ async def deactivate_account(
     db: Session = Depends(get_db)
 ) -> Any:
     """
-    Deactivate the current account.
+    Soft delete account - marks as deleted in database and disables in Cognito.
+
+    Account can be recovered within 3 years before permanent deletion.
+    User will not be able to login after deactivation.
     """
     try:
+        from datetime import datetime
+        from app.services.authentication import get_auth_service_with_db, AuthenticationError
+
         account_service = AccountService(db)
         account = account_service.get_account_by_external_auth_id(current_account.external_auth_id)
 
@@ -211,16 +217,112 @@ async def deactivate_account(
                 detail="Account not found"
             )
 
-        # Update account status
+        # Check if already deleted
+        if account.is_deleted:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Account is already deactivated"
+            )
+
+        # Soft delete in database
+        account.is_deleted = True
+        account.deleted_at = datetime.utcnow()
         account.is_active = False
         account.status = AccountStatusEnum.DISABLED
 
+        # Disable user in Cognito
+        auth_service = get_auth_service_with_db(db)
+        try:
+            await auth_service.disable_user(current_account.external_auth_id)
+        except AuthenticationError as e:
+            # Log error but don't fail the request if Cognito disable fails
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to disable user in Cognito: {e}")
+
         db.commit()
 
-        return {"message": "Account deactivated successfully"}
+        return {
+            "message": "Account deactivated successfully. You can recover it within 3 years by contacting support.",
+            "deleted_at": account.deleted_at.isoformat()
+        }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Failed to deactivate account: {str(e)}"
+        )
+
+
+@router.delete("/delete-permanently/{account_id}", response_model=Dict[str, str])
+async def delete_account_permanently(
+    account_id: int,
+    current_account: AccountProfile = Depends(get_current_account),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Permanently delete an account (ADMIN ONLY).
+
+    This action:
+    - Deletes user from Cognito (cannot login)
+    - Deletes all account data from database (profiles, verifications, roles)
+    - Cannot be recovered
+
+    Typically used for accounts deleted >3 years ago or by admin request.
+    """
+    try:
+        from app.services.authentication import get_auth_service_with_db, AuthenticationError
+
+        account_service = AccountService(db)
+
+        # Check if current user is admin
+        if current_account.account_type != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Only administrators can permanently delete accounts"
+            )
+
+        # Get account to delete
+        account = account_service.get_account_with_profiles(account_id)
+
+        if not account:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Account not found"
+            )
+
+        # Prevent admin from deleting themselves
+        if account.external_auth_id == current_account.external_auth_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot delete your own account"
+            )
+
+        # Delete from Cognito
+        auth_service = get_auth_service_with_db(db)
+        try:
+            await auth_service.delete_user_permanently(account.external_auth_id)
+        except AuthenticationError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to delete user from Cognito: {e}")
+
+        # Delete from database (CASCADE will handle related records)
+        db.delete(account)
+        db.commit()
+
+        return {
+            "message": f"Account {account.email} permanently deleted",
+            "account_id": str(account_id)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to permanently delete account: {str(e)}"
         )

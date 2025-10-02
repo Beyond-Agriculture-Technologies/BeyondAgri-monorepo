@@ -298,6 +298,84 @@ class AuthenticationService:
             logger.error(f"Token validation error: {e}")
             raise AuthenticationError(f"Token validation failed: {e}")
 
+    async def disable_user(self, external_auth_id: str) -> Dict[str, Any]:
+        """
+        Disable user in Cognito (soft delete - can be re-enabled).
+
+        Args:
+            external_auth_id: The user's external auth ID (Cognito sub)
+
+        Returns:
+            Dict with status
+        """
+        try:
+            # Get user by sub to find username
+            if self.account_service:
+                account = self.account_service.get_account_by_external_auth_id(external_auth_id)
+                if account:
+                    username = account.email
+                else:
+                    raise UserNotFoundError(f"Account with auth ID {external_auth_id} not found")
+            else:
+                raise AuthenticationError("Database session required for this operation")
+
+            # Disable user in Cognito
+            self.client.admin_disable_user(
+                UserPoolId=self.user_pool_id,
+                Username=username
+            )
+
+            logger.info(f"User {username} disabled in Cognito")
+            return {"status": "disabled", "username": username}
+
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            if error_code == 'UserNotFoundException':
+                raise UserNotFoundError(f"User not found in Cognito")
+            else:
+                logger.error(f"Error disabling user: {e}")
+                raise AuthenticationError(f"Failed to disable user: {e}")
+
+    async def delete_user_permanently(self, external_auth_id: str) -> Dict[str, Any]:
+        """
+        Permanently delete user from Cognito (hard delete - cannot be recovered).
+
+        Args:
+            external_auth_id: The user's external auth ID (Cognito sub)
+
+        Returns:
+            Dict with status
+        """
+        try:
+            # Get user by sub to find username
+            if self.account_service:
+                account = self.account_service.get_account_by_external_auth_id(external_auth_id)
+                if account:
+                    username = account.email
+                else:
+                    raise UserNotFoundError(f"Account with auth ID {external_auth_id} not found")
+            else:
+                raise AuthenticationError("Database session required for this operation")
+
+            # Permanently delete user from Cognito
+            self.client.admin_delete_user(
+                UserPoolId=self.user_pool_id,
+                Username=username
+            )
+
+            logger.info(f"User {username} permanently deleted from Cognito")
+            return {"status": "deleted", "username": username}
+
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            if error_code == 'UserNotFoundException':
+                # User already deleted from Cognito, that's okay
+                logger.warning(f"User not found in Cognito during deletion")
+                return {"status": "already_deleted"}
+            else:
+                logger.error(f"Error deleting user: {e}")
+                raise AuthenticationError(f"Failed to delete user: {e}")
+
 
 def get_auth_service_with_db(db: Session) -> AuthenticationService:
     """
