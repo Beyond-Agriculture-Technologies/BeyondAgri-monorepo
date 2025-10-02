@@ -148,12 +148,3 @@ export interface Permission {
   resource?: string
   action?: string
 }
-
-export interface AccountActivity {
-  id: string
-  action: string
-  details?: string
-  ip_address?: string
-  user_agent?: string
-  timestamp: string
-}

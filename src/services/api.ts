@@ -186,13 +186,6 @@ class ApiClient {
     })
   }
 
-  async getAccountActivity(limit?: number) {
-    const params = limit ? `?limit=${limit}` : ''
-    return this.request(`/accounts/activity${params}`, {
-      method: 'GET',
-    })
-  }
-
   async deactivateAccount() {
     return this.request('/accounts/deactivate', {
       method: 'DELETE',

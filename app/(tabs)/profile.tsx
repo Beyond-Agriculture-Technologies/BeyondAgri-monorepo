@@ -41,19 +41,19 @@ export default function ProfileScreen() {
       // Load verification status
       const verificationResult = await apiClient.getVerificationStatus()
       if (verificationResult.success) {
-        setVerificationStatus(verificationResult.data)
+        setVerificationStatus(verificationResult.data as VerificationStatus)
       }
 
       // Load user roles
       const rolesResult = await apiClient.getUserRoles()
       if (rolesResult.success) {
-        setUserRoles(rolesResult.data || [])
+        setUserRoles((rolesResult.data as UserRole[]) || [])
       }
 
       // Load permissions
       const permissionsResult = await apiClient.getUserPermissions()
       if (permissionsResult.success) {
-        setPermissions(permissionsResult.data || [])
+        setPermissions((permissionsResult.data as Permission[]) || [])
       }
     } catch (error) {
       console.error('Failed to load account data:', error)
@@ -172,9 +172,9 @@ export default function ProfileScreen() {
           <Text style={styles.userName}>{user?.name || 'User'}</Text>
           <Text style={styles.userEmail}>{user?.email}</Text>
           <View style={styles.roleContainer}>
-            <Text style={styles.roleTitle}>{getRoleDisplayName(user?.user_type || user?.role || '')}</Text>
+            <Text style={styles.roleTitle}>{getRoleDisplayName(user?.user_type || '')}</Text>
             <Text style={styles.roleDescription}>
-              {getRoleDescription(user?.user_type || user?.role || '')}
+              {getRoleDescription(user?.user_type || '')}
             </Text>
           </View>
         </View>
@@ -241,7 +241,7 @@ export default function ProfileScreen() {
             <View style={styles.statusRow}>
               <View style={styles.statusLeft}>
                 <Ionicons
-                  name={isOnline ? "wifi" : "wifi-off"}
+                  name={isOnline ? "wifi" : "cloud-offline"}
                   size={20}
                   color={isOnline ? APP_COLORS.success : APP_COLORS.warning}
                 />

@@ -79,7 +79,30 @@ export default function RegisterScreen() {
           ]
         )
       } else {
-        Alert.alert('Registration Failed', result.error || 'Please try again')
+        // Check if error is due to email already existing (409 Conflict)
+        const errorMessage = result.error || 'Please try again'
+        const isEmailExists = errorMessage.toLowerCase().includes('already exists') ||
+                              errorMessage.toLowerCase().includes('already registered') ||
+                              errorMessage.toLowerCase().includes('conflict')
+
+        if (isEmailExists) {
+          Alert.alert(
+            'Email Already Registered',
+            'This email is already registered. Would you like to sign in instead?',
+            [
+              {
+                text: 'Use Different Email',
+                style: 'cancel',
+              },
+              {
+                text: 'Sign In',
+                onPress: () => router.replace('/(auth)'),
+              },
+            ]
+          )
+        } else {
+          Alert.alert('Registration Failed', errorMessage)
+        }
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred')

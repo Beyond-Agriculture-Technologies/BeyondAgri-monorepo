@@ -33,10 +33,33 @@ export default function LoginScreen() {
       if (result.success) {
         router.replace('/(tabs)')
       } else {
-        Alert.alert('Login Failed', result.error || 'Please check your credentials')
+        // Provide more specific error messages
+        const errorMessage = result.error || 'Please check your credentials'
+        const isInvalidCredentials = errorMessage.toLowerCase().includes('invalid') ||
+                                     errorMessage.toLowerCase().includes('incorrect') ||
+                                     errorMessage.toLowerCase().includes('unauthorized')
+
+        if (isInvalidCredentials) {
+          Alert.alert(
+            'Invalid Credentials',
+            'The email or password you entered is incorrect. Please try again.',
+            [
+              {
+                text: 'Try Again',
+                style: 'cancel',
+              },
+              {
+                text: 'Reset Password',
+                onPress: () => router.push('/(auth)/password-reset'),
+              },
+            ]
+          )
+        } else {
+          Alert.alert('Login Failed', errorMessage)
+        }
       }
     } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred')
+      Alert.alert('Error', 'An unexpected error occurred. Please check your internet connection and try again.')
     } finally {
       setIsLoading(false)
     }
