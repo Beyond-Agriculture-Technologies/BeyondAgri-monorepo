@@ -109,6 +109,60 @@ export default function ProfileScreen() {
     )
   }
 
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will deactivate your account and disable login access. Your account can be recovered within 30 days by contacting support. After 30 days, your data may be permanently deleted.\n\nAre you sure you want to continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: () => {
+            // Second confirmation
+            Alert.alert(
+              'Final Confirmation',
+              'This action will immediately deactivate your account. You will be signed out and unable to sign in until your account is recovered.\n\nDo you want to proceed?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Yes, Delete My Account',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      const result = await apiClient.deactivateAccount()
+
+                      if (result.success) {
+                        Alert.alert(
+                          'Account Deleted',
+                          'Your account has been deactivated. Contact support within 30 days if you want to recover it.',
+                          [
+                            {
+                              text: 'OK',
+                              onPress: async () => {
+                                await BackendAuthService.signOut()
+                                router.replace('/(auth)')
+                              },
+                            },
+                          ],
+                          { cancelable: false }
+                        )
+                      } else {
+                        Alert.alert('Error', result.message || 'Failed to delete account. Please try again.')
+                      }
+                    } catch (error) {
+                      Alert.alert('Error', 'An unexpected error occurred. Please try again.')
+                    }
+                  },
+                },
+              ]
+            )
+          },
+        },
+      ]
+    )
+  }
+
   const getRoleDisplayName = (role: string) => {
     switch (role) {
       case 'farmer':
@@ -338,6 +392,21 @@ export default function ProfileScreen() {
             <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
           </TouchableOpacity>
 
+          {isOnline && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.deleteAccountButton]}
+              onPress={handleDeleteAccount}
+            >
+              <View style={styles.actionLeft}>
+                <Ionicons name="close-circle" size={20} color={APP_COLORS.error} />
+                <Text style={[styles.actionText, styles.deleteAccountText]}>
+                  Delete Account
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
+            </TouchableOpacity>
+          )}
+
           <TouchableOpacity
             style={[styles.actionButton, styles.logoutButton]}
             onPress={handleLogout}
@@ -505,6 +574,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: APP_COLORS.text,
     marginLeft: 12,
+  },
+  deleteAccountButton: {
+    marginTop: 8,
+  },
+  deleteAccountText: {
+    color: APP_COLORS.error,
   },
   logoutButton: {
     marginTop: 8,
