@@ -28,39 +28,41 @@ interface AppStore {
   setIsSyncing: (isSyncing: boolean) => void
 }
 
-export const useAppStore = create<AppStore>((set) => ({
+export const useAppStore = create<AppStore>(set => ({
   // Network state
   isOnline: true,
-  setIsOnline: (isOnline) => set({ isOnline }),
+  setIsOnline: isOnline => set({ isOnline }),
 
   // Farms
   farms: [],
-  setFarms: (farms) => set({ farms }),
-  addFarm: (farm) => set((state) => ({ farms: [...state.farms, farm] })),
-  updateFarm: (id, updates) => set((state) => ({
-    farms: state.farms.map(farm =>
-      farm.id === id ? { ...farm, ...updates } : farm
-    )
-  })),
-  removeFarm: (id) => set((state) => ({
-    farms: state.farms.filter(farm => farm.id !== id)
-  })),
+  setFarms: farms => set({ farms }),
+  addFarm: farm => set(state => ({ farms: [...state.farms, farm] })),
+  updateFarm: (id, updates) =>
+    set(state => ({
+      farms: state.farms.map(farm => (farm.id === id ? { ...farm, ...updates } : farm)),
+    })),
+  removeFarm: id =>
+    set(state => ({
+      farms: state.farms.filter(farm => farm.id !== id),
+    })),
 
   // Offline actions
   offlineActions: [],
-  addOfflineAction: (action) => set((state) => ({
-    offlineActions: [...state.offlineActions, action]
-  })),
-  removeOfflineAction: (id) => set((state) => ({
-    offlineActions: state.offlineActions.filter(action => action.id !== id)
-  })),
+  addOfflineAction: action =>
+    set(state => ({
+      offlineActions: [...state.offlineActions, action],
+    })),
+  removeOfflineAction: id =>
+    set(state => ({
+      offlineActions: state.offlineActions.filter(action => action.id !== id),
+    })),
   clearOfflineActions: () => set({ offlineActions: [] }),
 
   // Loading states
   isLoading: false,
-  setIsLoading: (isLoading) => set({ isLoading }),
+  setIsLoading: isLoading => set({ isLoading }),
 
   // Sync status
   isSyncing: false,
-  setIsSyncing: (isSyncing) => set({ isSyncing }),
+  setIsSyncing: isSyncing => set({ isSyncing }),
 }))

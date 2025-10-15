@@ -37,10 +37,11 @@ export default function PasswordResetScreen() {
           [
             {
               text: 'Continue',
-              onPress: () => router.push({
-                pathname: '/(auth)/confirm-password-reset',
-                params: { email }
-              }),
+              onPress: () =>
+                router.push({
+                  pathname: '/(auth)/confirm-password-reset',
+                  params: { email },
+                }),
             },
           ]
         )
@@ -62,10 +63,7 @@ export default function PasswordResetScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color={APP_COLORS.text} />
             </TouchableOpacity>
             <Text style={styles.title}>Reset Password</Text>
@@ -99,10 +97,7 @@ export default function PasswordResetScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={styles.backToLoginLink}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.backToLoginLink} onPress={() => router.back()}>
             <Text style={styles.backToLoginLinkText}>
               Remember your password? <Text style={styles.backToLoginLinkTextBold}>Sign In</Text>
             </Text>

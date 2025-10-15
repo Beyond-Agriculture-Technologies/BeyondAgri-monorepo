@@ -7,9 +7,9 @@ import {
   TouchableOpacity,
   Image,
   RefreshControl,
-  SafeAreaView,
   Dimensions,
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Photo } from '../../src/types'
 import { APP_COLORS } from '../../src/utils/constants'
@@ -47,15 +47,23 @@ export default function PhotosScreen() {
     <TouchableOpacity style={styles.photoCard}>
       <View style={styles.imageContainer}>
         <Image source={{ uri: item.uri }} style={styles.image} />
-        <View style={[
-          styles.syncBadge,
-          item.syncStatus === 'synced' ? styles.syncedBadge :
-          item.syncStatus === 'pending' ? styles.pendingBadge : styles.failedBadge
-        ]}>
+        <View
+          style={[
+            styles.syncBadge,
+            item.syncStatus === 'synced'
+              ? styles.syncedBadge
+              : item.syncStatus === 'pending'
+                ? styles.pendingBadge
+                : styles.failedBadge,
+          ]}
+        >
           <Ionicons
             name={
-              item.syncStatus === 'synced' ? 'checkmark' :
-              item.syncStatus === 'pending' ? 'time' : 'warning'
+              item.syncStatus === 'synced'
+                ? 'checkmark'
+                : item.syncStatus === 'pending'
+                  ? 'time'
+                  : 'warning'
             }
             size={12}
             color="white"
@@ -66,9 +74,7 @@ export default function PhotosScreen() {
         <Text style={styles.photoDescription} numberOfLines={2}>
           {item.description || 'No description'}
         </Text>
-        <Text style={styles.photoDate}>
-          {new Date(item.timestamp).toLocaleDateString()}
-        </Text>
+        <Text style={styles.photoDate}>{new Date(item.timestamp).toLocaleDateString()}</Text>
       </View>
     </TouchableOpacity>
   )
@@ -103,7 +109,7 @@ export default function PhotosScreen() {
 
       {!isOnline && (
         <View style={styles.offlineBar}>
-          <Ionicons name="wifi-off" size={16} color={APP_COLORS.warning} />
+          <Ionicons name="cloud-offline-outline" size={16} color={APP_COLORS.warning} />
           <Text style={styles.offlineText}>
             You're offline. Photos will upload when connection is restored.
           </Text>
@@ -113,13 +119,11 @@ export default function PhotosScreen() {
       <FlatList
         data={photos}
         renderItem={renderPhotoItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         numColumns={2}
         contentContainerStyle={photos.length === 0 ? styles.emptyContainer : styles.list}
         ListEmptyComponent={EmptyState}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={photos.length > 0 ? styles.row : undefined}
       />

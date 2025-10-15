@@ -18,9 +18,24 @@ import { APP_COLORS } from '../../src/utils/constants'
 import { RegisterRequest } from '../../src/types'
 
 const roleOptions = [
-  { value: 'farmer' as const, label: 'Farmer', icon: 'leaf', description: 'Manage your own farms and crops' },
-  { value: 'wholesaler' as const, label: 'Wholesaler', icon: 'business', description: 'Access farms from multiple farmers' },
-  { value: 'admin' as const, label: 'Administrator', icon: 'settings', description: 'Full system access and management' },
+  {
+    value: 'farmer' as const,
+    label: 'Farmer',
+    icon: 'leaf',
+    description: 'Manage your own farms and crops',
+  },
+  {
+    value: 'wholesaler' as const,
+    label: 'Wholesaler',
+    icon: 'business',
+    description: 'Access farms from multiple farmers',
+  },
+  {
+    value: 'admin' as const,
+    label: 'Administrator',
+    icon: 'settings',
+    description: 'Full system access and management',
+  },
 ]
 
 export default function RegisterScreen() {
@@ -81,9 +96,10 @@ export default function RegisterScreen() {
       } else {
         // Check if error is due to email already existing (409 Conflict)
         const errorMessage = result.error || 'Please try again'
-        const isEmailExists = errorMessage.toLowerCase().includes('already exists') ||
-                              errorMessage.toLowerCase().includes('already registered') ||
-                              errorMessage.toLowerCase().includes('conflict')
+        const isEmailExists =
+          errorMessage.toLowerCase().includes('already exists') ||
+          errorMessage.toLowerCase().includes('already registered') ||
+          errorMessage.toLowerCase().includes('conflict')
 
         if (isEmailExists) {
           Alert.alert(
@@ -120,14 +136,13 @@ export default function RegisterScreen() {
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           <View style={styles.content}>
             <View style={styles.header}>
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => router.back()}
-              >
+              <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
                 <Ionicons name="arrow-back" size={24} color={APP_COLORS.text} />
               </TouchableOpacity>
               <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Join BeyondAgri to manage your agricultural operations</Text>
+              <Text style={styles.subtitle}>
+                Join BeyondAgri to manage your agricultural operations
+              </Text>
             </View>
 
             <View style={styles.form}>
@@ -135,7 +150,7 @@ export default function RegisterScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.label}>Account Type</Text>
                 <View style={styles.roleContainer}>
-                  {roleOptions.map((role) => (
+                  {roleOptions.map(role => (
                     <TouchableOpacity
                       key={role.value}
                       style={[
@@ -147,12 +162,18 @@ export default function RegisterScreen() {
                       <Ionicons
                         name={role.icon as any}
                         size={24}
-                        color={formData.user_type === role.value ? APP_COLORS.primary : APP_COLORS.textSecondary}
+                        color={
+                          formData.user_type === role.value
+                            ? APP_COLORS.primary
+                            : APP_COLORS.textSecondary
+                        }
                       />
-                      <Text style={[
-                        styles.roleLabel,
-                        formData.user_type === role.value && styles.roleLabelSelected,
-                      ]}>
+                      <Text
+                        style={[
+                          styles.roleLabel,
+                          formData.user_type === role.value && styles.roleLabelSelected,
+                        ]}
+                      >
                         {role.label}
                       </Text>
                       <Text style={styles.roleDescription}>{role.description}</Text>
@@ -167,7 +188,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   value={formData.email}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, email: text }))}
+                  onChangeText={text => setFormData(prev => ({ ...prev, email: text }))}
                   placeholder="Enter your email"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -181,7 +202,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   value={formData.name}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, name: text }))}
+                  onChangeText={text => setFormData(prev => ({ ...prev, name: text }))}
                   placeholder="Enter your full name"
                   autoCapitalize="words"
                 />
@@ -193,7 +214,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   value={formData.phone_number}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, phone_number: text }))}
+                  onChangeText={text => setFormData(prev => ({ ...prev, phone_number: text }))}
                   placeholder="Enter your phone number"
                   keyboardType="phone-pad"
                 />
@@ -205,7 +226,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   value={formData.address}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, address: text }))}
+                  onChangeText={text => setFormData(prev => ({ ...prev, address: text }))}
                   placeholder="Enter your address"
                   multiline
                   numberOfLines={3}
@@ -218,7 +239,7 @@ export default function RegisterScreen() {
                 <TextInput
                   style={styles.input}
                   value={formData.password}
-                  onChangeText={(text) => setFormData(prev => ({ ...prev, password: text }))}
+                  onChangeText={text => setFormData(prev => ({ ...prev, password: text }))}
                   placeholder="Enter your password"
                   secureTextEntry
                   autoCapitalize="none"
@@ -251,10 +272,7 @@ export default function RegisterScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity
-              style={styles.signInLink}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={styles.signInLink} onPress={() => router.back()}>
               <Text style={styles.signInLinkText}>
                 Already have an account? <Text style={styles.signInLinkTextBold}>Sign In</Text>
               </Text>

@@ -8,18 +8,19 @@ interface AuthStore extends AuthState {
   logout: () => void
 }
 
-export const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthStore = create<AuthStore>(set => ({
   isAuthenticated: false,
   user: null,
   token: null,
 
-  setUser: (user) => set({ user }),
-  setToken: (token) => set({ token }),
-  setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
+  setUser: user => set({ user }),
+  setToken: token => set({ token }),
+  setAuthenticated: isAuthenticated => set({ isAuthenticated }),
 
-  logout: () => set({
-    isAuthenticated: false,
-    user: null,
-    token: null,
-  }),
+  logout: () =>
+    set({
+      isAuthenticated: false,
+      user: null,
+      token: null,
+    }),
 }))

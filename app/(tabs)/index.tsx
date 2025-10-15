@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-} from 'react-native'
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAuthStore } from '../../src/store/auth-store'
@@ -16,7 +9,7 @@ import { dbService } from '../../src/services/database'
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets()
-  const user = useAuthStore((state) => state.user)
+  const user = useAuthStore(state => state.user)
   const { isOnline, farms, isSyncing } = useAppStore()
   const [refreshing, setRefreshing] = useState(false)
   const [stats, setStats] = useState({
@@ -68,9 +61,7 @@ export default function DashboardScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView
         style={styles.scrollView}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       >
         {/* Header */}
         <View style={styles.header}>
@@ -81,14 +72,8 @@ export default function DashboardScreen() {
           </View>
           <View style={styles.statusContainer}>
             <View style={[styles.statusIndicator, isOnline ? styles.online : styles.offline]}>
-              <Ionicons
-                name={isOnline ? "wifi" : "cloud-offline"}
-                size={16}
-                color="white"
-              />
-              <Text style={styles.statusText}>
-                {isOnline ? 'Online' : 'Offline'}
-              </Text>
+              <Ionicons name={isOnline ? 'wifi' : 'cloud-offline'} size={16} color="white" />
+              <Text style={styles.statusText}>{isOnline ? 'Online' : 'Offline'}</Text>
             </View>
           </View>
         </View>
@@ -113,12 +98,8 @@ export default function DashboardScreen() {
             <View style={[styles.statCard, styles.warningCard, styles.fullWidth]}>
               <View style={styles.syncRow}>
                 <Ionicons name="sync" size={20} color={APP_COLORS.warning} />
-                <Text style={styles.syncText}>
-                  {stats.pendingSync} items pending sync
-                </Text>
-                {isSyncing && (
-                  <Ionicons name="reload" size={16} color={APP_COLORS.warning} />
-                )}
+                <Text style={styles.syncText}>{stats.pendingSync} items pending sync</Text>
+                {isSyncing && <Ionicons name="reload" size={16} color={APP_COLORS.warning} />}
               </View>
             </View>
           )}
@@ -156,9 +137,8 @@ export default function DashboardScreen() {
           <View style={styles.activityCard}>
             <Text style={styles.activityText}>
               {stats.totalFarms === 0
-                ? "No farms added yet. Start by adding your first farm!"
-                : "Your farms are ready for management. Add photos and track your progress."
-              }
+                ? 'No farms added yet. Start by adding your first farm!'
+                : 'Your farms are ready for management. Add photos and track your progress.'}
             </Text>
           </View>
         </View>

@@ -8,8 +8,8 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
 } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { BackendAuthService } from '../../src/services/auth'
@@ -75,10 +75,7 @@ export default function ConfirmPasswordResetScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color={APP_COLORS.text} />
             </TouchableOpacity>
             <Text style={styles.title}>Confirm Reset</Text>
@@ -138,10 +135,7 @@ export default function ConfirmPasswordResetScreen() {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={styles.resendLink}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.resendLink} onPress={() => router.back()}>
             <Text style={styles.resendLinkText}>
               Didn't receive a code? <Text style={styles.resendLinkTextBold}>Try Again</Text>
             </Text>

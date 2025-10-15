@@ -35,9 +35,10 @@ export default function LoginScreen() {
       } else {
         // Provide more specific error messages
         const errorMessage = result.error || 'Please check your credentials'
-        const isInvalidCredentials = errorMessage.toLowerCase().includes('invalid') ||
-                                     errorMessage.toLowerCase().includes('incorrect') ||
-                                     errorMessage.toLowerCase().includes('unauthorized')
+        const isInvalidCredentials =
+          errorMessage.toLowerCase().includes('invalid') ||
+          errorMessage.toLowerCase().includes('incorrect') ||
+          errorMessage.toLowerCase().includes('unauthorized')
 
         if (isInvalidCredentials) {
           Alert.alert(
@@ -59,7 +60,10 @@ export default function LoginScreen() {
         }
       }
     } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred. Please check your internet connection and try again.')
+      Alert.alert(
+        'Error',
+        'An unexpected error occurred. Please check your internet connection and try again.'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -109,9 +113,7 @@ export default function LoginScreen() {
               onPress={handleLogin}
               disabled={isLoading}
             >
-              <Text style={styles.loginButtonText}>
-                {isLoading ? 'Signing In...' : 'Sign In'}
-              </Text>
+              <Text style={styles.loginButtonText}>{isLoading ? 'Signing In...' : 'Sign In'}</Text>
             </TouchableOpacity>
           </View>
 
@@ -125,7 +127,8 @@ export default function LoginScreen() {
 
             <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
               <Text style={styles.registerLinkText}>
-                Don't have an account? <Text style={styles.registerLinkTextBold}>Create Account</Text>
+                Don't have an account?{' '}
+                <Text style={styles.registerLinkTextBold}>Create Account</Text>
               </Text>
             </TouchableOpacity>
           </View>

@@ -6,6 +6,9 @@ export const API_FULL_URL = `${API_BASE_URL}/api/${API_VERSION}`
 // Development Features
 export const ENABLE_HIDDEN_FEATURES = process.env.EXPO_PUBLIC_ENABLE_HIDDEN_FEATURES === 'true'
 
+// RBAC Configuration
+export const DISABLE_RBAC = process.env.EXPO_PUBLIC_DISABLE_RBAC === 'true'
+
 // App Constants
 export const APP_COLORS = {
   primary: '#22c55e',
@@ -15,6 +18,7 @@ export const APP_COLORS = {
   error: '#ef4444',
   warning: '#f59e0b',
   success: '#10b981',
+  info: '#3b82f6',
   text: '#1f2937',
   textSecondary: '#6b7280',
 }

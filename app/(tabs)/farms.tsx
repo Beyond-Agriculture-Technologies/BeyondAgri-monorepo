@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  RefreshControl,
-} from 'react-native'
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Farm } from '../../src/types'
@@ -46,11 +39,16 @@ export default function FarmsScreen() {
           <Text style={styles.farmName}>{item.name}</Text>
           <Text style={styles.farmLocation}>📍 {item.location}</Text>
         </View>
-        <View style={[
-          styles.syncStatus,
-          item.syncStatus === 'synced' ? styles.synced :
-          item.syncStatus === 'pending' ? styles.pending : styles.failed
-        ]}>
+        <View
+          style={[
+            styles.syncStatus,
+            item.syncStatus === 'synced'
+              ? styles.synced
+              : item.syncStatus === 'pending'
+                ? styles.pending
+                : styles.failed,
+          ]}
+        >
           <Text style={styles.syncStatusText}>{item.syncStatus}</Text>
         </View>
       </View>
@@ -125,12 +123,10 @@ export default function FarmsScreen() {
       <FlatList
         data={farms}
         renderItem={renderFarmItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         contentContainerStyle={farms.length === 0 ? styles.emptyContainer : styles.list}
         ListEmptyComponent={EmptyState}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         showsVerticalScrollIndicator={false}
       />
     </View>

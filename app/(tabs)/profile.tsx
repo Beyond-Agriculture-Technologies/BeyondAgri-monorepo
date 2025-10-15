@@ -1,13 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  SafeAreaView,
-} from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native'
+import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useAuthStore } from '../../src/store/auth-store'
@@ -19,7 +12,7 @@ import { APP_COLORS } from '../../src/utils/constants'
 import { VerificationStatus, UserRole, Permission } from '../../src/types'
 
 export default function ProfileScreen() {
-  const user = useAuthStore((state) => state.user)
+  const user = useAuthStore(state => state.user)
   const { isOnline, isSyncing, offlineActions } = useAppStore()
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus | null>(null)
@@ -63,28 +56,24 @@ export default function ProfileScreen() {
   }
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            setIsLoggingOut(true)
-            try {
-              await BackendAuthService.signOut()
-              router.replace('/(auth)')
-            } catch (error) {
-              Alert.alert('Error', 'Failed to sign out')
-            } finally {
-              setIsLoggingOut(false)
-            }
-          },
+    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign Out',
+        style: 'destructive',
+        onPress: async () => {
+          setIsLoggingOut(true)
+          try {
+            await BackendAuthService.signOut()
+            router.replace('/(auth)')
+          } catch (error) {
+            Alert.alert('Error', 'Failed to sign out')
+          } finally {
+            setIsLoggingOut(false)
+          }
         },
-      ]
-    )
+      },
+    ])
   }
 
   const handleClearData = () => {
@@ -148,7 +137,10 @@ export default function ProfileScreen() {
                           { cancelable: false }
                         )
                       } else {
-                        Alert.alert('Error', result.message || 'Failed to delete account. Please try again.')
+                        Alert.alert(
+                          'Error',
+                          result.message || 'Failed to delete account. Please try again.'
+                        )
                       }
                     } catch (error) {
                       Alert.alert('Error', 'An unexpected error occurred. Please try again.')
@@ -227,9 +219,7 @@ export default function ProfileScreen() {
           <Text style={styles.userEmail}>{user?.email}</Text>
           <View style={styles.roleContainer}>
             <Text style={styles.roleTitle}>{getRoleDisplayName(user?.user_type || '')}</Text>
-            <Text style={styles.roleDescription}>
-              {getRoleDescription(user?.user_type || '')}
-            </Text>
+            <Text style={styles.roleDescription}>{getRoleDescription(user?.user_type || '')}</Text>
           </View>
         </View>
 
@@ -252,20 +242,26 @@ export default function ProfileScreen() {
                     />
                     <Text style={styles.verificationLabel}>Status</Text>
                   </View>
-                  <Text style={[
-                    styles.verificationValue,
-                    { color: getVerificationStatusColor(verificationStatus.status) }
-                  ]}>
+                  <Text
+                    style={[
+                      styles.verificationValue,
+                      { color: getVerificationStatusColor(verificationStatus.status) },
+                    ]}
+                  >
                     {verificationStatus.status
-                      ? verificationStatus.status.charAt(0).toUpperCase() + verificationStatus.status.slice(1)
-                      : 'Unknown'
-                    }
+                      ? verificationStatus.status.charAt(0).toUpperCase() +
+                        verificationStatus.status.slice(1)
+                      : 'Unknown'}
                   </Text>
                 </View>
               ) : (
                 <View style={styles.verificationRow}>
                   <View style={styles.verificationLeft}>
-                    <Ionicons name="information-circle" size={20} color={APP_COLORS.textSecondary} />
+                    <Ionicons
+                      name="information-circle"
+                      size={20}
+                      color={APP_COLORS.textSecondary}
+                    />
                     <Text style={styles.verificationLabel}>Status</Text>
                   </View>
                   <Text style={styles.verificationValue}>Not Available</Text>
@@ -295,16 +291,18 @@ export default function ProfileScreen() {
             <View style={styles.statusRow}>
               <View style={styles.statusLeft}>
                 <Ionicons
-                  name={isOnline ? "wifi" : "cloud-offline"}
+                  name={isOnline ? 'wifi' : 'cloud-offline'}
                   size={20}
                   color={isOnline ? APP_COLORS.success : APP_COLORS.warning}
                 />
                 <Text style={styles.statusLabel}>Connection</Text>
               </View>
-              <Text style={[
-                styles.statusValue,
-                { color: isOnline ? APP_COLORS.success : APP_COLORS.warning }
-              ]}>
+              <Text
+                style={[
+                  styles.statusValue,
+                  { color: isOnline ? APP_COLORS.success : APP_COLORS.warning },
+                ]}
+              >
                 {isOnline ? 'Online' : 'Offline'}
               </Text>
             </View>
@@ -318,9 +316,7 @@ export default function ProfileScreen() {
                 />
                 <Text style={styles.statusLabel}>Sync Status</Text>
               </View>
-              <Text style={styles.statusValue}>
-                {isSyncing ? 'Syncing...' : 'Up to date'}
-              </Text>
+              <Text style={styles.statusValue}>{isSyncing ? 'Syncing...' : 'Up to date'}</Text>
             </View>
 
             {offlineActions.length > 0 && (
@@ -399,9 +395,7 @@ export default function ProfileScreen() {
             >
               <View style={styles.actionLeft}>
                 <Ionicons name="close-circle" size={20} color={APP_COLORS.error} />
-                <Text style={[styles.actionText, styles.deleteAccountText]}>
-                  Delete Account
-                </Text>
+                <Text style={[styles.actionText, styles.deleteAccountText]}>Delete Account</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
             </TouchableOpacity>
@@ -424,12 +418,8 @@ export default function ProfileScreen() {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            BeyondAgri Mobile v1.0.0
-          </Text>
-          <Text style={styles.footerSubtext}>
-            Offline-first agricultural management platform
-          </Text>
+          <Text style={styles.footerText}>BeyondAgri Mobile v1.0.0</Text>
+          <Text style={styles.footerSubtext}>Offline-first agricultural management platform</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

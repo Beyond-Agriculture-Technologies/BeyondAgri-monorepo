@@ -11,11 +11,10 @@ import {
   ConfirmPasswordResetRequest,
   ConfirmPasswordResetResponse,
   User,
-  BackendApiResponse
+  BackendApiResponse,
 } from '../types'
 
 export class BackendAuthService {
-
   static async signIn(email: string, password: string) {
     try {
       const loginData: LoginRequest = {
@@ -29,7 +28,7 @@ export class BackendAuthService {
         console.log('🔐 Auth Login Request:', {
           url,
           email,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         })
       }
 
@@ -47,7 +46,7 @@ export class BackendAuthService {
           status: response.status,
           statusText: response.statusText,
           ok: response.ok,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         })
       }
 
@@ -100,7 +99,7 @@ export class BackendAuthService {
           url,
           email: userData.email,
           user_type: userData.user_type,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         })
       }
 
@@ -118,7 +117,7 @@ export class BackendAuthService {
           status: response.status,
           statusText: response.statusText,
           ok: response.ok,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         })
       }
 
@@ -131,7 +130,7 @@ export class BackendAuthService {
       return {
         success: true,
         user: data.data?.user,
-        message: data.data?.message || 'Registration successful'
+        message: data.data?.message || 'Registration successful',
       }
     } catch (error: any) {
       console.error('Registration error:', error)
@@ -148,7 +147,7 @@ export class BackendAuthService {
         await fetch(`${API_FULL_URL}/auth/logout`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         })
@@ -185,7 +184,7 @@ export class BackendAuthService {
 
       const response = await fetch(`${API_FULL_URL}/auth/me`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       })
@@ -267,7 +266,7 @@ export class BackendAuthService {
         success: true,
         message: data.data?.message || 'Password reset code sent',
         deliveryMedium: data.data?.delivery_medium,
-        destination: data.data?.destination
+        destination: data.data?.destination,
       }
     } catch (error: any) {
       console.error('Password reset error:', error)
@@ -299,7 +298,7 @@ export class BackendAuthService {
 
       return {
         success: true,
-        message: data.data?.message || 'Password reset successful'
+        message: data.data?.message || 'Password reset successful',
       }
     } catch (error: any) {
       console.error('Password reset confirmation error:', error)

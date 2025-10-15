@@ -12,14 +12,14 @@ class ApiClient {
     if (ENABLE_HIDDEN_FEATURES) {
       console.log('🔗 API Client initialized:', {
         baseURL: this.baseURL,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       })
     }
   }
 
-  private async getHeaders(): Promise<HeadersInit> {
+  private async getHeaders(): Promise<Record<string, string>> {
     const token = await BackendAuthService.getAuthToken()
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     }
 
@@ -30,10 +30,7 @@ class ApiClient {
     return headers
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
 
     try {
@@ -46,7 +43,7 @@ class ApiClient {
           url,
           endpoint,
           hasAuth: !!headers.Authorization,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         })
       }
 
@@ -65,20 +62,21 @@ class ApiClient {
           status: response.status,
           statusText: response.statusText,
           ok: response.ok,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         })
       }
 
       const data: BackendApiResponse<T> = await response.json()
 
       if (!response.ok) {
-        const errorMessage = data.error || data.message || `HTTP ${response.status}: ${response.statusText}`
+        const errorMessage =
+          data.error || data.message || `HTTP ${response.status}: ${response.statusText}`
         throw new Error(errorMessage)
       }
 
       return {
         success: true,
-        data: data.data || data as any,
+        data: data.data || (data as any),
         message: data.message,
       }
     } catch (error: any) {
@@ -88,7 +86,7 @@ class ApiClient {
         endpoint,
         error: error.message,
         type: error.name,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       }
 
       if (ENABLE_HIDDEN_FEATURES) {
@@ -100,7 +98,8 @@ class ApiClient {
       // Provide more specific error messages
       let userMessage = error.message || 'Network error'
       if (error.message?.includes('Network request failed') || error.message?.includes('fetch')) {
-        userMessage = 'Unable to connect to server. Please check your internet connection and try again.'
+        userMessage =
+          'Unable to connect to server. Please check your internet connection and try again.'
       } else if (error.message?.includes('timeout')) {
         userMessage = 'Request timed out. Please try again.'
       }
@@ -122,7 +121,9 @@ class ApiClient {
     return this.request<Farm>(`/farms/${id}`)
   }
 
-  async createFarm(farm: Omit<Farm, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>): Promise<ApiResponse<Farm>> {
+  async createFarm(
+    farm: Omit<Farm, 'id' | 'createdAt' | 'updatedAt' | 'syncStatus'>
+  ): Promise<ApiResponse<Farm>> {
     return this.request<Farm>('/farms', {
       method: 'POST',
       body: JSON.stringify(farm),
@@ -228,10 +229,11 @@ class ApiClient {
       }
     } catch (error) {
       console.error('Photo upload error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Photo upload failed'
       return {
         success: false,
         data: null,
-        message: error.message || 'Photo upload failed',
+        message: errorMessage,
       }
     }
   }
