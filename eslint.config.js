@@ -39,6 +39,12 @@ module.exports = [
         fetch: 'readonly',
         FormData: 'readonly',
         Headers: 'readonly',
+        HeadersInit: 'readonly',
+        RequestInit: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
       },
     },
     plugins: {

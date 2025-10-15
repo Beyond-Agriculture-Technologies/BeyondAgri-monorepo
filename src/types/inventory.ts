@@ -81,7 +81,7 @@ export interface WarehouseBase {
   is_active: boolean
 }
 
-export interface WarehouseCreate extends WarehouseBase {}
+export type WarehouseCreate = WarehouseBase
 
 export interface WarehouseUpdate {
   warehouse_name?: string

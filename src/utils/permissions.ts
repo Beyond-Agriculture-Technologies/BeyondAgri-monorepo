@@ -7,6 +7,8 @@
  * - Admin: Full system access
  */
 
+import { DISABLE_RBAC } from './constants'
+
 export interface InventoryPermissionSet {
   // Basic Inventory Operations
   canViewOwnInventory: boolean
@@ -122,9 +124,6 @@ export function hasPermission(
   userType: 'farmer' | 'wholesaler' | 'admin',
   permission: keyof InventoryPermissionSet
 ): boolean {
-  // Import DISABLE_RBAC flag
-  const { DISABLE_RBAC } = require('./constants')
-
   // If RBAC is disabled, grant all permissions
   if (DISABLE_RBAC) {
     return true

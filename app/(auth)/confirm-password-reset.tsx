@@ -137,7 +137,7 @@ export default function ConfirmPasswordResetScreen() {
 
           <TouchableOpacity style={styles.resendLink} onPress={() => router.back()}>
             <Text style={styles.resendLinkText}>
-              Didn't receive a code? <Text style={styles.resendLinkTextBold}>Try Again</Text>
+              Didn&apos;t receive a code? <Text style={styles.resendLinkTextBold}>Try Again</Text>
             </Text>
           </TouchableOpacity>
         </View>

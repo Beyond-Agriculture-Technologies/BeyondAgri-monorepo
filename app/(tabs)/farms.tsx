@@ -115,7 +115,7 @@ export default function FarmsScreen() {
         <View style={styles.offlineBar}>
           <Ionicons name="cloud-offline" size={16} color={APP_COLORS.warning} />
           <Text style={styles.offlineText}>
-            You're offline. Changes will sync when connection is restored.
+            You&apos;re offline. Changes will sync when connection is restored.
           </Text>
         </View>
       )}

@@ -111,7 +111,7 @@ export default function PhotosScreen() {
         <View style={styles.offlineBar}>
           <Ionicons name="cloud-offline-outline" size={16} color={APP_COLORS.warning} />
           <Text style={styles.offlineText}>
-            You're offline. Photos will upload when connection is restored.
+            You&apos;re offline. Photos will upload when connection is restored.
           </Text>
         </View>
       )}
