@@ -239,7 +239,7 @@ export default function InventoryDashboard() {
                     </Text>
                   </View>
                   <Text style={styles.categoryValue}>
-                    {valuation.currency} {value.toFixed(0)}
+                    {valuation.currency} {Number(value || 0).toFixed(0)}
                   </Text>
                 </View>
               ))}
