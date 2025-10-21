@@ -303,8 +303,35 @@ export default function InventoryDashboard() {
             </TouchableOpacity>
           )}
 
+          {permissions.canViewReports && (
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push('/(inventory)/valuation')}
+            >
+              <View style={styles.actionLeft}>
+                <Ionicons name="cash" size={24} color={APP_COLORS.primary} />
+                <Text style={styles.actionText}>Valuation Reports</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
+            </TouchableOpacity>
+          )}
+
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => router.push('/(inventory)/transactions')}
+          >
+            <View style={styles.actionLeft}>
+              <Ionicons name="swap-horizontal" size={24} color={APP_COLORS.primary} />
+              <Text style={styles.actionText}>Transaction History</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
+          </TouchableOpacity>
+
           {permissions.canViewBatches && (
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push('/(inventory)/batches')}
+            >
               <View style={styles.actionLeft}>
                 <Ionicons name="layers" size={24} color={APP_COLORS.primary} />
                 <Text style={styles.actionText}>Track Batches</Text>
@@ -314,7 +341,10 @@ export default function InventoryDashboard() {
           )}
 
           {permissions.canManageInventoryTypes && (
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push('/(inventory)/types')}
+            >
               <View style={styles.actionLeft}>
                 <Ionicons name="pricetag" size={24} color={APP_COLORS.primary} />
                 <Text style={styles.actionText}>Manage Inventory Types</Text>

@@ -58,7 +58,7 @@ export default function TransferModal({ visible, onClose, onSuccess }: TransferM
     setSelectedWarehouseId(warehouseId)
     setSelectedBinId(null)
     // Load bins for selected warehouse
-    await fetchBins({ warehouse_id: warehouseId })
+    await fetchBins(warehouseId)
     setStep('bin')
   }
 
@@ -72,7 +72,7 @@ export default function TransferModal({ visible, onClose, onSuccess }: TransferM
       Alert.alert('Invalid Quantity', 'Please enter a valid quantity')
       return
     }
-    if (transferModal.item && Number(quantity) > transferModal.item.quantity) {
+    if (transferModal.item && Number(quantity) > (transferModal.item.quantity || 0)) {
       Alert.alert(
         'Invalid Quantity',
         `Cannot transfer more than available quantity (${transferModal.item.quantity})`
@@ -121,8 +121,9 @@ export default function TransferModal({ visible, onClose, onSuccess }: TransferM
   }
 
   const selectedWarehouse = warehouses.find(w => w.id === selectedWarehouseId)
-  const selectedBin = bins.find(b => b.id === selectedBinId)
-  const availableBins = bins.filter(b => b.warehouse_id === selectedWarehouseId)
+  const allBins = selectedWarehouseId ? bins[selectedWarehouseId] || [] : []
+  const selectedBin = allBins.find(b => b.id === selectedBinId)
+  const availableBins = allBins
 
   // Filter out current warehouse
   const availableWarehouses = warehouses.filter(w => w.id !== transferModal.sourceWarehouseId)
@@ -282,7 +283,7 @@ export default function TransferModal({ visible, onClose, onSuccess }: TransferM
                         }
                       />
                       <View style={styles.optionInfo}>
-                        <Text style={styles.optionName}>Bin {bin.bin_number}</Text>
+                        <Text style={styles.optionName}>Bin {bin.bin_name}</Text>
                         {bin.capacity && (
                           <Text style={styles.optionMeta}>Capacity: {bin.capacity}</Text>
                         )}
@@ -361,7 +362,7 @@ export default function TransferModal({ visible, onClose, onSuccess }: TransferM
                   {selectedBin && (
                     <View style={styles.confirmRow}>
                       <Text style={styles.confirmLabel}>Bin:</Text>
-                      <Text style={styles.confirmValue}>Bin {selectedBin.bin_number}</Text>
+                      <Text style={styles.confirmValue}>Bin {selectedBin.bin_name}</Text>
                     </View>
                   )}
                   {notes && (

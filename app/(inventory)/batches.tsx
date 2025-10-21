@@ -53,7 +53,7 @@ export default function BatchesScreen() {
         return
       }
 
-      const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0)
+      const totalQuantity = items.reduce((sum, item) => sum + (item.quantity || 0), 0)
       const dates = items
         .map(item => item.harvest_date || item.created_at)
         .filter(Boolean)
