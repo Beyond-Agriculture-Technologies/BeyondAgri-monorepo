@@ -9,6 +9,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   ScrollView,
+  Modal,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -19,29 +20,44 @@ import { useInventoryPermissions } from '../../src/hooks/useInventoryPermissions
 import { APP_COLORS } from '../../src/utils/constants'
 import { InventoryItemResponse, InventoryStatusEnum } from '../../src/types/inventory'
 
+type SortOption = 'name' | 'quantity' | 'date' | 'expiry' | 'value'
+type SortDirection = 'asc' | 'desc'
+
 export default function InventoryListScreen() {
   const { isOnline } = useAppStore()
   const { permissions } = useInventoryPermissions()
-  const { items, itemsLoading, fetchItems } = useInventoryStore()
+  const { items, itemsLoading, fetchItems, warehouses, fetchWarehouses } = useInventoryStore()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [selectedStatus, setSelectedStatus] = useState<string>('all')
+  const [selectedWarehouse, setSelectedWarehouse] = useState<string>('all')
+  const [batchNumber, setBatchNumber] = useState('')
+  const [sortBy, setSortBy] = useState<SortOption>('name')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     if (isOnline) {
       loadItems()
+      fetchWarehouses()
     }
   }, [isOnline])
 
   const loadItems = async () => {
-    const filters: any = {}
+    const filters: Record<string, string | number> = {}
     if (selectedCategory !== 'all') {
       filters.category = selectedCategory
     }
     if (selectedStatus !== 'all') {
       filters.status = selectedStatus
+    }
+    if (selectedWarehouse !== 'all') {
+      filters.warehouse_id = parseInt(selectedWarehouse)
+    }
+    if (batchNumber.trim()) {
+      filters.batch_number = batchNumber.trim()
     }
     await fetchItems(filters)
   }
@@ -53,10 +69,69 @@ export default function InventoryListScreen() {
     setRefreshing(false)
   }
 
-  const filteredItems = items.filter(item => {
-    const matchesSearch = item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesSearch
-  })
+  const handleApplyFilters = () => {
+    loadItems()
+    setShowAdvancedFilters(false)
+  }
+
+  const handleClearAllFilters = () => {
+    setSearchQuery('')
+    setSelectedCategory('all')
+    setSelectedStatus('all')
+    setSelectedWarehouse('all')
+    setBatchNumber('')
+    setSortBy('name')
+    setSortDirection('asc')
+    loadItems()
+  }
+
+  const getFilteredAndSortedItems = () => {
+    // Filter by search query
+    let filtered = items.filter(item => {
+      const matchesSearch = item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
+      return matchesSearch
+    })
+
+    // Sort items
+    filtered = [...filtered].sort((a, b) => {
+      let comparison = 0
+
+      switch (sortBy) {
+        case 'name': {
+          comparison = a.item_name.localeCompare(b.item_name)
+          break
+        }
+        case 'quantity': {
+          comparison = a.current_quantity - b.current_quantity
+          break
+        }
+        case 'date': {
+          const dateA = new Date(a.created_at || 0).getTime()
+          const dateB = new Date(b.created_at || 0).getTime()
+          comparison = dateA - dateB
+          break
+        }
+        case 'expiry': {
+          const expiryA = a.expiry_date ? new Date(a.expiry_date).getTime() : Infinity
+          const expiryB = b.expiry_date ? new Date(b.expiry_date).getTime() : Infinity
+          comparison = expiryA - expiryB
+          break
+        }
+        case 'value': {
+          const valueA = a.current_quantity * (Number(a.cost_per_unit) || 0)
+          const valueB = b.current_quantity * (Number(b.cost_per_unit) || 0)
+          comparison = valueA - valueB
+          break
+        }
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+
+    return filtered
+  }
+
+  const filteredItems = getFilteredAndSortedItems()
 
   const renderItem = ({ item }: { item: InventoryItemResponse }) => {
     const statusColor = getStatusColor(item.status)
@@ -199,22 +274,74 @@ export default function InventoryListScreen() {
         )}
       </View>
 
-      {/* Filters */}
-      <View style={styles.filterContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      {/* Filter Bar with Advanced Filters Button */}
+      <View style={styles.filterBar}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+          {/* Advanced Filters Button */}
+          <TouchableOpacity
+            style={[
+              styles.filterChip,
+              (selectedWarehouse !== 'all' || batchNumber !== '') && styles.filterChipActive,
+            ]}
+            onPress={() => setShowAdvancedFilters(true)}
+          >
+            <Ionicons
+              name="options"
+              size={16}
+              color={
+                selectedWarehouse !== 'all' || batchNumber !== ''
+                  ? 'white'
+                  : APP_COLORS.textSecondary
+              }
+            />
+            <Text
+              style={[
+                styles.filterChipText,
+                (selectedWarehouse !== 'all' || batchNumber !== '') && styles.filterChipTextActive,
+              ]}
+            >
+              Advanced
+            </Text>
+          </TouchableOpacity>
+
+          {/* Sort Button */}
+          <TouchableOpacity
+            style={styles.filterChip}
+            onPress={() => {
+              if (sortDirection === 'asc') {
+                setSortDirection('desc')
+              } else {
+                setSortDirection('asc')
+              }
+            }}
+          >
+            <Ionicons
+              name={sortDirection === 'asc' ? 'arrow-up' : 'arrow-down'}
+              size={16}
+              color={APP_COLORS.textSecondary}
+            />
+            <Text style={styles.filterChipText}>
+              {sortBy === 'name' && 'Name'}
+              {sortBy === 'quantity' && 'Quantity'}
+              {sortBy === 'date' && 'Date'}
+              {sortBy === 'expiry' && 'Expiry'}
+              {sortBy === 'value' && 'Value'}
+            </Text>
+          </TouchableOpacity>
+
           {/* Category Filter */}
           <TouchableOpacity
             style={[styles.filterChip, selectedCategory !== 'all' && styles.filterChipActive]}
             onPress={() => {
-              // Cycle through categories
               const categories = ['all', 'harvest', 'meat', 'poultry', 'dairy', 'other']
               const currentIndex = categories.indexOf(selectedCategory)
               const nextIndex = (currentIndex + 1) % categories.length
               setSelectedCategory(categories[nextIndex])
+              loadItems()
             }}
           >
             <Ionicons
-              name="filter"
+              name="grid"
               size={16}
               color={selectedCategory !== 'all' ? 'white' : APP_COLORS.textSecondary}
             />
@@ -224,7 +351,7 @@ export default function InventoryListScreen() {
                 selectedCategory !== 'all' && styles.filterChipTextActive,
               ]}
             >
-              {selectedCategory === 'all' ? 'All Categories' : selectedCategory}
+              {selectedCategory === 'all' ? 'Category' : selectedCategory}
             </Text>
           </TouchableOpacity>
 
@@ -232,11 +359,11 @@ export default function InventoryListScreen() {
           <TouchableOpacity
             style={[styles.filterChip, selectedStatus !== 'all' && styles.filterChipActive]}
             onPress={() => {
-              // Cycle through statuses
               const statuses = ['all', 'available', 'reserved', 'sold', 'expired']
               const currentIndex = statuses.indexOf(selectedStatus)
               const nextIndex = (currentIndex + 1) % statuses.length
               setSelectedStatus(statuses[nextIndex])
+              loadItems()
             }}
           >
             <Text
@@ -245,24 +372,157 @@ export default function InventoryListScreen() {
                 selectedStatus !== 'all' && styles.filterChipTextActive,
               ]}
             >
-              {selectedStatus === 'all' ? 'All Status' : selectedStatus}
+              {selectedStatus === 'all' ? 'Status' : selectedStatus}
             </Text>
           </TouchableOpacity>
 
-          {/* Clear Filters */}
-          {(selectedCategory !== 'all' || selectedStatus !== 'all') && (
-            <TouchableOpacity
-              style={styles.clearFilterChip}
-              onPress={() => {
-                setSelectedCategory('all')
-                setSelectedStatus('all')
-              }}
-            >
-              <Text style={styles.clearFilterText}>Clear</Text>
+          {/* Clear All Filters */}
+          {(selectedCategory !== 'all' ||
+            selectedStatus !== 'all' ||
+            selectedWarehouse !== 'all' ||
+            batchNumber !== '' ||
+            sortBy !== 'name') && (
+            <TouchableOpacity style={styles.clearFilterChip} onPress={handleClearAllFilters}>
+              <Ionicons name="close" size={16} color="white" />
+              <Text style={styles.clearFilterText}>Clear All</Text>
             </TouchableOpacity>
           )}
         </ScrollView>
       </View>
+
+      {/* Advanced Filters Modal */}
+      <Modal
+        visible={showAdvancedFilters}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAdvancedFilters(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Advanced Filters</Text>
+              <TouchableOpacity onPress={() => setShowAdvancedFilters(false)}>
+                <Ionicons name="close" size={24} color={APP_COLORS.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              {/* Sort Section */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Sort By</Text>
+                <View style={styles.sortOptions}>
+                  {[
+                    { value: 'name', label: 'Name', icon: 'text' },
+                    { value: 'quantity', label: 'Quantity', icon: 'cube' },
+                    { value: 'date', label: 'Date Added', icon: 'calendar' },
+                    { value: 'expiry', label: 'Expiry Date', icon: 'time' },
+                    { value: 'value', label: 'Total Value', icon: 'cash' },
+                  ].map(option => (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.sortOption,
+                        sortBy === option.value && styles.sortOptionActive,
+                      ]}
+                      onPress={() => setSortBy(option.value as SortOption)}
+                    >
+                      <Ionicons
+                        name={option.icon as keyof typeof Ionicons.glyphMap}
+                        size={20}
+                        color={
+                          sortBy === option.value ? APP_COLORS.primary : APP_COLORS.textSecondary
+                        }
+                      />
+                      <Text
+                        style={[
+                          styles.sortOptionText,
+                          sortBy === option.value && styles.sortOptionTextActive,
+                        ]}
+                      >
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Warehouse Filter */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Warehouse</Text>
+                <View style={styles.warehouseOptions}>
+                  <TouchableOpacity
+                    style={[
+                      styles.warehouseOption,
+                      selectedWarehouse === 'all' && styles.warehouseOptionActive,
+                    ]}
+                    onPress={() => setSelectedWarehouse('all')}
+                  >
+                    <Text
+                      style={[
+                        styles.warehouseOptionText,
+                        selectedWarehouse === 'all' && styles.warehouseOptionTextActive,
+                      ]}
+                    >
+                      All Warehouses
+                    </Text>
+                  </TouchableOpacity>
+                  {warehouses.map(warehouse => (
+                    <TouchableOpacity
+                      key={warehouse.id}
+                      style={[
+                        styles.warehouseOption,
+                        selectedWarehouse === warehouse.id.toString() &&
+                          styles.warehouseOptionActive,
+                      ]}
+                      onPress={() => setSelectedWarehouse(warehouse.id.toString())}
+                    >
+                      <Text
+                        style={[
+                          styles.warehouseOptionText,
+                          selectedWarehouse === warehouse.id.toString() &&
+                            styles.warehouseOptionTextActive,
+                        ]}
+                      >
+                        {warehouse.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Batch Number Filter */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Batch Number</Text>
+                <TextInput
+                  style={styles.filterInput}
+                  placeholder="Enter batch number..."
+                  value={batchNumber}
+                  onChangeText={setBatchNumber}
+                  placeholderTextColor={APP_COLORS.textSecondary}
+                />
+              </View>
+            </ScrollView>
+
+            {/* Modal Footer */}
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.modalButtonSecondary}
+                onPress={() => {
+                  setSelectedWarehouse('all')
+                  setBatchNumber('')
+                  setSortBy('name')
+                  setSortDirection('asc')
+                }}
+              >
+                <Text style={styles.modalButtonSecondaryText}>Reset</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.modalButtonPrimary} onPress={handleApplyFilters}>
+                <Text style={styles.modalButtonPrimaryText}>Apply Filters</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Offline Indicator */}
       {!isOnline && (
@@ -357,9 +617,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: APP_COLORS.text,
   },
-  filterContainer: {
+  filterBar: {
     paddingHorizontal: 16,
     marginBottom: 16,
+  },
+  filterScroll: {
+    flexGrow: 0,
   },
   filterChip: {
     flexDirection: 'row',
@@ -537,5 +800,132 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: APP_COLORS.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: APP_COLORS.text,
+  },
+  modalBody: {
+    flex: 1,
+    padding: 20,
+  },
+  filterSection: {
+    marginBottom: 24,
+  },
+  filterSectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: APP_COLORS.text,
+    marginBottom: 12,
+  },
+  sortOptions: {
+    gap: 8,
+  },
+  sortOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: APP_COLORS.background,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    gap: 12,
+  },
+  sortOptionActive: {
+    borderColor: APP_COLORS.primary,
+    backgroundColor: `${APP_COLORS.primary}10`,
+  },
+  sortOptionText: {
+    fontSize: 15,
+    color: APP_COLORS.text,
+  },
+  sortOptionTextActive: {
+    fontWeight: '600',
+    color: APP_COLORS.primary,
+  },
+  warehouseOptions: {
+    gap: 8,
+  },
+  warehouseOption: {
+    padding: 12,
+    backgroundColor: APP_COLORS.background,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  warehouseOptionActive: {
+    borderColor: APP_COLORS.primary,
+    backgroundColor: `${APP_COLORS.primary}10`,
+  },
+  warehouseOptionText: {
+    fontSize: 15,
+    color: APP_COLORS.text,
+  },
+  warehouseOptionTextActive: {
+    fontWeight: '600',
+    color: APP_COLORS.primary,
+  },
+  filterInput: {
+    backgroundColor: APP_COLORS.background,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 15,
+    color: APP_COLORS.text,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  modalButtonSecondary: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: APP_COLORS.background,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  modalButtonSecondaryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: APP_COLORS.text,
+  },
+  modalButtonPrimary: {
+    flex: 1,
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: APP_COLORS.primary,
+    alignItems: 'center',
+  },
+  modalButtonPrimaryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
   },
 })

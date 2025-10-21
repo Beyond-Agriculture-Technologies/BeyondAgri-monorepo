@@ -106,6 +106,9 @@ export interface WarehouseResponse extends WarehouseBase {
   account_id: number
   created_at: string
   updated_at: string
+  // Simplified properties for compatibility
+  name?: string
+  location?: string
 }
 
 // ==================== Storage Bins ====================
@@ -200,6 +203,14 @@ export interface InventoryItemResponse extends InventoryItemBase {
   updated_at: string
   is_low_stock: boolean
   is_expired: boolean
+  // Extended properties from API joins
+  product_name?: string
+  quantity?: number
+  warehouse_name?: string
+  bin_number?: string
+  supplier_name?: string
+  origin?: string
+  harvest_date?: string
 }
 
 // ==================== Transactions ====================
@@ -262,6 +273,9 @@ export interface InventoryValuationReport {
   currency: string
   by_category: Record<string, number>
   by_status: Record<string, number>
+  by_warehouse?: Record<string, number>
+  item_count?: number
+  last_updated?: string
 }
 
 // ==================== Query Parameters ====================

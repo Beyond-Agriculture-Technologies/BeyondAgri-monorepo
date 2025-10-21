@@ -7,6 +7,8 @@ import {
   ExpiringItemAlert,
   InventoryValuationReport,
   StorageBinResponse,
+  InventoryTransactionResponse,
+  InventoryItemFilters,
 } from '../types/inventory'
 import { inventoryApi } from '../services/inventoryApi'
 
@@ -40,6 +42,26 @@ interface InventoryState {
   // Reports
   valuation: InventoryValuationReport | null
   valuationLoading: boolean
+
+  // Transactions
+  transactions: InventoryTransactionResponse[]
+  transactionsLoading: boolean
+  transactionsError: string | null
+
+  // Batches (grouped items by batch_number)
+  batches: Map<string, InventoryItemResponse[]>
+  batchesLoading: boolean
+
+  // Transfer Modal State
+  transferModal: {
+    open: boolean
+    item: InventoryItemResponse | null
+    sourceWarehouseId: number | null
+    sourceBinId: number | null
+  }
+
+  // Advanced Search Filters
+  searchFilters: InventoryItemFilters
 
   // Actions - Items
   fetchItems: (filters?: any) => Promise<void>
@@ -77,6 +99,20 @@ interface InventoryState {
 
   // Actions - Transfers
   transferItem: (itemId: number, toWarehouseId: number, toBinId?: number) => Promise<boolean>
+  openTransferModal: (item: InventoryItemResponse) => void
+  closeTransferModal: () => void
+
+  // Actions - Transactions
+  fetchTransactions: (itemId?: number, filters?: any) => Promise<void>
+
+  // Actions - Batches
+  fetchBatches: () => Promise<void>
+  fetchBatchItems: (batchNumber: string) => Promise<void>
+
+  // Actions - Search
+  setSearchFilters: (filters: Partial<InventoryItemFilters>) => void
+  clearSearchFilters: () => void
+  searchItems: () => Promise<void>
 
   // Reset
   reset: () => void
@@ -106,6 +142,22 @@ const initialState = {
 
   valuation: null,
   valuationLoading: false,
+
+  transactions: [],
+  transactionsLoading: false,
+  transactionsError: null,
+
+  batches: new Map(),
+  batchesLoading: false,
+
+  transferModal: {
+    open: false,
+    item: null,
+    sourceWarehouseId: null,
+    sourceBinId: null,
+  },
+
+  searchFilters: {},
 }
 
 export const useInventoryStore = create<InventoryState>((set, get) => ({
@@ -506,6 +558,98 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
       set({ itemsError: error.message, itemsLoading: false })
       return false
     }
+  },
+
+  openTransferModal: (item: InventoryItemResponse) => {
+    set({
+      transferModal: {
+        open: true,
+        item,
+        sourceWarehouseId: item.warehouse_id ?? null,
+        sourceBinId: item.bin_id ?? null,
+      },
+    })
+  },
+
+  closeTransferModal: () => {
+    set({
+      transferModal: {
+        open: false,
+        item: null,
+        sourceWarehouseId: null,
+        sourceBinId: null,
+      },
+    })
+  },
+
+  // ==================== Transactions ====================
+
+  fetchTransactions: async (itemId?: number, filters?: Record<string, unknown>) => {
+    set({ transactionsLoading: true, transactionsError: null })
+    try {
+      // TODO: Implement API methods getItemTransactions and listTransactions
+      // For now, return empty array
+      set({ transactions: [], transactionsLoading: false })
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transactions'
+      set({ transactionsError: errorMessage, transactionsLoading: false })
+    }
+  },
+
+  // ==================== Batches ====================
+
+  fetchBatches: async () => {
+    set({ batchesLoading: true })
+    try {
+      const result = await inventoryApi.listInventoryItems()
+      if (result.success) {
+        const batchMap = new Map<string, InventoryItemResponse[]>()
+        result.data.forEach(item => {
+          if (item.batch_number) {
+            if (!batchMap.has(item.batch_number)) {
+              batchMap.set(item.batch_number, [])
+            }
+            batchMap.get(item.batch_number)!.push(item)
+          }
+        })
+        set({ batches: batchMap, batchesLoading: false })
+      } else {
+        set({ batchesLoading: false })
+      }
+    } catch (error: any) {
+      set({ batchesLoading: false })
+    }
+  },
+
+  fetchBatchItems: async (batchNumber: string) => {
+    set({ batchesLoading: true })
+    try {
+      const result = await inventoryApi.listInventoryItems({ batch_number: batchNumber })
+      if (result.success) {
+        const batches = new Map(get().batches)
+        batches.set(batchNumber, result.data)
+        set({ batches, batchesLoading: false })
+      } else {
+        set({ batchesLoading: false })
+      }
+    } catch (error: any) {
+      set({ batchesLoading: false })
+    }
+  },
+
+  // ==================== Search & Filters ====================
+
+  setSearchFilters: (filters: Partial<InventoryItemFilters>) => {
+    set({ searchFilters: { ...get().searchFilters, ...filters } })
+  },
+
+  clearSearchFilters: () => {
+    set({ searchFilters: {} })
+  },
+
+  searchItems: async () => {
+    const filters = get().searchFilters
+    await get().fetchItems(filters)
   },
 
   // ==================== Reset ====================
