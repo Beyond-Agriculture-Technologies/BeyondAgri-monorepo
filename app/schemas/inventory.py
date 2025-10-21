@@ -213,7 +213,7 @@ class InventoryTransactionBase(BaseModel):
     related_order_id: Optional[int] = None
     related_task_id: Optional[int] = None
     notes: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    transaction_metadata: Optional[Dict[str, Any]] = Field(None, serialization_alias="metadata")
 
 
 class InventoryTransactionCreate(InventoryTransactionBase):
@@ -233,6 +233,7 @@ class InventoryTransactionResponse(InventoryTransactionBase):
 
     class Config:
         from_attributes = True
+        populate_by_name = True  # Allow using both 'metadata' and 'transaction_metadata'
 
 
 # ==================== Alert and Report Schemas ====================
@@ -274,3 +275,9 @@ class StockMovementReport(BaseModel):
     total_added: Decimal
     total_removed: Decimal
     net_change: Decimal
+
+
+class TransactionListResponse(BaseModel):
+    """Response wrapper for transaction history endpoint"""
+    data: List[InventoryTransactionResponse]
+    message: str = "Transactions retrieved successfully"

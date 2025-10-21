@@ -14,7 +14,7 @@ from app.schemas.inventory import (
     # Inventory Items
     InventoryItemCreate, InventoryItemUpdate, InventoryItemResponse,
     # Transactions
-    InventoryTransactionCreate, InventoryTransactionResponse,
+    InventoryTransactionCreate, InventoryTransactionResponse, TransactionListResponse,
     # Alerts & Reports
     LowStockAlert, ExpiringItemAlert, InventoryValuationReport
 )
@@ -410,7 +410,7 @@ async def delete_inventory_item(
 
 # ==================== Transaction Endpoints ====================
 
-@router.get("/items/{item_id}/transactions", response_model=List[InventoryTransactionResponse])
+@router.get("/items/{item_id}/transactions", response_model=TransactionListResponse)
 async def get_item_transactions(
     item_id: int,
     skip: int = 0,
@@ -420,6 +420,10 @@ async def get_item_transactions(
 ):
     """
     Get transaction history for a specific inventory item.
+
+    Returns transaction history wrapped in a response object with:
+    - data: List of transactions ordered by date (most recent first)
+    - message: Success message
     """
     transactions = InventoryService.get_item_transactions(
         db=db,
@@ -428,7 +432,10 @@ async def get_item_transactions(
         skip=skip,
         limit=limit
     )
-    return transactions
+    return {
+        "data": transactions,
+        "message": "Transactions retrieved successfully"
+    }
 
 
 @router.post("/items/{item_id}/transactions", response_model=InventoryTransactionResponse, status_code=status.HTTP_201_CREATED)
