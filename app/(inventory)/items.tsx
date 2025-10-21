@@ -26,7 +26,8 @@ type SortDirection = 'asc' | 'desc'
 export default function InventoryListScreen() {
   const { isOnline } = useAppStore()
   const { permissions } = useInventoryPermissions()
-  const { items, itemsLoading, fetchItems, warehouses, fetchWarehouses } = useInventoryStore()
+  const { items, itemsLoading, itemsError, fetchItems, warehouses, fetchWarehouses } =
+    useInventoryStore()
 
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
@@ -139,7 +140,7 @@ export default function InventoryListScreen() {
     return (
       <TouchableOpacity
         style={styles.itemCard}
-        onPress={() => router.push(`/inventory/item-details?id=${item.id}`)}
+        onPress={() => router.push(`/(inventory)/item-details?id=${item.id}`)}
       >
         <View style={styles.itemHeader}>
           <View style={styles.itemTitleRow}>
@@ -532,6 +533,19 @@ export default function InventoryListScreen() {
         </View>
       )}
 
+      {/* Error Banner */}
+      {itemsError && (
+        <View style={styles.errorBanner}>
+          <Ionicons name="alert-circle" size={20} color="white" />
+          <Text style={styles.errorBannerText} numberOfLines={2}>
+            {itemsError}
+          </Text>
+          <TouchableOpacity onPress={loadItems} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Items List */}
       <FlatList
         data={filteredItems}
@@ -670,6 +684,31 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '500',
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: APP_COLORS.error,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 10,
+  },
+  errorBannerText: {
+    flex: 1,
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  retryButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
   listContent: {
     padding: 16,

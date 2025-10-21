@@ -12,11 +12,14 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Stack } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useInventoryStore } from '../../src/store/inventory-store'
+import { useAppStore } from '../../src/store/app-store'
 import { APP_COLORS } from '../../src/utils/constants'
 import { InventoryTransactionResponse, TransactionTypeEnum } from '../../src/types/inventory'
 
 export default function TransactionsScreen() {
-  const { transactions, transactionsLoading, fetchTransactions } = useInventoryStore()
+  const { isOnline } = useAppStore()
+  const { transactions, transactionsLoading, transactionsError, fetchTransactions } =
+    useInventoryStore()
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState<TransactionTypeEnum | 'all'>('all')
 
@@ -177,6 +180,25 @@ export default function TransactionsScreen() {
         <FilterButton type={TransactionTypeEnum.SALE} label="Sale" />
       </View>
 
+      {!isOnline && (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-offline" size={16} color="white" />
+          <Text style={styles.offlineText}>Viewing cached data</Text>
+        </View>
+      )}
+
+      {transactionsError && (
+        <View style={styles.errorBanner}>
+          <Ionicons name="alert-circle" size={20} color="white" />
+          <Text style={styles.errorBannerText} numberOfLines={2}>
+            {transactionsError}
+          </Text>
+          <TouchableOpacity onPress={loadTransactions} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <FlatList
         data={filteredTransactions}
         renderItem={renderTransaction}
@@ -243,6 +265,44 @@ const styles = StyleSheet.create({
   },
   filterButtonTextActive: {
     color: 'white',
+  },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: APP_COLORS.warning,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  offlineText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: APP_COLORS.error,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 10,
+  },
+  errorBannerText: {
+    flex: 1,
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  retryButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
   list: {
     padding: 16,

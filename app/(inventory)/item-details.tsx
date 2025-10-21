@@ -14,17 +14,28 @@ import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { useInventoryPermissions } from '../../src/hooks/useInventoryPermissions'
 import { APP_COLORS } from '../../src/utils/constants'
+import { TransactionTypeEnum } from '../../src/types/inventory'
 
 export default function ItemDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
   const { permissions } = useInventoryPermissions()
-  const { currentItem, itemsLoading, fetchItemById, deleteItem } = useInventoryStore()
+  const {
+    currentItem,
+    itemsLoading,
+    fetchItemById,
+    deleteItem,
+    transactions,
+    transactionsLoading,
+    fetchTransactions,
+  } = useInventoryStore()
 
   const [deleting, setDeleting] = useState(false)
+  const [showAllTransactions, setShowAllTransactions] = useState(false)
 
   useEffect(() => {
     if (id) {
       fetchItemById(Number(id))
+      fetchTransactions(Number(id))
     }
   }, [id])
 
@@ -232,6 +243,96 @@ export default function ItemDetailsScreen() {
           </View>
         </View>
 
+        {/* Transaction History */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Transaction History</Text>
+            {transactions.length > 0 && (
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{transactions.length}</Text>
+              </View>
+            )}
+          </View>
+
+          {transactionsLoading ? (
+            <View style={styles.transactionsLoadingContainer}>
+              <ActivityIndicator size="small" color={APP_COLORS.primary} />
+              <Text style={styles.transactionsLoadingText}>Loading transactions...</Text>
+            </View>
+          ) : transactions.length === 0 ? (
+            <View style={styles.emptyTransactions}>
+              <Ionicons name="receipt-outline" size={48} color={APP_COLORS.textSecondary} />
+              <Text style={styles.emptyTransactionsText}>No transaction history</Text>
+            </View>
+          ) : (
+            <>
+              {(showAllTransactions ? transactions : transactions.slice(0, 5)).map(transaction => {
+                const color = getTransactionColor(transaction.transaction_type)
+                const icon = getTransactionIcon(transaction.transaction_type)
+
+                return (
+                  <View key={transaction.id} style={styles.transactionCard}>
+                    <View style={[styles.transactionIcon, { backgroundColor: `${color}20` }]}>
+                      <Ionicons name={icon as any} size={20} color={color} />
+                    </View>
+
+                    <View style={styles.transactionContent}>
+                      <View style={styles.transactionHeader}>
+                        <Text style={styles.transactionType}>
+                          {formatTransactionType(transaction.transaction_type)}
+                        </Text>
+                        <Text style={[styles.transactionQuantity, { color }]}>
+                          {transaction.quantity_change > 0 ? '+' : ''}
+                          {transaction.quantity_change}
+                        </Text>
+                      </View>
+
+                      <Text style={styles.transactionDate}>
+                        {new Date(transaction.transaction_date).toLocaleString()}
+                      </Text>
+
+                      {transaction.notes && (
+                        <Text style={styles.transactionNotes} numberOfLines={2}>
+                          {transaction.notes}
+                        </Text>
+                      )}
+
+                      {(transaction.quantity_before !== undefined ||
+                        transaction.quantity_after !== undefined) && (
+                        <Text style={styles.transactionQuantityFlow}>
+                          {transaction.quantity_before ?? '-'} → {transaction.quantity_after ?? '-'}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                )
+              })}
+
+              {transactions.length > 5 && !showAllTransactions && (
+                <TouchableOpacity
+                  style={styles.showMoreButton}
+                  onPress={() => setShowAllTransactions(true)}
+                >
+                  <Text style={styles.showMoreText}>
+                    Show {transactions.length - 5} more transactions
+                  </Text>
+                  <Ionicons name="chevron-down" size={16} color={APP_COLORS.primary} />
+                </TouchableOpacity>
+              )}
+
+              {showAllTransactions && transactions.length > 5 && (
+                <TouchableOpacity
+                  style={styles.showMoreButton}
+                  onPress={() => setShowAllTransactions(false)}
+                >
+                  <Text style={styles.showMoreText}>Show less</Text>
+                  <Ionicons name="chevron-up" size={16} color={APP_COLORS.primary} />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+        </View>
+
         {/* Action Buttons */}
         {(canEdit || canDelete) && (
           <View style={styles.actionsSection}>
@@ -291,6 +392,55 @@ function InfoRow({
       <Text style={[styles.infoValue, valueColor && { color: valueColor }]}>{value}</Text>
     </View>
   )
+}
+
+// Helper functions for transactions
+function getTransactionIcon(type: TransactionTypeEnum): string {
+  switch (type) {
+    case TransactionTypeEnum.ADD:
+      return 'add-circle'
+    case TransactionTypeEnum.REMOVE:
+      return 'remove-circle'
+    case TransactionTypeEnum.TRANSFER:
+      return 'swap-horizontal'
+    case TransactionTypeEnum.ADJUSTMENT:
+      return 'create'
+    case TransactionTypeEnum.SALE:
+      return 'cash'
+    case TransactionTypeEnum.SPOILAGE:
+      return 'warning'
+    case TransactionTypeEnum.RETURN:
+      return 'return-up-back'
+    default:
+      return 'document'
+  }
+}
+
+function getTransactionColor(type: TransactionTypeEnum): string {
+  switch (type) {
+    case TransactionTypeEnum.ADD:
+      return APP_COLORS.success
+    case TransactionTypeEnum.REMOVE:
+    case TransactionTypeEnum.SPOILAGE:
+      return APP_COLORS.error
+    case TransactionTypeEnum.TRANSFER:
+      return APP_COLORS.info
+    case TransactionTypeEnum.SALE:
+      return APP_COLORS.primary
+    case TransactionTypeEnum.ADJUSTMENT:
+      return APP_COLORS.warning
+    case TransactionTypeEnum.RETURN:
+      return APP_COLORS.secondary
+    default:
+      return APP_COLORS.textSecondary
+  }
+}
+
+function formatTransactionType(type: TransactionTypeEnum): string {
+  return type
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
 }
 
 const styles = StyleSheet.create({
@@ -444,5 +594,118 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: 'white',
+  },
+  // Transaction History Styles
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  countBadge: {
+    backgroundColor: APP_COLORS.primary,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    minWidth: 28,
+    alignItems: 'center',
+  },
+  countBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  transactionsLoadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    gap: 12,
+  },
+  transactionsLoadingText: {
+    fontSize: 14,
+    color: APP_COLORS.textSecondary,
+  },
+  emptyTransactions: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+    backgroundColor: 'white',
+    borderRadius: 12,
+  },
+  emptyTransactionsText: {
+    fontSize: 15,
+    color: APP_COLORS.textSecondary,
+    marginTop: 12,
+  },
+  transactionCard: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  transactionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  transactionContent: {
+    flex: 1,
+    gap: 4,
+  },
+  transactionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  transactionType: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: APP_COLORS.text,
+  },
+  transactionQuantity: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  transactionDate: {
+    fontSize: 13,
+    color: APP_COLORS.textSecondary,
+  },
+  transactionNotes: {
+    fontSize: 13,
+    color: APP_COLORS.textSecondary,
+    fontStyle: 'italic',
+    marginTop: 2,
+  },
+  transactionQuantityFlow: {
+    fontSize: 13,
+    color: APP_COLORS.textSecondary,
+    marginTop: 2,
+  },
+  showMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    marginTop: 4,
+    gap: 6,
+  },
+  showMoreText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: APP_COLORS.primary,
   },
 })
