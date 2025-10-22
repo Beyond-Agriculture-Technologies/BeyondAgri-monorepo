@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from decimal import Decimal
@@ -230,6 +230,13 @@ class InventoryTransactionResponse(InventoryTransactionBase):
     performed_by_account_id: Optional[int]
     created_at: datetime
     updated_at: datetime
+
+    # Nested item information (populated when relationships are loaded)
+    item_name: Optional[str] = Field(None, description="Name of the inventory item")
+    item_sku: Optional[str] = Field(None, description="SKU of the inventory item")
+    item_unit: Optional[str] = Field(None, description="Unit of measurement")
+    inventory_type_name: Optional[str] = Field(None, description="Inventory type name")
+    warehouse_name: Optional[str] = Field(None, description="Warehouse name")
 
     class Config:
         from_attributes = True

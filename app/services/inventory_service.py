@@ -1,7 +1,7 @@
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_, func
 
 from app.models.inventory import (
@@ -525,9 +525,70 @@ class InventoryService:
         if not item:
             return []
 
-        return db.query(InventoryTransaction).filter(
+        # Query with eager loading of relationships
+        transactions = db.query(InventoryTransaction).options(
+            joinedload(InventoryTransaction.inventory_item).joinedload(InventoryItem.inventory_type),
+            joinedload(InventoryTransaction.inventory_item).joinedload(InventoryItem.warehouse)
+        ).filter(
             InventoryTransaction.inventory_item_id == item_id
         ).order_by(InventoryTransaction.transaction_date.desc()).offset(skip).limit(limit).all()
+
+        # Populate nested item information
+        for transaction in transactions:
+            if transaction.inventory_item:
+                transaction.item_name = transaction.inventory_item.item_name
+                transaction.item_sku = transaction.inventory_item.sku
+                transaction.item_unit = transaction.inventory_item.unit
+                if transaction.inventory_item.inventory_type:
+                    transaction.inventory_type_name = transaction.inventory_item.inventory_type.type_name
+                if transaction.inventory_item.warehouse:
+                    transaction.warehouse_name = transaction.inventory_item.warehouse.warehouse_name
+
+        return transactions
+
+    @staticmethod
+    def get_all_transactions(
+        db: Session,
+        account_id: int,
+        transaction_type: Optional[TransactionTypeEnum] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        skip: int = 0,
+        limit: int = 100
+    ) -> List[InventoryTransaction]:
+        """Get all transaction history for an account with optional filters"""
+        # Query transactions for all items owned by the account with eager loading
+        query = db.query(InventoryTransaction).options(
+            joinedload(InventoryTransaction.inventory_item).joinedload(InventoryItem.inventory_type),
+            joinedload(InventoryTransaction.inventory_item).joinedload(InventoryItem.warehouse)
+        ).join(InventoryItem).filter(
+            InventoryItem.account_id == account_id
+        )
+
+        # Apply optional filters
+        if transaction_type:
+            query = query.filter(InventoryTransaction.transaction_type == transaction_type)
+
+        if start_date:
+            query = query.filter(InventoryTransaction.transaction_date >= start_date)
+
+        if end_date:
+            query = query.filter(InventoryTransaction.transaction_date <= end_date)
+
+        transactions = query.order_by(InventoryTransaction.transaction_date.desc()).offset(skip).limit(limit).all()
+
+        # Populate nested item information
+        for transaction in transactions:
+            if transaction.inventory_item:
+                transaction.item_name = transaction.inventory_item.item_name
+                transaction.item_sku = transaction.inventory_item.sku
+                transaction.item_unit = transaction.inventory_item.unit
+                if transaction.inventory_item.inventory_type:
+                    transaction.inventory_type_name = transaction.inventory_item.inventory_type.type_name
+                if transaction.inventory_item.warehouse:
+                    transaction.warehouse_name = transaction.inventory_item.warehouse.warehouse_name
+
+        return transactions
 
     # ==================== Alert Methods ====================
 

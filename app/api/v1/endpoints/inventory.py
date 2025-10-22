@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import List, Optional
+from datetime import datetime
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_db, get_current_account
@@ -409,6 +410,59 @@ async def delete_inventory_item(
 
 
 # ==================== Transaction Endpoints ====================
+
+@router.get("/transactions", response_model=TransactionListResponse)
+async def get_all_transactions(
+    transaction_type: Optional[str] = Query(None, description="Filter by transaction type"),
+    start_date: Optional[datetime] = Query(None, description="Filter by start date"),
+    end_date: Optional[datetime] = Query(None, description="Filter by end date"),
+    skip: int = 0,
+    limit: int = 100,
+    current_account: AccountProfile = Depends(get_current_account),
+    db: Session = Depends(get_db)
+):
+    """
+    Get global transaction history across all inventory items for the current account.
+
+    This endpoint provides a comprehensive view of all inventory transactions,
+    useful for audit trails, reporting, and inventory management dashboards.
+
+    Filters:
+    - **transaction_type**: Filter by transaction type (add, remove, sale, transfer, etc.)
+    - **start_date**: Show transactions from this date onwards
+    - **end_date**: Show transactions up to this date
+    - **skip**: Number of records to skip (pagination)
+    - **limit**: Maximum number of records to return (default: 100)
+
+    Returns transaction history ordered by date (most recent first).
+    """
+    from app.models.inventory import TransactionTypeEnum
+
+    # Parse transaction_type string to enum if provided
+    transaction_type_enum = None
+    if transaction_type:
+        try:
+            transaction_type_enum = TransactionTypeEnum(transaction_type.lower())
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid transaction_type. Valid values: {', '.join([e.value for e in TransactionTypeEnum])}"
+            )
+
+    transactions = InventoryService.get_all_transactions(
+        db=db,
+        account_id=current_account.id,
+        transaction_type=transaction_type_enum,
+        start_date=start_date,
+        end_date=end_date,
+        skip=skip,
+        limit=limit
+    )
+    return {
+        "data": transactions,
+        "message": "Transactions retrieved successfully"
+    }
+
 
 @router.get("/items/{item_id}/transactions", response_model=TransactionListResponse)
 async def get_item_transactions(
