@@ -56,7 +56,7 @@ export default function AlertsScreen() {
   const renderLowStockAlert = ({ item }: { item: LowStockAlert }) => (
     <TouchableOpacity
       style={styles.alertCard}
-      onPress={() => router.push(`/inventory/item-details?id=${item.item_id}`)}
+      onPress={() => router.push(`/(inventory)/item-details?id=${item.item_id}`)}
     >
       <View style={styles.alertHeader}>
         <View style={styles.alertIconContainer}>
@@ -107,7 +107,7 @@ export default function AlertsScreen() {
     return (
       <TouchableOpacity
         style={styles.alertCard}
-        onPress={() => router.push(`/inventory/item-details?id=${item.item_id}`)}
+        onPress={() => router.push(`/(inventory)/item-details?id=${item.item_id}`)}
       >
         <View style={styles.alertHeader}>
           <View style={styles.alertIconContainer}>

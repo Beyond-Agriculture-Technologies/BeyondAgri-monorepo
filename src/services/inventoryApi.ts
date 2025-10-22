@@ -70,8 +70,36 @@ class InventoryApiClient {
         },
       })
 
-      const data = await response.json()
+      // Get response as text first (can only read body once)
+      const responseText = await response.text()
 
+      // Try to parse as JSON
+      let data: any
+      try {
+        data = JSON.parse(responseText)
+      } catch (jsonError) {
+        // Response is not valid JSON
+        console.error(
+          'Non-JSON response from server:',
+          responseText.substring(0, 200),
+          'Status:',
+          response.status,
+          'Endpoint:',
+          endpoint
+        )
+
+        // If response is not ok and not JSON, throw error with status
+        if (!response.ok) {
+          throw new Error(
+            `Server returned ${response.status}: ${responseText.substring(0, 100) || response.statusText}`
+          )
+        }
+
+        // If response is ok but not JSON, treat as error
+        throw new Error('Server returned invalid response format (expected JSON)')
+      }
+
+      // Check if response was successful
       if (!response.ok) {
         const errorMessage =
           data.detail ||
@@ -87,11 +115,21 @@ class InventoryApiClient {
         message: data.message,
       }
     } catch (error: any) {
-      console.error('Inventory API request error:', error.message)
+      console.error('Inventory API request error:', error.message, 'Endpoint:', endpoint)
 
       let userMessage = error.message || 'Network error'
       if (error.message?.includes('Network request failed') || error.message?.includes('fetch')) {
         userMessage = 'Unable to connect to server. Please check your internet connection.'
+      } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        userMessage = 'Session expired. Please log in again.'
+      } else if (error.message?.includes('403') || error.message?.includes('Forbidden')) {
+        userMessage = 'You do not have permission to perform this action.'
+      } else if (error.message?.includes('404') || error.message?.includes('Not Found')) {
+        userMessage = 'The requested resource was not found.'
+      } else if (error.message?.includes('500') || error.message?.includes('Server returned 500')) {
+        userMessage = 'Server error. Please try again later.'
+      } else if (error.message?.includes('invalid response')) {
+        userMessage = 'Server returned an invalid response. The feature may not be available yet.'
       }
 
       return {
@@ -249,6 +287,13 @@ class InventoryApiClient {
   }
 
   // ==================== Transactions ====================
+
+  async getAllTransactions(
+    filters?: TransactionFilters
+  ): Promise<ApiResponse<InventoryTransactionResponse[]>> {
+    const queryString = this.buildQueryString(filters)
+    return this.request<InventoryTransactionResponse[]>(`/transactions${queryString}`)
+  }
 
   async getItemTransactions(
     itemId: number,

@@ -9,14 +9,17 @@ import {
   TouchableOpacity,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Stack } from 'expo-router'
+import { Stack, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useInventoryStore } from '../../src/store/inventory-store'
+import { useAppStore } from '../../src/store/app-store'
 import { APP_COLORS } from '../../src/utils/constants'
 import { InventoryTransactionResponse, TransactionTypeEnum } from '../../src/types/inventory'
 
 export default function TransactionsScreen() {
-  const { transactions, transactionsLoading, fetchTransactions } = useInventoryStore()
+  const { isOnline } = useAppStore()
+  const { transactions, transactionsLoading, transactionsError, fetchTransactions } =
+    useInventoryStore()
   const [refreshing, setRefreshing] = useState(false)
   const [filter, setFilter] = useState<TransactionTypeEnum | 'all'>('all')
 
@@ -90,8 +93,18 @@ export default function TransactionsScreen() {
     const color = getTransactionColor(item.transaction_type)
     const icon = getTransactionIcon(item.transaction_type)
 
+    const handlePress = () => {
+      if (item.inventory_item_id) {
+        router.push(`/(inventory)/item-details?id=${item.inventory_item_id}`)
+      }
+    }
+
     return (
-      <View style={styles.transactionCard}>
+      <TouchableOpacity
+        style={styles.transactionCard}
+        onPress={handlePress}
+        disabled={!item.inventory_item_id}
+      >
         <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
           <Ionicons name={icon} size={24} color={color} />
         </View>
@@ -104,8 +117,29 @@ export default function TransactionsScreen() {
             <Text style={[styles.quantityChange, { color }]}>
               {item.quantity_change > 0 ? '+' : ''}
               {item.quantity_change}
+              {item.item_unit ? ` ${item.item_unit}` : ''}
             </Text>
           </View>
+
+          {/* Item Information - Only shown in global transactions */}
+          {item.item_name && (
+            <View style={styles.itemInfoContainer}>
+              <Ionicons name="cube-outline" size={14} color={APP_COLORS.primary} />
+              <Text style={styles.itemName}>{item.item_name}</Text>
+              {item.item_sku && <Text style={styles.itemSku}>({item.item_sku})</Text>}
+            </View>
+          )}
+
+          {item.inventory_type_name && (
+            <Text style={styles.inventoryType}>Type: {item.inventory_type_name}</Text>
+          )}
+
+          {item.warehouse_name && (
+            <View style={styles.warehouseContainer}>
+              <Ionicons name="business-outline" size={14} color={APP_COLORS.textSecondary} />
+              <Text style={styles.warehouseText}>{item.warehouse_name}</Text>
+            </View>
+          )}
 
           <Text style={styles.transactionDate}>
             {new Date(item.transaction_date).toLocaleString()}
@@ -125,7 +159,11 @@ export default function TransactionsScreen() {
             <Text style={styles.costText}>Cost: ZAR {Number(item.total_cost).toFixed(2)}</Text>
           )}
         </View>
-      </View>
+
+        {item.inventory_item_id && (
+          <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
+        )}
+      </TouchableOpacity>
     )
   }
 
@@ -176,6 +214,25 @@ export default function TransactionsScreen() {
         <FilterButton type={TransactionTypeEnum.TRANSFER} label="Transfer" />
         <FilterButton type={TransactionTypeEnum.SALE} label="Sale" />
       </View>
+
+      {!isOnline && (
+        <View style={styles.offlineBanner}>
+          <Ionicons name="cloud-offline" size={16} color="white" />
+          <Text style={styles.offlineText}>Viewing cached data</Text>
+        </View>
+      )}
+
+      {transactionsError && (
+        <View style={styles.errorBanner}>
+          <Ionicons name="alert-circle" size={20} color="white" />
+          <Text style={styles.errorBannerText} numberOfLines={2}>
+            {transactionsError}
+          </Text>
+          <TouchableOpacity onPress={loadTransactions} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <FlatList
         data={filteredTransactions}
@@ -244,6 +301,44 @@ const styles = StyleSheet.create({
   filterButtonTextActive: {
     color: 'white',
   },
+  offlineBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: APP_COLORS.warning,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  offlineText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: APP_COLORS.error,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 10,
+  },
+  errorBannerText: {
+    flex: 1,
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  retryButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
   list: {
     padding: 16,
   },
@@ -258,6 +353,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    alignItems: 'center',
   },
   iconContainer: {
     width: 48,
@@ -284,6 +380,38 @@ const styles = StyleSheet.create({
   quantityChange: {
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  itemInfoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 6,
+    marginBottom: 4,
+    gap: 6,
+  },
+  itemName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: APP_COLORS.primary,
+  },
+  itemSku: {
+    fontSize: 12,
+    color: APP_COLORS.textSecondary,
+    fontStyle: 'italic',
+  },
+  inventoryType: {
+    fontSize: 12,
+    color: APP_COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  warehouseContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    gap: 4,
+  },
+  warehouseText: {
+    fontSize: 12,
+    color: APP_COLORS.textSecondary,
   },
   transactionDate: {
     fontSize: 12,

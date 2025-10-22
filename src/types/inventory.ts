@@ -241,6 +241,12 @@ export interface InventoryTransactionResponse extends InventoryTransactionBase {
   performed_by_account_id?: number
   created_at: string
   updated_at: string
+  // Extended fields from global transactions endpoint
+  item_name?: string
+  item_sku?: string
+  item_unit?: string
+  inventory_type_name?: string
+  warehouse_name?: string
 }
 
 // ==================== Alerts & Reports ====================
@@ -308,6 +314,9 @@ export interface StorageBinFilters {
 }
 
 export interface TransactionFilters {
+  transaction_type?: TransactionTypeEnum
+  start_date?: string
+  end_date?: string
   skip?: number
   limit?: number
 }

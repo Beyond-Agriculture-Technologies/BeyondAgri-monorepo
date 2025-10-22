@@ -26,6 +26,7 @@ export default function WarehousesScreen() {
   const {
     warehouses,
     warehousesLoading,
+    warehousesError,
     fetchWarehouses,
     createWarehouse,
     updateWarehouse,
@@ -269,6 +270,18 @@ export default function WarehousesScreen() {
         </View>
       )}
 
+      {warehousesError && (
+        <View style={styles.errorBanner}>
+          <Ionicons name="alert-circle" size={20} color="white" />
+          <Text style={styles.errorBannerText} numberOfLines={2}>
+            {warehousesError}
+          </Text>
+          <TouchableOpacity onPress={loadWarehouses} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <FlatList
         data={warehouses}
         renderItem={renderWarehouse}
@@ -429,6 +442,31 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '500',
+  },
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: APP_COLORS.error,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    gap: 10,
+  },
+  errorBannerText: {
+    flex: 1,
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  retryButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
   listContent: {
     padding: 16,
