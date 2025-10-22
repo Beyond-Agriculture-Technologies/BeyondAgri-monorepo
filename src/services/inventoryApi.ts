@@ -288,6 +288,13 @@ class InventoryApiClient {
 
   // ==================== Transactions ====================
 
+  async getAllTransactions(
+    filters?: TransactionFilters
+  ): Promise<ApiResponse<InventoryTransactionResponse[]>> {
+    const queryString = this.buildQueryString(filters)
+    return this.request<InventoryTransactionResponse[]>(`/transactions${queryString}`)
+  }
+
   async getItemTransactions(
     itemId: number,
     filters?: TransactionFilters

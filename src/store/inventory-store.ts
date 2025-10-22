@@ -596,9 +596,13 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
           set({ transactionsError: result.message, transactionsLoading: false })
         }
       } else {
-        // For now, if no itemId is provided, return empty array
-        // This could be extended to fetch all transactions if backend supports it
-        set({ transactions: [], transactionsLoading: false })
+        // Fetch all transactions (global history)
+        const result = await inventoryApi.getAllTransactions(filters as any)
+        if (result.success) {
+          set({ transactions: result.data, transactionsLoading: false })
+        } else {
+          set({ transactionsError: result.message, transactionsLoading: false })
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transactions'
