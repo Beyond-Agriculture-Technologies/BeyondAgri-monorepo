@@ -1,5 +1,48 @@
 import re
-from typing import Optional
+from typing import Optional, Literal, Tuple
+
+
+def detect_login_identifier_type(identifier: str) -> Tuple[Literal["email", "phone", "unknown"], Optional[str]]:
+    """
+    Detect if the login identifier is an email or phone number.
+
+    Args:
+        identifier: User input (email or phone)
+
+    Returns:
+        Tuple of (identifier_type, normalized_value):
+        - ("email", "user@example.com") for valid email
+        - ("phone", "+27821234567") for valid phone (returns normalized E.164 format)
+        - ("unknown", None) if neither valid email nor phone
+    """
+    if not identifier or not identifier.strip():
+        return ("unknown", None)
+
+    identifier = identifier.strip()
+
+    # Check if it's an email (basic pattern matching)
+    # Pattern: something@something.domain
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if re.match(email_pattern, identifier):
+        return ("email", identifier)
+
+    # Check if it could be a phone number
+    # Remove common formatting characters
+    cleaned = re.sub(r'[\s\-\(\)\.]', '', identifier)
+
+    # Check for phone patterns:
+    # - Starts with + (international)
+    # - Starts with 0 (South African local)
+    # - Just digits (might be phone without formatting)
+    if cleaned.startswith('+') or cleaned.startswith('0') or cleaned.isdigit():
+        # Validate and normalize
+        try:
+            normalized = normalize_phone_number(identifier)
+            return ("phone", normalized)
+        except ValueError:
+            pass
+
+    return ("unknown", None)
 
 
 def normalize_phone_number(phone: str) -> str:

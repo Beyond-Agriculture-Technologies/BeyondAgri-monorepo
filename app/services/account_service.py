@@ -122,6 +122,35 @@ class AccountService:
         """Get account by email address."""
         return self.db.query(Account).filter(Account.email == email).first()
 
+    def get_account_by_phone(self, phone_number: str) -> Optional[Account]:
+        """
+        Get account by phone number.
+
+        Args:
+            phone_number: Phone number (will be normalized internally)
+
+        Returns:
+            Account if found, None otherwise
+        """
+        from app.utils.phone_validation import normalize_phone_number
+
+        try:
+            # Normalize phone to E.164 format for consistent lookup
+            normalized_phone = normalize_phone_number(phone_number)
+        except ValueError:
+            # Invalid phone format
+            return None
+
+        # Query UserProfile for matching phone, join to Account
+        user_profile = self.db.query(UserProfile).filter(
+            UserProfile.phone_number == normalized_phone
+        ).first()
+
+        if user_profile and user_profile.account:
+            return user_profile.account
+
+        return None
+
     def get_account_with_profiles(self, account_id: int) -> Optional[Account]:
         """Get account with all associated profiles loaded."""
         return self.db.query(Account).filter(Account.id == account_id).first()

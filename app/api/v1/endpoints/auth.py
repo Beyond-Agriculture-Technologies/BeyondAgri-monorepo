@@ -1,6 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Any
+from pydantic import EmailStr
 from sqlalchemy.orm import Session
+import logging
 
 from app.schemas.auth import (
     UserRegister,
@@ -11,7 +14,12 @@ from app.schemas.auth import (
     LoginResponseData,
     PasswordResetRequest,
     PasswordResetResponse,
-    PasswordResetConfirm
+    PasswordResetConfirm,
+    ConfirmRegistrationRequest,
+    RegistrationResponse,
+    VerifyOTPRequest,
+    OTPResponse,
+    VerifyOTPResponse
 )
 from app.schemas.account import AccountProfile
 from app.core.deps import get_current_account
@@ -25,23 +33,30 @@ from app.services.authentication import (
 )
 
 router = APIRouter()
+security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 
-@router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=RegistrationResponse, status_code=status.HTTP_202_ACCEPTED)
 async def register(
     user_data: UserRegister,
     request: Request,
     db: Session = Depends(get_db)
 ) -> Any:
     """
-    Register a new user with enhanced account structure.
+    Initiate user registration with phone verification via SMS.
+
+    Sends a 6-digit verification code to the provided phone number.
+    User must call /confirm-registration with the code to complete registration.
 
     - **email**: User's email address (required)
     - **password**: Strong password (required, min 8 characters)
-    - **phone_number**: Phone number (optional)
+    - **phone_number**: Phone number in E.164 or SA format (required)
     - **user_type**: farmer, wholesaler, or admin (default: farmer)
     - **name**: Full name (optional)
     - **address**: Address (optional)
+
+    Returns delivery details for the verification code sent via SMS.
     """
     try:
         # Prepare additional attributes
@@ -51,9 +66,9 @@ async def register(
         if user_data.address:
             additional_attributes["address"] = user_data.address
 
-        # Register user with account structure
+        # Register user with Cognito SignUp API (sends verification code)
         auth_service = get_auth_service_with_db(db)
-        result = await auth_service.register_user(
+        result = await auth_service.sign_up_user(
             email=user_data.email,
             password=user_data.password,
             phone_number=user_data.phone_number,
@@ -61,18 +76,11 @@ async def register(
             **additional_attributes
         )
 
-        user_response = UserResponse(
-            user_id=result["user_id"],
+        return RegistrationResponse(
             user_sub=result["user_sub"],
-            email=result["email"],
-            user_type=result["account_type"],
-            phone_number=result["phone_number"],
-            status=result["status"]
-        )
-
-        return AuthResponse(
-            message="Account registered successfully",
-            data=None  # Registration doesn't include tokens
+            code_delivery_medium=result["code_delivery_medium"],
+            code_delivery_destination=result["code_delivery_destination"],
+            message=result["message"]
         )
 
     except UserAlreadyExistsError as e:
@@ -87,6 +95,81 @@ async def register(
         )
 
 
+@router.post("/confirm-registration", response_model=AuthResponse)
+async def confirm_registration(
+    confirmation_data: ConfirmRegistrationRequest,
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Confirm user registration with the verification code sent via SMS.
+
+    - **email**: Email address used during registration
+    - **confirmation_code**: 6-digit verification code received via SMS
+
+    After successful confirmation, the account is fully created and the user can login.
+    """
+    try:
+        auth_service = get_auth_service_with_db(db)
+        result = await auth_service.confirm_sign_up_user(
+            email=confirmation_data.email,
+            confirmation_code=confirmation_data.confirmation_code
+        )
+
+        return AuthResponse(
+            message=result["message"],
+            data=None
+        )
+
+    except AuthenticationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+@router.post("/resend-confirmation", response_model=RegistrationResponse)
+async def resend_confirmation(
+    email: EmailStr,
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Resend registration confirmation code to user's phone.
+
+    Use this if the original verification code expired (codes expire in ~3 minutes).
+
+    - **email**: Email address used during registration
+
+    Returns new delivery details with the resent verification code.
+    """
+    try:
+        auth_service = get_auth_service_with_db(db)
+        result = await auth_service.resend_confirmation_code(email)
+
+        return RegistrationResponse(
+            user_sub="",  # Not returned by resend
+            code_delivery_medium=result['code_delivery_medium'],
+            code_delivery_destination=result['code_delivery_destination'],
+            message="Verification code resent to your phone"
+        )
+
+    except UserNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except AuthenticationError as e:
+        # Handle both rate limit and other errors
+        if "Too many requests" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=str(e)
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
 @router.post("/login", response_model=AuthResponse)
 async def login(
     credentials: UserLogin,
@@ -94,10 +177,15 @@ async def login(
     db: Session = Depends(get_db)
 ) -> Any:
     """
-    Authenticate user with enhanced tracking.
+    Authenticate user with email or phone number.
 
-    - **username**: User's email address
+    - **username**: Email OR phone number
+      - Email: farmer@example.com
+      - Phone (E.164): +27821234567
+      - Phone (SA format): 0821234567
     - **password**: User's password
+
+    Note: Phone number must be verified before use for login.
     """
     try:
         # Extract request info for logging
@@ -158,9 +246,14 @@ async def request_password_reset(
     db: Session = Depends(get_db)
 ) -> Any:
     """
-    Initiate password reset process.
+    Initiate password reset process with email or phone number.
 
-    - **email**: User's email address
+    - **email**: Email OR phone number
+      - Email: farmer@example.com
+      - Phone (E.164): +27821234567
+      - Phone (SA format): 0821234567
+
+    Note: Phone number must be verified before use for password reset.
     """
     try:
         auth_service = get_auth_service_with_db(db)
@@ -172,6 +265,12 @@ async def request_password_reset(
             message="Password reset code sent successfully"
         )
 
+    except InvalidCredentialsError as e:
+        # Phone not verified
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except UserNotFoundError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -192,9 +291,12 @@ async def confirm_password_reset(
     """
     Confirm password reset with verification code.
 
-    - **email**: User's email address
+    - **email**: Email OR phone number (same as used to request reset)
+      - Email: farmer@example.com
+      - Phone (E.164): +27821234567
+      - Phone (SA format): 0821234567
     - **confirmation_code**: Code received via email/SMS
-    - **new_password**: New password
+    - **new_password**: New password (min 8 characters)
     """
     try:
         auth_service = get_auth_service_with_db(db)
@@ -213,6 +315,166 @@ async def confirm_password_reset(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+
+
+@router.post("/send-otp", response_model=OTPResponse)
+async def send_phone_verification_otp(
+    current_account: AccountProfile = Depends(get_current_account),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Send OTP to authenticated user's phone number via AWS Cognito.
+
+    **Authentication Required:** Yes (JWT access token)
+    **Phone Source:** From authenticated user's Cognito profile
+    **Expiry:** 3 minutes (Cognito default)
+
+    The OTP code will be sent via SMS to the phone number associated with the authenticated user's account.
+    """
+    from app.services.phone_verification_service import (
+        get_phone_verification_service,
+        PhoneVerificationError,
+        OTPLimitExceededError
+    )
+
+    try:
+        phone_service = get_phone_verification_service(db)
+        access_token = credentials.credentials
+
+        logger.info(f"Sending Cognito OTP for user: {current_account.email}")
+        result = await phone_service.send_verification_otp_cognito(access_token)
+
+        return OTPResponse(**result)
+
+    except OTPLimitExceededError as e:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(e)
+        )
+    except PhoneVerificationError as e:
+        logger.error(f"Failed to send OTP: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error sending OTP: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to send verification code. Please try again later."
+        )
+
+
+@router.post("/verify-otp", response_model=VerifyOTPResponse)
+async def verify_phone_otp(
+    request: VerifyOTPRequest,
+    current_account: AccountProfile = Depends(get_current_account),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Verify OTP code via AWS Cognito.
+
+    **Authentication Required:** Yes (JWT access token)
+    **Request Body:** Only otp_code needed (phone from authenticated user's Cognito profile)
+
+    - **otp_code**: 6-digit OTP code received via SMS
+
+    On successful verification, the account's phone_verified_at will be set.
+    """
+    from app.services.phone_verification_service import (
+        get_phone_verification_service,
+        PhoneVerificationError,
+        OTPExpiredError,
+        OTPInvalidError,
+        OTPLimitExceededError
+    )
+
+    try:
+        phone_service = get_phone_verification_service(db)
+        access_token = credentials.credentials
+
+        logger.info(f"Verifying Cognito OTP for user: {current_account.email}")
+        result = await phone_service.verify_otp_cognito(access_token, request.otp_code)
+
+        return VerifyOTPResponse(**result)
+
+    except OTPExpiredError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except OTPInvalidError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except OTPLimitExceededError as e:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(e)
+        )
+    except PhoneVerificationError as e:
+        logger.error(f"Failed to verify OTP: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error verifying OTP: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to verify code. Please try again later."
+        )
+
+
+@router.post("/resend-otp", response_model=OTPResponse)
+async def resend_phone_verification_otp(
+    current_account: AccountProfile = Depends(get_current_account),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(get_db)
+) -> Any:
+    """
+    Resend OTP via AWS Cognito (generates new code).
+
+    **Authentication Required:** Yes (JWT access token)
+    **Phone Source:** From authenticated user's Cognito profile
+
+    This will invalidate any previous OTP codes and send a new one.
+    """
+    from app.services.phone_verification_service import (
+        get_phone_verification_service,
+        PhoneVerificationError,
+        OTPLimitExceededError
+    )
+
+    try:
+        phone_service = get_phone_verification_service(db)
+        access_token = credentials.credentials
+
+        logger.info(f"Resending Cognito OTP for user: {current_account.email}")
+        result = await phone_service.send_verification_otp_cognito(access_token)
+
+        return OTPResponse(**result)
+
+    except OTPLimitExceededError as e:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(e)
+        )
+    except PhoneVerificationError as e:
+        logger.error(f"Failed to resend OTP: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error resending OTP: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to resend verification code. Please try again later."
         )
 
 

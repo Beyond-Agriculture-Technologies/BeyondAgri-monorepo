@@ -9,17 +9,18 @@ BeyondAgri uses AWS Cognito for authentication with JWT (JSON Web Tokens) for se
 ## Authentication Flow
 
 ```
-1. Register → Create account (email + password)
-2. Login → Receive JWT tokens (access, ID, refresh)
-3. Use Access Token → Include in Authorization header for API requests
-4. Token Expires → Use Refresh Token to get new Access Token
+1. Register → Initiate account creation (email + password + phone)
+2. Confirm Registration → Verify SMS code to complete account creation
+3. Login → Receive JWT tokens (access, ID, refresh)
+4. Use Access Token → Include in Authorization header for API requests
+5. Token Expires → Use Refresh Token to get new Access Token
 ```
 
 ## Endpoints
 
 ### 1. Register New User
 
-Create a new user account.
+Initiate user registration with phone verification. A 6-digit verification code will be sent via SMS.
 
 **Endpoint:** `POST /api/v1/auth/register`
 
@@ -31,7 +32,7 @@ Create a new user account.
 {
   "email": "farmer@example.com",
   "password": "SecurePassword123!",
-  "phone_number": "+27821234567",  // Optional, E.164 format
+  "phone_number": "+27821234567",   // Required, E.164 or SA format
   "user_type": "farmer",            // "farmer" | "wholesaler" | "admin"
   "name": "John Doe",               // Optional
   "address": "123 Farm Road, Cape Town"  // Optional
@@ -45,17 +46,21 @@ Create a new user account.
   - At least one lowercase letter
   - At least one number
   - At least one special character
-- `phone_number`: Optional, E.164 format (e.g., +27821234567)
+- `phone_number`: Required, E.164 format (+27821234567) or SA format (0821234567)
 - `user_type`: One of: "farmer", "wholesaler", "admin" (default: "farmer")
 
-**Success Response (201 Created):**
+**Success Response (202 Accepted):**
 
 ```json
 {
-  "message": "Account registered successfully",
-  "data": null
+  "user_sub": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "code_delivery_medium": "SMS",
+  "code_delivery_destination": "+27***4567",
+  "message": "Verification code sent to your phone. Please confirm to complete registration."
 }
 ```
+
+**Note:** After receiving this response, the user must call `/confirm-registration` with the verification code to complete registration.
 
 **Error Responses:**
 
@@ -125,9 +130,106 @@ const register = async (userData) => {
 
 ---
 
+### 1b. Confirm Registration
+
+Complete user registration by verifying the SMS code.
+
+**Endpoint:** `POST /api/v1/auth/confirm-registration`
+
+**Authentication:** Not required
+
+**Request Body:**
+
+```json
+{
+  "email": "farmer@example.com",
+  "confirmation_code": "123456"
+}
+```
+
+**Success Response (200 OK):**
+
+```json
+{
+  "message": "Registration completed. You can now log in.",
+  "data": null
+}
+```
+
+**Error Responses:**
+
+```json
+// 400 Bad Request - Invalid code
+{
+  "detail": "Invalid verification code"
+}
+
+// 400 Bad Request - Code expired
+{
+  "detail": "Verification code expired. Please request a new code or register again."
+}
+```
+
+**cURL Example:**
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/confirm-registration" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "farmer@example.com",
+    "confirmation_code": "123456"
+  }'
+```
+
+---
+
+### 1c. Resend Confirmation Code
+
+Resend the registration verification code if it expired or wasn't received.
+
+**Endpoint:** `POST /api/v1/auth/resend-confirmation`
+
+**Authentication:** Not required
+
+**Query Parameter:**
+- `email`: Email address used during registration
+
+**Success Response (200 OK):**
+
+```json
+{
+  "user_sub": "",
+  "code_delivery_medium": "SMS",
+  "code_delivery_destination": "+27***4567",
+  "message": "Verification code resent to your phone"
+}
+```
+
+**Error Responses:**
+
+```json
+// 404 Not Found - User not found
+{
+  "detail": "User not found. Please register first."
+}
+
+// 429 Too Many Requests - Rate limit
+{
+  "detail": "Too many requests. Please wait before requesting another code."
+}
+```
+
+**cURL Example:**
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/resend-confirmation?email=farmer@example.com"
+```
+
+---
+
 ### 2. Login
 
-Authenticate a user and receive JWT tokens.
+Authenticate a user with email or phone number and receive JWT tokens.
 
 **Endpoint:** `POST /api/v1/auth/login`
 
@@ -137,7 +239,36 @@ Authenticate a user and receive JWT tokens.
 
 ```json
 {
-  "username": "farmer@example.com",  // Email address
+  "username": "farmer@example.com",  // Email OR phone number
+  "password": "SecurePassword123!"
+}
+```
+
+**Username Formats Accepted:**
+- **Email**: `farmer@example.com`
+- **Phone (E.164)**: `+27821234567`
+- **Phone (SA format)**: `0821234567`
+
+**Important:** Phone number must be verified before it can be used for login.
+
+**Request Examples:**
+
+```json
+// Login with email
+{
+  "username": "farmer@example.com",
+  "password": "SecurePassword123!"
+}
+
+// Login with E.164 phone
+{
+  "username": "+27821234567",
+  "password": "SecurePassword123!"
+}
+
+// Login with SA format phone
+{
+  "username": "0821234567",
   "password": "SecurePassword123!"
 }
 ```
@@ -173,22 +304,49 @@ Authenticate a user and receive JWT tokens.
 ```json
 // 401 Unauthorized - Invalid credentials
 {
-  "detail": "Incorrect username or password."
+  "detail": "Invalid username or password"
+}
+
+// 401 Unauthorized - Unverified phone
+{
+  "detail": "Please verify your phone number before logging in"
 }
 
 // 404 Not Found - User doesn't exist
 {
-  "detail": "User not found"
+  "detail": "No account found. Please check your credentials or register."
+}
+
+// 400 Bad Request - Invalid format
+{
+  "detail": "Username must be a valid email address or phone number. Phone formats: +27XXXXXXXXX (international) or 0XXXXXXXXX (South African)"
 }
 ```
 
-**cURL Example:**
+**cURL Examples:**
 
 ```bash
+# Login with email
 curl -X POST "http://localhost:8000/api/v1/auth/login" \
   -H "Content-Type: application/json" \
   -d '{
     "username": "farmer@example.com",
+    "password": "SecurePass123!"
+  }'
+
+# Login with phone (E.164)
+curl -X POST "http://localhost:8000/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "+27821234567",
+    "password": "SecurePass123!"
+  }'
+
+# Login with phone (SA format)
+curl -X POST "http://localhost:8000/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "0821234567",
     "password": "SecurePass123!"
   }'
 ```
@@ -196,14 +354,15 @@ curl -X POST "http://localhost:8000/api/v1/auth/login" \
 **JavaScript Example:**
 
 ```javascript
-const login = async (email, password) => {
+const login = async (username, password) => {
+  // username can be email OR phone number
   const response = await fetch('http://localhost:8000/api/v1/auth/login', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      username: email,
+      username: username,  // Email: "farmer@example.com" OR Phone: "+27821234567" or "0821234567"
       password: password
     })
   });
@@ -222,13 +381,18 @@ const login = async (email, password) => {
 
   return data.data;
 };
+
+// Example usage
+await login('farmer@example.com', 'SecurePass123!');  // Email login
+await login('+27821234567', 'SecurePass123!');        // Phone login (E.164)
+await login('0821234567', 'SecurePass123!');          // Phone login (SA format)
 ```
 
 ---
 
 ### 3. Request Password Reset
 
-Initiate the password reset process.
+Initiate the password reset process with email or phone number.
 
 **Endpoint:** `POST /api/v1/auth/password-reset`
 
@@ -238,7 +402,33 @@ Initiate the password reset process.
 
 ```json
 {
+  "email": "farmer@example.com"  // Email OR phone number
+}
+```
+
+**Email/Phone Formats Accepted:**
+- **Email**: `farmer@example.com`
+- **Phone (E.164)**: `+27821234567`
+- **Phone (SA format)**: `0821234567`
+
+**Important:** Phone number must be verified before it can be used for password reset.
+
+**Request Examples:**
+
+```json
+// Password reset with email
+{
   "email": "farmer@example.com"
+}
+
+// Password reset with E.164 phone
+{
+  "email": "+27821234567"
+}
+
+// Password reset with SA format phone
+{
+  "email": "0821234567"
 }
 ```
 
@@ -255,19 +445,44 @@ Initiate the password reset process.
 **Error Responses:**
 
 ```json
-// 404 Not Found
+// 404 Not Found - User doesn't exist
 {
-  "detail": "User not found"
+  "detail": "No account found. Please check your credentials or register."
+}
+
+// 400 Bad Request - Unverified phone
+{
+  "detail": "Please verify your phone number before resetting password"
+}
+
+// 400 Bad Request - Invalid format
+{
+  "detail": "Must be a valid email address or phone number. Phone formats: +27XXXXXXXXX (international) or 0XXXXXXXXX (South African)"
 }
 ```
 
-**cURL Example:**
+**cURL Examples:**
 
 ```bash
+# Password reset with email
 curl -X POST "http://localhost:8000/api/v1/auth/password-reset" \
   -H "Content-Type: application/json" \
   -d '{
     "email": "farmer@example.com"
+  }'
+
+# Password reset with phone (E.164)
+curl -X POST "http://localhost:8000/api/v1/auth/password-reset" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "+27821234567"
+  }'
+
+# Password reset with phone (SA format)
+curl -X POST "http://localhost:8000/api/v1/auth/password-reset" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "0821234567"
   }'
 ```
 
@@ -285,7 +500,39 @@ Complete the password reset with the verification code.
 
 ```json
 {
+  "email": "farmer@example.com",  // Email OR phone number (same as used to request reset)
+  "confirmation_code": "123456",
+  "new_password": "NewSecurePass123!"
+}
+```
+
+**Email/Phone Formats Accepted:**
+- **Email**: `farmer@example.com`
+- **Phone (E.164)**: `+27821234567`
+- **Phone (SA format)**: `0821234567`
+
+**Important:** Use the same identifier (email or phone) that you used to request the password reset.
+
+**Request Examples:**
+
+```json
+// Confirm with email
+{
   "email": "farmer@example.com",
+  "confirmation_code": "123456",
+  "new_password": "NewSecurePass123!"
+}
+
+// Confirm with E.164 phone
+{
+  "email": "+27821234567",
+  "confirmation_code": "123456",
+  "new_password": "NewSecurePass123!"
+}
+
+// Confirm with SA format phone
+{
+  "email": "0821234567",
   "confirmation_code": "123456",
   "new_password": "NewSecurePass123!"
 }
@@ -307,6 +554,204 @@ Complete the password reset with the verification code.
 {
   "detail": "Invalid verification code provided"
 }
+```
+
+---
+
+### 5. Send OTP for Phone Verification
+
+Send a verification code to the authenticated user's phone number via AWS Cognito.
+
+**Endpoint:** `POST /api/v1/auth/send-otp`
+
+**Authentication:** Required (JWT access token)
+
+**Request Body:** None required - phone number is extracted from the authenticated user's Cognito profile.
+
+**Success Response (200 OK):**
+
+```json
+{
+  "status": "success",
+  "message": "Verification code sent successfully",
+  "delivery_medium": "SMS",
+  "destination": "+27***4567",
+  "expires_in_minutes": 3
+}
+```
+
+**Error Responses:**
+
+```json
+// 400 Bad Request - Phone not set
+{
+  "detail": "Phone number not set for this account"
+}
+
+// 429 Too Many Requests - Rate limit
+{
+  "detail": "Too many OTP requests. Please wait before requesting another code."
+}
+
+// 500 Internal Server Error
+{
+  "detail": "Failed to send verification code. Please try again later."
+}
+```
+
+**cURL Example:**
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/send-otp" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+**JavaScript Example:**
+
+```javascript
+const sendOTP = async (accessToken) => {
+  const response = await fetch('http://localhost:8000/api/v1/auth/send-otp', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`
+    }
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail);
+  }
+
+  const data = await response.json();
+  console.log(`OTP sent to ${data.destination}, expires in ${data.expires_in_minutes} minutes`);
+
+  return data;
+};
+```
+
+---
+
+### 6. Verify OTP
+
+Verify the OTP code received via SMS for the authenticated user.
+
+**Endpoint:** `POST /api/v1/auth/verify-otp`
+
+**Authentication:** Required (JWT access token)
+
+**Request Body:**
+
+```json
+{
+  "otp_code": "123456"
+}
+```
+
+**Note:** Phone number is extracted from the authenticated user's Cognito profile - only the OTP code is required.
+
+**Success Response (200 OK):**
+
+```json
+{
+  "status": "success",
+  "message": "Phone number verified successfully",
+  "phone_number": "+27***4567",
+  "account_found": true,
+  "account": {
+    "email": "farmer@example.com",
+    "account_type": "farmer",
+    "phone_verified": true,
+    "phone_verified_at": "2025-12-05T10:30:00Z"
+  }
+}
+```
+
+**Error Responses:**
+
+```json
+// 400 Bad Request - OTP expired
+{
+  "detail": "Verification code has expired. Please request a new one."
+}
+
+// 401 Unauthorized - Invalid OTP
+{
+  "detail": "Invalid verification code"
+}
+
+// 429 Too Many Requests - Too many attempts
+{
+  "detail": "Too many attempts. Please request a new code."
+}
+
+// 500 Internal Server Error
+{
+  "detail": "Failed to verify code. Please try again later."
+}
+```
+
+**cURL Example:**
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/verify-otp" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "otp_code": "123456"
+  }'
+```
+
+**JavaScript Example:**
+
+```javascript
+const verifyOTP = async (accessToken, otpCode) => {
+  const response = await fetch('http://localhost:8000/api/v1/auth/verify-otp', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      otp_code: otpCode
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail);
+  }
+
+  const data = await response.json();
+
+  if (data.account_found) {
+    console.log(`Phone verified for ${data.account.email}`);
+  }
+
+  return data;
+};
+```
+
+---
+
+### 7. Resend OTP
+
+Resend a new OTP code (invalidates any previous code).
+
+**Endpoint:** `POST /api/v1/auth/resend-otp`
+
+**Authentication:** Required (JWT access token)
+
+**Request Body:** None required - phone number is extracted from the authenticated user's Cognito profile.
+
+**Success Response (200 OK):**
+
+Same as Send OTP response.
+
+**cURL Example:**
+
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/resend-otp" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 ---

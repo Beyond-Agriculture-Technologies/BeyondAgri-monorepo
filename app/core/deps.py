@@ -143,3 +143,23 @@ async def get_optional_current_account(
         return await get_current_account(credentials)
     except HTTPException:
         return None
+
+
+async def get_current_account_with_token(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db)
+) -> tuple[Optional[AccountProfile], Optional[str]]:
+    """
+    Dependency to optionally get the current account with access token.
+    Returns (account_profile, access_token) tuple, or (None, None) if not authenticated.
+    Used for endpoints that behave differently for authenticated vs unauthenticated users.
+    """
+    if not credentials:
+        return (None, None)
+
+    try:
+        access_token = credentials.credentials
+        account = await get_current_account(credentials, db)
+        return (account, access_token)
+    except HTTPException:
+        return (None, None)

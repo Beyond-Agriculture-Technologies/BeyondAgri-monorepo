@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Dict, Any
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from app.utils.phone_validation import normalize_phone_number, get_phone_validation_error
 
@@ -34,13 +34,32 @@ class UserRegister(BaseModel):
 
 
 class UserLogin(BaseModel):
-    username: EmailStr = Field(..., description="Username (email)")
+    username: str = Field(
+        ...,
+        description="Email address or phone number (E.164 format: +27XXXXXXXXX or SA format: 0XXXXXXXXX)"
+    )
     password: str = Field(..., description="User's password")
+
+    @field_validator('username')
+    @classmethod
+    def validate_username(cls, v: str) -> str:
+        """Validate that username is either a valid email or phone number."""
+        from app.utils.phone_validation import detect_login_identifier_type
+
+        identifier_type = detect_login_identifier_type(v)
+
+        if identifier_type == "unknown":
+            raise ValueError(
+                "Username must be a valid email address or phone number. "
+                "Phone formats: +27XXXXXXXXX (international) or 0XXXXXXXXX (South African)"
+            )
+
+        return v.strip()
 
     class Config:
         json_schema_extra = {
             "example": {
-                "username": "farmer@example.com",
+                "username": "farmer@example.com",  # or "+27821234567" or "0821234567"
                 "password": "SecurePassword123!"
             }
         }
@@ -60,25 +79,60 @@ class TokenData(BaseModel):
 
 
 class PasswordResetRequest(BaseModel):
-    email: EmailStr = Field(..., description="Email address for password reset")
+    email: str = Field(
+        ...,
+        description="Email address or phone number for password reset"
+    )
+
+    @field_validator('email')
+    @classmethod
+    def validate_email_or_phone(cls, v: str) -> str:
+        """Validate that input is either valid email or phone number."""
+        from app.utils.phone_validation import detect_login_identifier_type
+
+        identifier_type = detect_login_identifier_type(v)
+
+        if identifier_type == "unknown":
+            raise ValueError(
+                "Must be a valid email address or phone number. "
+                "Phone formats: +27XXXXXXXXX (international) or 0XXXXXXXXX (South African)"
+            )
+
+        return v.strip()
 
     class Config:
         json_schema_extra = {
             "example": {
-                "email": "farmer@example.com"
+                "email": "farmer@example.com"  # or "+27821234567" or "0821234567"
             }
         }
 
 
 class PasswordResetConfirm(BaseModel):
-    email: EmailStr = Field(..., description="Email address")
+    email: str = Field(..., description="Email address or phone number")
     confirmation_code: str = Field(..., description="Confirmation code received")
     new_password: str = Field(..., min_length=8, description="New password")
+
+    @field_validator('email')
+    @classmethod
+    def validate_email_or_phone(cls, v: str) -> str:
+        """Validate that input is either valid email or phone number."""
+        from app.utils.phone_validation import detect_login_identifier_type
+
+        identifier_type = detect_login_identifier_type(v)
+
+        if identifier_type == "unknown":
+            raise ValueError(
+                "Must be a valid email address or phone number. "
+                "Phone formats: +27XXXXXXXXX (international) or 0XXXXXXXXX (South African)"
+            )
+
+        return v.strip()
 
     class Config:
         json_schema_extra = {
             "example": {
-                "email": "farmer@example.com",
+                "email": "farmer@example.com",  # or "+27821234567" or "0821234567"
                 "confirmation_code": "123456",
                 "new_password": "NewSecurePassword123!"
             }
@@ -121,6 +175,113 @@ class UserResponse(BaseModel):
                 "user_type": "farmer",
                 "phone_number": "+27123456789",
                 "status": "CONFIRMED"
+            }
+        }
+
+
+class ConfirmRegistrationRequest(BaseModel):
+    """Confirm user registration with verification code sent to phone"""
+    email: EmailStr = Field(..., description="User's email address used during registration")
+    confirmation_code: str = Field(..., min_length=6, max_length=6, description="6-digit verification code")
+
+    @field_validator('confirmation_code')
+    @classmethod
+    def validate_confirmation_code(cls, v: str) -> str:
+        """Validate confirmation code is 6 digits."""
+        if not v.isdigit():
+            raise ValueError("Confirmation code must contain only digits")
+        if len(v) != 6:
+            raise ValueError("Confirmation code must be exactly 6 digits")
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "email": "farmer@example.com",
+                "confirmation_code": "123456"
+            }
+        }
+
+
+class RegistrationResponse(BaseModel):
+    """Response for registration initiation"""
+    user_sub: str = Field(..., description="Cognito user sub")
+    code_delivery_medium: str = Field(..., description="Delivery method (SMS)")
+    code_delivery_destination: str = Field(..., description="Masked phone number where code was sent")
+    message: str = Field(..., description="Success message")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "user_sub": "cognito-user-sub-123",
+                "code_delivery_medium": "SMS",
+                "code_delivery_destination": "+27***4567",
+                "message": "Verification code sent to your phone. Please confirm to complete registration."
+            }
+        }
+
+
+class VerifyOTPRequest(BaseModel):
+    """Simplified - only OTP code needed, phone comes from authenticated user's Cognito profile"""
+    otp_code: str = Field(..., min_length=6, max_length=6, description="6-digit OTP code")
+
+    @field_validator('otp_code')
+    @classmethod
+    def validate_otp_code(cls, v: str) -> str:
+        """Validate OTP code is 6 digits."""
+        if not v.isdigit():
+            raise ValueError("OTP code must contain only digits")
+        if len(v) != 6:
+            raise ValueError("OTP code must be exactly 6 digits")
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "otp_code": "123456"
+            }
+        }
+
+
+class OTPResponse(BaseModel):
+    status: str = Field(..., description="Response status")
+    message: str = Field(..., description="Response message")
+    delivery_medium: str = Field(..., description="Delivery method (SMS)")
+    destination: str = Field(..., description="Masked phone number where OTP was sent")
+    expires_in_minutes: int = Field(..., description="OTP expiry time in minutes (3 for Cognito)")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "status": "success",
+                "message": "Verification code sent successfully",
+                "delivery_medium": "SMS",
+                "destination": "+27***4567",
+                "expires_in_minutes": 3
+            }
+        }
+
+
+class VerifyOTPResponse(BaseModel):
+    status: str = Field(..., description="Response status")
+    message: str = Field(..., description="Response message")
+    phone_number: str = Field(..., description="Masked phone number")
+    account_found: bool = Field(..., description="Whether an account was found for this phone")
+    account: Optional[Dict[str, Any]] = Field(None, description="Account information if found")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "status": "success",
+                "message": "Phone number verified successfully",
+                "phone_number": "+27***4567",
+                "account_found": True,
+                "account": {
+                    "email": "farmer@example.com",
+                    "account_type": "farmer",
+                    "phone_verified": True,
+                    "phone_verified_at": "2025-12-05T10:30:00Z"
+                }
             }
         }
 
