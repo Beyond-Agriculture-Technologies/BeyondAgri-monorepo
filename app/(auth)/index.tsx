@@ -11,24 +11,44 @@ import {
 } from 'react-native'
 import { router } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { Ionicons } from '@expo/vector-icons'
 import { BackendAuthService } from '../../src/services/auth'
 import { APP_COLORS } from '../../src/utils/constants'
+import { isPhoneNumber, normalizePhoneNumber } from '../../src/utils/phone-validation'
+import { getErrorMessage } from '../../src/utils/error-handler'
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets()
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [inputType, setInputType] = useState<'email' | 'phone' | null>(null)
+
+  const handleIdentifierChange = (text: string) => {
+    setIdentifier(text)
+
+    if (text.trim().length === 0) {
+      setInputType(null)
+    } else if (isPhoneNumber(text)) {
+      setInputType('phone')
+    } else {
+      setInputType('email')
+    }
+  }
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please enter both email and password')
+    if (!identifier || !password) {
+      Alert.alert('Error', 'Please enter your email/phone and password')
       return
     }
 
     setIsLoading(true)
     try {
-      const result = await BackendAuthService.signIn(email, password)
+      // Normalize phone numbers to E.164 format
+      const normalizedIdentifier =
+        inputType === 'phone' ? normalizePhoneNumber(identifier) : identifier
+
+      const result = await BackendAuthService.signIn(normalizedIdentifier, password)
 
       if (result.success) {
         router.replace('/(tabs)')
@@ -59,11 +79,8 @@ export default function LoginScreen() {
           Alert.alert('Login Failed', errorMessage)
         }
       }
-    } catch (error) {
-      Alert.alert(
-        'Error',
-        'An unexpected error occurred. Please check your internet connection and try again.'
-      )
+    } catch (error: unknown) {
+      Alert.alert('Error', getErrorMessage(error))
     } finally {
       setIsLoading(false)
     }
@@ -83,16 +100,30 @@ export default function LoginScreen() {
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
+              <Text style={styles.label}>Email or Phone Number</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={identifier}
+                  onChangeText={handleIdentifierChange}
+                  placeholder="Enter email or phone"
+                  keyboardType="default"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {inputType && (
+                  <View style={styles.inputTypeIndicator}>
+                    <Ionicons
+                      name={inputType === 'email' ? 'mail-outline' : 'call-outline'}
+                      size={16}
+                      color={APP_COLORS.textSecondary}
+                    />
+                  </View>
+                )}
+              </View>
+              {inputType === 'phone' && (
+                <Text style={styles.helperText}>Format: +27821234567 or 0821234567</Text>
+              )}
             </View>
 
             <View style={styles.inputGroup}>
@@ -179,6 +210,9 @@ const styles = StyleSheet.create({
     color: APP_COLORS.text,
     marginBottom: 8,
   },
+  inputContainer: {
+    position: 'relative',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#e5e7eb',
@@ -187,6 +221,16 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     backgroundColor: APP_COLORS.surface,
+  },
+  inputTypeIndicator: {
+    position: 'absolute',
+    right: 16,
+    top: 14,
+  },
+  helperText: {
+    fontSize: 12,
+    color: APP_COLORS.textSecondary,
+    marginTop: 4,
   },
   loginButton: {
     backgroundColor: APP_COLORS.primary,

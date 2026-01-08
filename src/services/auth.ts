@@ -5,20 +5,25 @@ import {
   LoginRequest,
   LoginResponse,
   RegisterRequest,
-  RegisterResponse,
   PasswordResetRequest,
   PasswordResetResponse,
   ConfirmPasswordResetRequest,
   ConfirmPasswordResetResponse,
   User,
   BackendApiResponse,
+  RegistrationPendingResponse,
+  ConfirmRegistrationRequest,
+  ConfirmRegistrationResponse,
+  ResendConfirmationRequest,
+  createUserProfile,
 } from '../types'
+import { getErrorMessage } from '../utils/error-handler'
 
 export class BackendAuthService {
-  static async signIn(email: string, password: string) {
+  static async signIn(identifier: string, password: string) {
     try {
       const loginData: LoginRequest = {
-        username: email,
+        username: identifier, // Can be email or phone
         password,
       }
 
@@ -27,7 +32,7 @@ export class BackendAuthService {
       if (ENABLE_HIDDEN_FEATURES) {
         console.log('🔐 Auth Login Request:', {
           url,
-          email,
+          identifier,
           timestamp: new Date().toISOString(),
         })
       }
@@ -69,14 +74,11 @@ export class BackendAuthService {
         }
 
         // Create user profile with role compatibility
-        const userProfile = {
-          ...user,
-          role: user.user_type, // For backwards compatibility
-        }
+        const userProfile = createUserProfile(user)
 
         // Update auth store
         const authStore = useAuthStore.getState()
-        authStore.setUser(userProfile as any)
+        authStore.setUser(userProfile)
         authStore.setToken(access_token)
         authStore.setAuthenticated(true)
 
@@ -84,9 +86,9 @@ export class BackendAuthService {
       }
 
       return { success: false, error: 'Invalid response format' }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Sign in error:', error)
-      return { success: false, error: error.message || 'Sign in failed' }
+      return { success: false, error: getErrorMessage(error) }
     }
   }
 
@@ -98,6 +100,7 @@ export class BackendAuthService {
         console.log('📝 Auth Register Request:', {
           url,
           email: userData.email,
+          phone: userData.phone_number?.replace(/\d(?=\d{4})/g, '*'),
           user_type: userData.user_type,
           timestamp: new Date().toISOString(),
         })
@@ -116,25 +119,183 @@ export class BackendAuthService {
           url,
           status: response.status,
           statusText: response.statusText,
-          ok: response.ok,
           timestamp: new Date().toISOString(),
         })
       }
 
-      const data: BackendApiResponse<RegisterResponse> = await response.json()
+      const data: BackendApiResponse<RegistrationPendingResponse> = await response.json()
+
+      // Check for 202 ACCEPTED (pending confirmation)
+      if (response.status === 202 && data.data) {
+        return {
+          success: true,
+          status: 202,
+          data: data.data,
+          message: data.data.message,
+        }
+      }
 
       if (!response.ok) {
         throw new Error(data.error || data.message || 'Registration failed')
       }
 
+      // Fallback for unexpected success responses
       return {
         success: true,
-        user: data.data?.user,
-        message: data.data?.message || 'Registration successful',
+        status: response.status,
+        data: data.data,
+        message: data.message || 'Registration initiated',
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration error:', error)
-      return { success: false, error: error.message || 'Registration failed' }
+      return { success: false, error: getErrorMessage(error) }
+    }
+  }
+
+  static async confirmRegistration(email: string, confirmationCode: string) {
+    try {
+      const confirmData: ConfirmRegistrationRequest = {
+        email,
+        confirmation_code: confirmationCode,
+      }
+
+      const url = `${API_FULL_URL}/auth/confirm-registration`
+
+      if (ENABLE_HIDDEN_FEATURES) {
+        console.log('✅ Auth Confirm Registration Request:', {
+          url,
+          email,
+          timestamp: new Date().toISOString(),
+        })
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(confirmData),
+      })
+
+      const data: BackendApiResponse<ConfirmRegistrationResponse> = await response.json()
+
+      if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 400) {
+          const errorMessage = data.error || data.message || 'Invalid verification code'
+          if (errorMessage.toLowerCase().includes('expired')) {
+            return {
+              success: false,
+              error: 'Verification code expired. Please request a new one.',
+              expired: true,
+            }
+          }
+          if (errorMessage.toLowerCase().includes('invalid')) {
+            return {
+              success: false,
+              error: 'Invalid verification code. Please try again.',
+              invalid: true,
+            }
+          }
+          if (errorMessage.toLowerCase().includes('already confirmed')) {
+            return {
+              success: false,
+              error: 'Account already confirmed. Please login.',
+              alreadyConfirmed: true,
+            }
+          }
+        }
+
+        // Handle rate limiting (429)
+        if (response.status === 429) {
+          return {
+            success: false,
+            error: 'Too many requests. Please wait before trying again.',
+            rateLimited: true,
+          }
+        }
+
+        // Handle server errors (500)
+        if (response.status === 500) {
+          return {
+            success: false,
+            error: 'Something went wrong on our end. Please try again later.',
+            serverError: true,
+          }
+        }
+
+        throw new Error(data.error || data.message || 'Confirmation failed')
+      }
+
+      return {
+        success: true,
+        message: data.data?.message || data.message || 'Registration completed successfully',
+      }
+    } catch (error: unknown) {
+      console.error('Confirm registration error:', error)
+      return { success: false, error: getErrorMessage(error) }
+    }
+  }
+
+  static async resendConfirmation(email: string) {
+    try {
+      const resendData: ResendConfirmationRequest = { email }
+
+      const url = `${API_FULL_URL}/auth/resend-confirmation`
+
+      if (ENABLE_HIDDEN_FEATURES) {
+        console.log('📤 Auth Resend Confirmation Request:', {
+          url,
+          email,
+          timestamp: new Date().toISOString(),
+        })
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(resendData),
+      })
+
+      const data: BackendApiResponse<RegistrationPendingResponse> = await response.json()
+
+      if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 404) {
+          return {
+            success: false,
+            error: 'No registration found. Please register first.',
+            notFound: true,
+          }
+        }
+        if (response.status === 429) {
+          return {
+            success: false,
+            error: 'Too many requests. Please wait before requesting another code.',
+            rateLimited: true,
+          }
+        }
+        if (response.status === 500) {
+          return {
+            success: false,
+            error: 'Something went wrong on our end. Please try again later.',
+            serverError: true,
+          }
+        }
+
+        throw new Error(data.error || data.message || 'Failed to resend code')
+      }
+
+      return {
+        success: true,
+        data: data.data,
+        message: data.data?.message || 'Verification code resent',
+      }
+    } catch (error: unknown) {
+      console.error('Resend confirmation error:', error)
+      return { success: false, error: getErrorMessage(error) }
     }
   }
 
@@ -163,7 +324,7 @@ export class BackendAuthService {
       authStore.logout()
 
       return { success: true }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Sign out error:', error)
       // Even if backend call fails, clear local tokens
       await SecureStore.deleteItemAsync('authToken')
@@ -173,7 +334,7 @@ export class BackendAuthService {
       const authStore = useAuthStore.getState()
       authStore.logout()
 
-      return { success: false, error: error.message || 'Sign out failed' }
+      return { success: false, error: getErrorMessage(error) }
     }
   }
 
@@ -200,14 +361,11 @@ export class BackendAuthService {
       const data: BackendApiResponse<User> = await response.json()
 
       if (data.data) {
-        return {
-          ...data.data,
-          role: data.data.user_type, // Add role for compatibility
-        } as any
+        return createUserProfile(data.data)
       }
 
       return null
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Get current user error:', error)
       return null
     }
@@ -221,14 +379,14 @@ export class BackendAuthService {
       const user = await this.getCurrentUser()
       if (user) {
         const authStore = useAuthStore.getState()
-        authStore.setUser(user as any)
+        authStore.setUser(user)
         authStore.setToken(token)
         authStore.setAuthenticated(true)
         return true
       }
 
       return false
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Restore session error:', error)
       await this.signOut() // Clear invalid session
       return false
@@ -238,15 +396,15 @@ export class BackendAuthService {
   static async getAuthToken(): Promise<string | null> {
     try {
       return await SecureStore.getItemAsync('authToken')
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Get auth token error:', error)
       return null
     }
   }
 
-  static async requestPasswordReset(email: string) {
+  static async requestPasswordReset(identifier: string) {
     try {
-      const resetData: PasswordResetRequest = { email }
+      const resetData: PasswordResetRequest = { email: identifier } // Backend uses 'email' field for both email and phone
 
       const response = await fetch(`${API_FULL_URL}/auth/password-reset`, {
         method: 'POST',
@@ -268,9 +426,9 @@ export class BackendAuthService {
         deliveryMedium: data.data?.delivery_medium,
         destination: data.data?.destination,
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password reset error:', error)
-      return { success: false, error: error.message || 'Password reset request failed' }
+      return { success: false, error: getErrorMessage(error) }
     }
   }
 
@@ -300,9 +458,9 @@ export class BackendAuthService {
         success: true,
         message: data.data?.message || 'Password reset successful',
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password reset confirmation error:', error)
-      return { success: false, error: error.message || 'Password reset confirmation failed' }
+      return { success: false, error: getErrorMessage(error) }
     }
   }
 
@@ -316,7 +474,7 @@ export class BackendAuthService {
       // For now, we'll just return false to indicate refresh failed
       console.log('Token refresh not implemented in backend yet')
       return false
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Token refresh error:', error)
       return false
     }

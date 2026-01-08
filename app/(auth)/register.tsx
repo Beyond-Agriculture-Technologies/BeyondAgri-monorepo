@@ -14,8 +14,11 @@ import { router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BackendAuthService } from '../../src/services/auth'
-import { APP_COLORS } from '../../src/utils/constants'
+import { useAuthStore } from '../../src/store/auth-store'
+import { APP_COLORS, OTP_CONFIG } from '../../src/utils/constants'
 import { RegisterRequest } from '../../src/types'
+import { isValidPhoneNumber, normalizePhoneNumber } from '../../src/utils/phone-validation'
+import { getErrorMessage } from '../../src/utils/error-handler'
 
 const roleOptions = [
   {
@@ -52,9 +55,9 @@ export default function RegisterScreen() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleRegister = async () => {
-    // Validation
-    if (!formData.email || !formData.password) {
-      Alert.alert('Error', 'Email and password are required')
+    // Validation (email, password, phone REQUIRED)
+    if (!formData.email || !formData.password || !formData.phone_number) {
+      Alert.alert('Error', 'Email, password, and phone number are required')
       return
     }
 
@@ -68,60 +71,68 @@ export default function RegisterScreen() {
       return
     }
 
+    // Validate phone format
+    if (!isValidPhoneNumber(formData.phone_number)) {
+      Alert.alert('Invalid Phone Number', 'Please use format: +27XXXXXXXXX or 0XXXXXXXXX')
+      return
+    }
+
     setIsLoading(true)
     try {
-      // Remove empty fields
+      // Prepare registration data
       const registrationData: RegisterRequest = {
         email: formData.email,
         password: formData.password,
         user_type: formData.user_type,
+        phone_number: normalizePhoneNumber(formData.phone_number),
         ...(formData.name && { name: formData.name }),
-        ...(formData.phone_number && { phone_number: formData.phone_number }),
         ...(formData.address && { address: formData.address }),
       }
 
       const result = await BackendAuthService.register(registrationData)
 
-      if (result.success) {
+      if (result.success && result.status === 202 && result.data) {
+        // Store registration session
+        useAuthStore.getState().setRegistrationSession({
+          email: formData.email,
+          phoneDestination: result.data.code_delivery_destination,
+          expiresAt: new Date(Date.now() + OTP_CONFIG.EXPIRY_MS),
+          canResendAt: new Date(Date.now() + OTP_CONFIG.RESEND_DELAY_MS),
+        })
+
+        // Navigate to confirmation screen
+        router.push('/(auth)/confirm-registration')
+      } else {
+        // Handle unexpected response
+        Alert.alert('Error', 'Unexpected response from server. Please try again.')
+      }
+    } catch (error: unknown) {
+      // Handle errors
+      const errorMessage = getErrorMessage(error)
+
+      if (
+        errorMessage.toLowerCase().includes('already exists') ||
+        errorMessage.toLowerCase().includes('already registered')
+      ) {
         Alert.alert(
-          'Registration Successful',
-          'Your account has been created successfully. You can now sign in.',
+          'Email Already Registered',
+          'This email is already registered. Would you like to sign in instead?',
           [
+            {
+              text: 'Use Different Email',
+              style: 'cancel',
+            },
             {
               text: 'Sign In',
               onPress: () => router.replace('/(auth)'),
             },
           ]
         )
+      } else if (errorMessage.toLowerCase().includes('invalid phone')) {
+        Alert.alert('Invalid Phone', 'Please use format: +27XXXXXXXXX or 0XXXXXXXXX')
       } else {
-        // Check if error is due to email already existing (409 Conflict)
-        const errorMessage = result.error || 'Please try again'
-        const isEmailExists =
-          errorMessage.toLowerCase().includes('already exists') ||
-          errorMessage.toLowerCase().includes('already registered') ||
-          errorMessage.toLowerCase().includes('conflict')
-
-        if (isEmailExists) {
-          Alert.alert(
-            'Email Already Registered',
-            'This email is already registered. Would you like to sign in instead?',
-            [
-              {
-                text: 'Use Different Email',
-                style: 'cancel',
-              },
-              {
-                text: 'Sign In',
-                onPress: () => router.replace('/(auth)'),
-              },
-            ]
-          )
-        } else {
-          Alert.alert('Registration Failed', errorMessage)
-        }
+        Alert.alert('Registration Failed', errorMessage)
       }
-    } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred')
     } finally {
       setIsLoading(false)
     }
@@ -160,7 +171,7 @@ export default function RegisterScreen() {
                       onPress={() => setFormData(prev => ({ ...prev, user_type: role.value }))}
                     >
                       <Ionicons
-                        name={role.icon as any}
+                        name={role.icon as keyof typeof Ionicons.glyphMap}
                         size={24}
                         color={
                           formData.user_type === role.value
@@ -210,14 +221,15 @@ export default function RegisterScreen() {
 
               {/* Phone */}
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Phone Number</Text>
+                <Text style={styles.label}>Phone Number *</Text>
                 <TextInput
                   style={styles.input}
                   value={formData.phone_number}
                   onChangeText={text => setFormData(prev => ({ ...prev, phone_number: text }))}
-                  placeholder="Enter your phone number"
+                  placeholder="+27821234567 or 0821234567"
                   keyboardType="phone-pad"
                 />
+                <Text style={styles.helperText}>You will receive a verification code via SMS</Text>
               </View>
 
               {/* Address */}
@@ -399,5 +411,10 @@ const styles = StyleSheet.create({
   signInLinkTextBold: {
     color: APP_COLORS.primary,
     fontWeight: '600',
+  },
+  helperText: {
+    fontSize: 12,
+    color: APP_COLORS.textSecondary,
+    marginTop: 4,
   },
 })

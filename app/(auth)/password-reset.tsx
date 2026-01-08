@@ -14,33 +14,52 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BackendAuthService } from '../../src/services/auth'
 import { APP_COLORS } from '../../src/utils/constants'
+import { isPhoneNumber, normalizePhoneNumber } from '../../src/utils/phone-validation'
+import { getErrorMessage } from '../../src/utils/error-handler'
 
 export default function PasswordResetScreen() {
   const insets = useSafeAreaInsets()
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [inputType, setInputType] = useState<'email' | 'phone' | null>(null)
+
+  const handleIdentifierChange = (text: string) => {
+    setIdentifier(text)
+
+    if (text.trim().length === 0) {
+      setInputType(null)
+    } else if (isPhoneNumber(text)) {
+      setInputType('phone')
+    } else {
+      setInputType('email')
+    }
+  }
 
   const handlePasswordReset = async () => {
-    if (!email) {
-      Alert.alert('Error', 'Please enter your email address')
+    if (!identifier) {
+      Alert.alert('Error', 'Please enter your email or phone number')
       return
     }
 
     setIsLoading(true)
     try {
-      const result = await BackendAuthService.requestPasswordReset(email)
+      const normalizedIdentifier =
+        inputType === 'phone' ? normalizePhoneNumber(identifier) : identifier
+
+      const result = await BackendAuthService.requestPasswordReset(normalizedIdentifier)
 
       if (result.success) {
+        const medium = inputType === 'phone' ? 'phone' : 'email'
         Alert.alert(
           'Reset Code Sent',
-          `A password reset code has been sent to your email. Please check your inbox and then proceed to confirm the reset.`,
+          `A password reset code has been sent to your ${medium}. Please check and then proceed to confirm the reset.`,
           [
             {
               text: 'Continue',
               onPress: () =>
                 router.push({
                   pathname: '/(auth)/confirm-password-reset',
-                  params: { email },
+                  params: { email: normalizedIdentifier }, // Backend uses 'email' param for both
                 }),
             },
           ]
@@ -48,8 +67,8 @@ export default function PasswordResetScreen() {
       } else {
         Alert.alert('Error', result.error || 'Failed to send reset code')
       }
-    } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred')
+    } catch (error: unknown) {
+      Alert.alert('Error', getErrorMessage(error))
     } finally {
       setIsLoading(false)
     }
@@ -68,22 +87,33 @@ export default function PasswordResetScreen() {
             </TouchableOpacity>
             <Text style={styles.title}>Reset Password</Text>
             <Text style={styles.subtitle}>
-              Enter your email address and we&apos;ll send you a code to reset your password
+              Enter your email or phone number and we&apos;ll send you a code to reset your password
             </Text>
           </View>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email Address</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
+              <Text style={styles.label}>Email or Phone Number</Text>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={identifier}
+                  onChangeText={handleIdentifierChange}
+                  placeholder="Enter email or phone"
+                  keyboardType="default"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                {inputType && (
+                  <View style={styles.inputTypeIndicator}>
+                    <Ionicons
+                      name={inputType === 'email' ? 'mail-outline' : 'call-outline'}
+                      size={16}
+                      color={APP_COLORS.textSecondary}
+                    />
+                  </View>
+                )}
+              </View>
             </View>
 
             <TouchableOpacity
@@ -152,6 +182,9 @@ const styles = StyleSheet.create({
     color: APP_COLORS.text,
     marginBottom: 8,
   },
+  inputContainer: {
+    position: 'relative',
+  },
   input: {
     borderWidth: 1,
     borderColor: '#e5e7eb',
@@ -160,6 +193,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     backgroundColor: APP_COLORS.surface,
+  },
+  inputTypeIndicator: {
+    position: 'absolute',
+    right: 16,
+    top: 14,
   },
   resetButton: {
     backgroundColor: APP_COLORS.primary,

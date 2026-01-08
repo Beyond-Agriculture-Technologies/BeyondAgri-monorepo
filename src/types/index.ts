@@ -4,6 +4,8 @@ export interface User {
   email: string
   name?: string
   phone_number?: string
+  phone_verified?: boolean
+  phone_verified_at?: string
   address?: string
   user_type: 'farmer' | 'wholesaler' | 'admin'
   verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected'
@@ -15,6 +17,19 @@ export interface User {
 // Legacy alias for compatibility
 export interface UserProfile extends User {
   role: User['user_type']
+}
+
+/**
+ * Helper function to create a UserProfile from a User object
+ * This ensures proper typing when adding the 'role' field for backwards compatibility
+ * @param userData - User object without the role field
+ * @returns UserProfile with the role field set to user_type
+ */
+export function createUserProfile(userData: User): UserProfile {
+  return {
+    ...userData,
+    role: userData.user_type,
+  }
 }
 
 // Farm types
@@ -115,7 +130,7 @@ export interface BackendApiResponse<T> {
 export interface OfflineAction {
   id: string
   type: 'CREATE_FARM' | 'UPDATE_FARM' | 'UPLOAD_PHOTO' | 'DELETE_FARM'
-  payload: any
+  payload: unknown
   timestamp: string
   retryCount: number
 }
@@ -147,4 +162,34 @@ export interface Permission {
   description?: string
   resource?: string
   action?: string
+}
+
+// Registration Confirmation Types
+export interface RegistrationPendingResponse {
+  user_sub: string
+  code_delivery_medium: string
+  code_delivery_destination: string // Masked phone: "+27***4567"
+  message: string
+}
+
+export interface ConfirmRegistrationRequest {
+  email: string
+  confirmation_code: string
+}
+
+export interface ConfirmRegistrationResponse {
+  message: string
+  data: null
+}
+
+export interface ResendConfirmationRequest {
+  email: string
+}
+
+// Registration Session State
+export interface RegistrationSession {
+  email: string
+  phoneDestination: string // Masked phone from API
+  expiresAt: Date
+  canResendAt: Date
 }

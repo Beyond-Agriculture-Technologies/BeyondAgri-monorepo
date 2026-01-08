@@ -38,3 +38,10 @@ export const USER_ROLES = {
   WHOLESALER: 'wholesaler',
   ADMIN: 'admin',
 } as const
+
+// OTP Configuration
+export const OTP_CONFIG = {
+  EXPIRY_MS: 3 * 60 * 1000, // 3 minutes
+  RESEND_DELAY_MS: 30 * 1000, // 30 seconds
+  CODE_LENGTH: 6, // 6-digit OTP code
+} as const
