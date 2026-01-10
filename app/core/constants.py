@@ -46,3 +46,9 @@ class AccountTypes:
         'given_name', 'family_name', 'middle_name', 'nickname',
         'gender', 'birthdate', 'locale', 'website', 'picture'
     ])
+
+
+class InventoryDefaults:
+    """Default values for inventory module."""
+    CURRENCY = "ZAR"
+    DEFAULT_COUNTRY = "South Africa"

@@ -1,7 +1,11 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from typing import List, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+
+logger = logging.getLogger(__name__)
 
 from app.core.deps import get_db, get_current_account
 from app.schemas.account import AccountProfile
@@ -58,12 +62,24 @@ async def create_inventory_type(
     """
     Create a new custom inventory type for your account.
     """
-    inventory_type = InventoryService.create_inventory_type(
-        db=db,
-        inventory_type_data=type_data,
-        account_id=current_account.id
-    )
-    return inventory_type
+    try:
+        inventory_type = InventoryService.create_inventory_type(
+            db=db,
+            inventory_type_data=type_data,
+            account_id=current_account.id
+        )
+        return inventory_type
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Inventory type with this name already exists"
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Database error creating inventory type: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error occurred. Please try again."
+        )
 
 
 @router.get("/types/{type_id}", response_model=InventoryTypeResponse)
@@ -162,12 +178,24 @@ async def create_warehouse(
     """
     Create a new warehouse.
     """
-    warehouse = InventoryService.create_warehouse(
-        db=db,
-        warehouse_data=warehouse_data,
-        account_id=current_account.id
-    )
-    return warehouse
+    try:
+        warehouse = InventoryService.create_warehouse(
+            db=db,
+            warehouse_data=warehouse_data,
+            account_id=current_account.id
+        )
+        return warehouse
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Warehouse with this code already exists"
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Database error creating warehouse: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error occurred. Please try again."
+        )
 
 
 @router.get("/warehouses/{warehouse_id}", response_model=WarehouseResponse)
@@ -254,14 +282,26 @@ async def create_storage_bin(
     # Override warehouse_id from URL
     bin_data.warehouse_id = warehouse_id
 
-    storage_bin = InventoryService.create_storage_bin(
-        db=db,
-        bin_data=bin_data,
-        account_id=current_account.id
-    )
-    if not storage_bin:
-        raise HTTPException(status_code=404, detail="Warehouse not found or not owned by you")
-    return storage_bin
+    try:
+        storage_bin = InventoryService.create_storage_bin(
+            db=db,
+            bin_data=bin_data,
+            account_id=current_account.id
+        )
+        if not storage_bin:
+            raise HTTPException(status_code=404, detail="Warehouse not found or not owned by you")
+        return storage_bin
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Storage bin with this code already exists in this warehouse"
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Database error creating storage bin: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error occurred. Please try again."
+        )
 
 
 @router.put("/bins/{bin_id}", response_model=StorageBinResponse)
@@ -348,13 +388,26 @@ async def create_inventory_item(
     """
     Create a new inventory item.
     """
-    item = InventoryService.create_inventory_item(
-        db=db,
-        item_data=item_data,
-        account_id=current_account.id,
-        performed_by_account_id=current_account.id
-    )
-    return item
+    try:
+        item = InventoryService.create_inventory_item(
+            db=db,
+            item_data=item_data,
+            account_id=current_account.id,
+            performed_by_account_id=current_account.id
+        )
+        return item
+    except IntegrityError as e:
+        logger.error(f"Integrity error creating inventory item: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Database constraint violation. Check inventory type and warehouse IDs."
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Database error creating inventory item: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error occurred. Please try again."
+        )
 
 
 @router.get("/items/{item_id}", response_model=InventoryItemResponse)
@@ -442,7 +495,8 @@ async def get_all_transactions(
     transaction_type_enum = None
     if transaction_type:
         try:
-            transaction_type_enum = TransactionTypeEnum(transaction_type.lower())
+            # Accept both lowercase and uppercase input
+            transaction_type_enum = TransactionTypeEnum(transaction_type.upper())
         except ValueError:
             raise HTTPException(
                 status_code=400,
@@ -518,6 +572,18 @@ async def create_transaction(
         return transaction
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except IntegrityError as e:
+        logger.error(f"Integrity error creating transaction: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Database constraint violation"
+        )
+    except SQLAlchemyError as e:
+        logger.error(f"Database error creating transaction: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error occurred. Please try again."
+        )
 
 
 @router.post("/items/{item_id}/transfer", response_model=InventoryItemResponse)

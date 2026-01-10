@@ -1,40 +1,44 @@
+from datetime import datetime, timezone
+from decimal import Decimal
+import enum
+
 from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, Enum, ForeignKey, JSON, Numeric, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import enum
 
 from app.db.base import BaseModel
+from app.core.constants import InventoryDefaults
 
 
 class InventoryCategoryEnum(str, enum.Enum):
     """Categories for inventory items"""
-    HARVEST = "harvest"
-    MEAT = "meat"
-    POULTRY = "poultry"
-    PACKAGING = "packaging"
-    SUPPLIES = "supplies"
-    OTHER = "other"
+    HARVEST = "HARVEST"
+    MEAT = "MEAT"
+    POULTRY = "POULTRY"
+    PACKAGING = "PACKAGING"
+    SUPPLIES = "SUPPLIES"
+    OTHER = "OTHER"
 
 
 class InventoryStatusEnum(str, enum.Enum):
     """Status of inventory items"""
-    AVAILABLE = "available"
-    RESERVED = "reserved"
-    SOLD = "sold"
-    EXPIRED = "expired"
-    DAMAGED = "damaged"
-    IN_TRANSIT = "in_transit"
+    AVAILABLE = "AVAILABLE"
+    RESERVED = "RESERVED"
+    SOLD = "SOLD"
+    EXPIRED = "EXPIRED"
+    DAMAGED = "DAMAGED"
+    IN_TRANSIT = "IN_TRANSIT"
 
 
 class TransactionTypeEnum(str, enum.Enum):
     """Types of inventory transactions"""
-    ADD = "add"
-    REMOVE = "remove"
-    ADJUSTMENT = "adjustment"
-    TRANSFER = "transfer"
-    SALE = "sale"
-    SPOILAGE = "spoilage"
-    RETURN = "return"
+    ADD = "ADD"
+    REMOVE = "REMOVE"
+    ADJUSTMENT = "ADJUSTMENT"
+    TRANSFER = "TRANSFER"
+    SALE = "SALE"
+    SPOILAGE = "SPOILAGE"
+    RETURN = "RETURN"
 
 
 class InventoryType(BaseModel):
@@ -174,7 +178,7 @@ class InventoryItem(BaseModel):
     # Financials
     cost_per_unit = Column(Numeric(10, 2), nullable=True)
     total_value = Column(Numeric(12, 2), nullable=True)  # current_quantity × cost_per_unit
-    currency = Column(String(3), default="ZAR", nullable=False)
+    currency = Column(String(3), default=InventoryDefaults.CURRENCY, nullable=False)
 
     # Batch/Lot tracking (critical for traceability)
     batch_number = Column(String(100), nullable=True, index=True)
@@ -216,13 +220,12 @@ class InventoryItem(BaseModel):
         """Check if item has expired"""
         if self.expiry_date is None:
             return False
-        from datetime import datetime, timezone
         return datetime.now(timezone.utc) > self.expiry_date
 
     def calculate_total_value(self):
-        """Calculate and update total value"""
-        if self.cost_per_unit is not None:
-            self.total_value = float(self.current_quantity) * float(self.cost_per_unit)
+        """Calculate and update total value using Decimal for precision"""
+        if self.cost_per_unit is not None and self.current_quantity is not None:
+            self.total_value = Decimal(str(self.current_quantity)) * Decimal(str(self.cost_per_unit))
         return self.total_value
 
 

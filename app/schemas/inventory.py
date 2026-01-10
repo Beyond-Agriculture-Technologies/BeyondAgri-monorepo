@@ -8,6 +8,7 @@ from app.models.inventory import (
     InventoryStatusEnum,
     TransactionTypeEnum
 )
+from app.core.constants import InventoryDefaults
 
 
 # ==================== Inventory Type Schemas ====================
@@ -144,7 +145,7 @@ class InventoryItemBase(BaseModel):
     acquisition_date: Optional[datetime] = None
     expiry_date: Optional[datetime] = None
     cost_per_unit: Optional[Decimal] = Field(None, ge=0)
-    currency: str = Field(default="ZAR", max_length=3)
+    currency: str = Field(default=InventoryDefaults.CURRENCY, max_length=3)
     batch_number: Optional[str] = Field(None, max_length=100)
     lot_number: Optional[str] = Field(None, max_length=100)
     status: InventoryStatusEnum = Field(default=InventoryStatusEnum.AVAILABLE)
@@ -273,15 +274,6 @@ class InventoryValuationReport(BaseModel):
     currency: str
     by_category: Dict[str, Decimal]
     by_status: Dict[str, int]
-
-
-class StockMovementReport(BaseModel):
-    item_id: int
-    item_name: str
-    transactions: List[InventoryTransactionResponse]
-    total_added: Decimal
-    total_removed: Decimal
-    net_change: Decimal
 
 
 class TransactionListResponse(BaseModel):

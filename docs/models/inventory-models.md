@@ -20,38 +20,40 @@ Account ────────────────────────
 
 ```typescript
 type InventoryCategoryEnum =
-  | "harvest"     // Vegetables, fruits
-  | "meat"        // Beef, pork
-  | "poultry"     // Chicken, turkey, eggs
-  | "packaging"   // Boxes, containers
-  | "supplies"    // General supplies
-  | "other";      // Miscellaneous
+  | "HARVEST"     // Vegetables, fruits
+  | "MEAT"        // Beef, pork
+  | "POULTRY"     // Chicken, turkey, eggs
+  | "PACKAGING"   // Boxes, containers
+  | "SUPPLIES"    // General supplies
+  | "OTHER";      // Miscellaneous
 ```
 
 ### InventoryStatusEnum
 
 ```typescript
 type InventoryStatusEnum =
-  | "available"   // Ready for sale/use
-  | "reserved"    // Held for pending order
-  | "sold"        // Sold and removed
-  | "expired"     // Past expiry date
-  | "damaged"     // Not fit for sale
-  | "in_transit"; // Being moved
+  | "AVAILABLE"   // Ready for sale/use
+  | "RESERVED"    // Held for pending order
+  | "SOLD"        // Sold and removed
+  | "EXPIRED"     // Past expiry date
+  | "DAMAGED"     // Not fit for sale
+  | "IN_TRANSIT"; // Being moved
 ```
 
 ### TransactionTypeEnum
 
 ```typescript
 type TransactionTypeEnum =
-  | "add"         // Harvest, purchase
-  | "remove"      // Sale, usage
-  | "adjustment"  // Inventory count correction
-  | "transfer"    // Move between locations
-  | "sale"        // Sold to customer
-  | "spoilage"    // Waste, expired
-  | "return";     // Customer return
+  | "ADD"         // Harvest, purchase
+  | "REMOVE"      // Sale, usage
+  | "ADJUSTMENT"  // Inventory count correction
+  | "TRANSFER"    // Move between locations
+  | "SALE"        // Sold to customer
+  | "SPOILAGE"    // Waste, expired
+  | "RETURN";     // Customer return
 ```
+
+> **Note:** All enum values are UPPERCASE to match database schema. The API accepts both lowercase and uppercase input for convenience.
 
 ---
 

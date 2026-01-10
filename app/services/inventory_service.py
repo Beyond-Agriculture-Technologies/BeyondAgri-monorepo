@@ -17,6 +17,7 @@ from app.schemas.inventory import (
     InventoryTransactionCreate,
     LowStockAlert, ExpiringItemAlert, InventoryValuationReport
 )
+from app.core.constants import InventoryDefaults
 
 
 class InventoryService:
@@ -24,6 +25,25 @@ class InventoryService:
     Service class for inventory management business logic.
     Handles CRUD operations, stock management, alerts, and reporting.
     """
+
+    # ==================== Helper Methods ====================
+
+    @staticmethod
+    def _populate_transaction_metadata(transaction: InventoryTransaction) -> None:
+        """
+        Populate computed fields on transaction from relationships.
+
+        This method adds item details to transaction objects for API responses
+        without modifying the database model.
+        """
+        if transaction.inventory_item:
+            transaction.item_name = transaction.inventory_item.item_name
+            transaction.item_sku = transaction.inventory_item.sku
+            transaction.item_unit = transaction.inventory_item.unit
+            if transaction.inventory_item.inventory_type:
+                transaction.inventory_type_name = transaction.inventory_item.inventory_type.type_name
+            if transaction.inventory_item.warehouse:
+                transaction.warehouse_name = transaction.inventory_item.warehouse.warehouse_name
 
     # ==================== Inventory Type Methods ====================
 
@@ -300,9 +320,9 @@ class InventoryService:
 
         item = InventoryItem(**item_dict, account_id=account_id)
 
-        # Calculate initial total value
-        if item.cost_per_unit is not None:
-            item.total_value = float(item.current_quantity) * float(item.cost_per_unit)
+        # Calculate initial total value using Decimal for precision
+        if item.cost_per_unit is not None and item.current_quantity is not None:
+            item.total_value = Decimal(str(item.current_quantity)) * Decimal(str(item.cost_per_unit))
 
         db.add(item)
         db.flush()  # Get the ID without committing
@@ -414,8 +434,8 @@ class InventoryService:
 
         # Recalculate total value if cost or quantity changed
         if "current_quantity" in update_dict or "cost_per_unit" in update_dict:
-            if item.cost_per_unit is not None:
-                item.total_value = float(item.current_quantity) * float(item.cost_per_unit)
+            if item.cost_per_unit is not None and item.current_quantity is not None:
+                item.total_value = Decimal(str(item.current_quantity)) * Decimal(str(item.cost_per_unit))
 
         # Log transaction if quantity changed
         if quantity_changed:
@@ -497,8 +517,8 @@ class InventoryService:
         )
 
         # Calculate total cost if cost_per_unit provided
-        if transaction.cost_per_unit:
-            transaction.total_cost = abs(float(transaction.quantity_change)) * float(transaction.cost_per_unit)
+        if transaction.cost_per_unit is not None and transaction.quantity_change is not None:
+            transaction.total_cost = abs(Decimal(str(transaction.quantity_change))) * Decimal(str(transaction.cost_per_unit))
 
         db.add(transaction)
         db.commit()
@@ -533,16 +553,9 @@ class InventoryService:
             InventoryTransaction.inventory_item_id == item_id
         ).order_by(InventoryTransaction.transaction_date.desc()).offset(skip).limit(limit).all()
 
-        # Populate nested item information
+        # Populate nested item information using helper method
         for transaction in transactions:
-            if transaction.inventory_item:
-                transaction.item_name = transaction.inventory_item.item_name
-                transaction.item_sku = transaction.inventory_item.sku
-                transaction.item_unit = transaction.inventory_item.unit
-                if transaction.inventory_item.inventory_type:
-                    transaction.inventory_type_name = transaction.inventory_item.inventory_type.type_name
-                if transaction.inventory_item.warehouse:
-                    transaction.warehouse_name = transaction.inventory_item.warehouse.warehouse_name
+            InventoryService._populate_transaction_metadata(transaction)
 
         return transactions
 
@@ -577,16 +590,9 @@ class InventoryService:
 
         transactions = query.order_by(InventoryTransaction.transaction_date.desc()).offset(skip).limit(limit).all()
 
-        # Populate nested item information
+        # Populate nested item information using helper method
         for transaction in transactions:
-            if transaction.inventory_item:
-                transaction.item_name = transaction.inventory_item.item_name
-                transaction.item_sku = transaction.inventory_item.sku
-                transaction.item_unit = transaction.inventory_item.unit
-                if transaction.inventory_item.inventory_type:
-                    transaction.inventory_type_name = transaction.inventory_item.inventory_type.type_name
-                if transaction.inventory_item.warehouse:
-                    transaction.warehouse_name = transaction.inventory_item.warehouse.warehouse_name
+            InventoryService._populate_transaction_metadata(transaction)
 
         return transactions
 
@@ -735,7 +741,7 @@ class InventoryService:
             total_items=total_items,
             total_quantity=total_quantity,
             total_value=total_value,
-            currency="ZAR",
+            currency=InventoryDefaults.CURRENCY,
             by_category=by_category,
             by_status=by_status
         )
