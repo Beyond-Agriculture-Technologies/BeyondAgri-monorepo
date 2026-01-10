@@ -39,10 +39,10 @@ export interface InventoryPermissionSet {
 }
 
 export const InventoryPermissions: Record<
-  'farmer' | 'wholesaler' | 'admin',
+  'FARMER' | 'WHOLESALER' | 'ADMIN',
   InventoryPermissionSet
 > = {
-  farmer: {
+  FARMER: {
     // Farmers can manage their own inventory (harvests, livestock products)
     canViewOwnInventory: true,
     canCreateInventory: true,
@@ -66,7 +66,7 @@ export const InventoryPermissions: Record<
     canViewAlerts: true,
   },
 
-  wholesaler: {
+  WHOLESALER: {
     // Wholesalers manage aggregated inventory from multiple farmers
     canViewOwnInventory: true,
     canCreateInventory: true,
@@ -90,7 +90,7 @@ export const InventoryPermissions: Record<
     canViewAlerts: true,
   },
 
-  admin: {
+  ADMIN: {
     // Admins have full access to everything
     canViewOwnInventory: true,
     canCreateInventory: true,
@@ -121,7 +121,7 @@ export const InventoryPermissions: Record<
  * Helper function to check if a user has a specific permission
  */
 export function hasPermission(
-  userType: 'farmer' | 'wholesaler' | 'admin',
+  userType: 'FARMER' | 'WHOLESALER' | 'ADMIN',
   permission: keyof InventoryPermissionSet
 ): boolean {
   // If RBAC is disabled, grant all permissions
@@ -135,11 +135,11 @@ export function hasPermission(
 /**
  * Get display-friendly role names
  */
-export function getRoleDisplayName(userType: 'farmer' | 'wholesaler' | 'admin'): string {
+export function getRoleDisplayName(userType: 'FARMER' | 'WHOLESALER' | 'ADMIN'): string {
   const roleNames = {
-    farmer: 'Farmer',
-    wholesaler: 'Wholesaler',
-    admin: 'Administrator',
+    FARMER: 'Farmer',
+    WHOLESALER: 'Wholesaler',
+    ADMIN: 'Administrator',
   }
   return roleNames[userType] || 'User'
 }
@@ -147,11 +147,11 @@ export function getRoleDisplayName(userType: 'farmer' | 'wholesaler' | 'admin'):
 /**
  * Get role-specific dashboard titles
  */
-export function getDashboardTitle(userType: 'farmer' | 'wholesaler' | 'admin'): string {
+export function getDashboardTitle(userType: 'FARMER' | 'WHOLESALER' | 'ADMIN'): string {
   const titles = {
-    farmer: 'My Farm Inventory',
-    wholesaler: 'Warehouse Inventory',
-    admin: 'System Inventory Overview',
+    FARMER: 'My Farm Inventory',
+    WHOLESALER: 'Warehouse Inventory',
+    ADMIN: 'System Inventory Overview',
   }
   return titles[userType] || 'Inventory'
 }
@@ -159,23 +159,23 @@ export function getDashboardTitle(userType: 'farmer' | 'wholesaler' | 'admin'): 
 /**
  * Get role-specific action button labels
  */
-export function getActionLabels(userType: 'farmer' | 'wholesaler' | 'admin') {
+export function getActionLabels(userType: 'FARMER' | 'WHOLESALER' | 'ADMIN') {
   const labels = {
-    farmer: {
+    FARMER: {
       addItem: 'Add Harvest',
       viewItems: 'View My Harvests',
       dashboard: 'Farm Dashboard',
     },
-    wholesaler: {
+    WHOLESALER: {
       addItem: 'Add Inventory Item',
       viewItems: 'View All Inventory',
       dashboard: 'Warehouse Dashboard',
     },
-    admin: {
+    ADMIN: {
       addItem: 'Add Inventory Item',
       viewItems: 'View All Inventory',
       dashboard: 'System Dashboard',
     },
   }
-  return labels[userType] || labels.farmer
+  return labels[userType] || labels.FARMER
 }

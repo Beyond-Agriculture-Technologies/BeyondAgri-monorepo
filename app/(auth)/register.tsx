@@ -22,19 +22,19 @@ import { getErrorMessage } from '../../src/utils/error-handler'
 
 const roleOptions = [
   {
-    value: 'farmer' as const,
+    value: 'FARMER' as const,
     label: 'Farmer',
     icon: 'leaf',
     description: 'Manage your own farms and crops',
   },
   {
-    value: 'wholesaler' as const,
+    value: 'WHOLESALER' as const,
     label: 'Wholesaler',
     icon: 'business',
     description: 'Access farms from multiple farmers',
   },
   {
-    value: 'admin' as const,
+    value: 'ADMIN' as const,
     label: 'Administrator',
     icon: 'settings',
     description: 'Full system access and management',
@@ -47,7 +47,7 @@ export default function RegisterScreen() {
     email: '',
     password: '',
     phone_number: '',
-    user_type: 'farmer',
+    user_type: 'FARMER',
     name: '',
     address: '',
   })

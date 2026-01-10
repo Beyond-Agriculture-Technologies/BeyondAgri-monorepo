@@ -34,9 +34,9 @@ export const SCREEN_NAMES = {
 } as const
 
 export const USER_ROLES = {
-  FARMER: 'farmer',
-  WHOLESALER: 'wholesaler',
-  ADMIN: 'admin',
+  FARMER: 'FARMER',
+  WHOLESALER: 'WHOLESALER',
+  ADMIN: 'ADMIN',
 } as const
 
 // OTP Configuration

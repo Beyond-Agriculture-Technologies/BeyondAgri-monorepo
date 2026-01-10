@@ -7,8 +7,8 @@ export interface User {
   phone_verified?: boolean
   phone_verified_at?: string
   address?: string
-  user_type: 'farmer' | 'wholesaler' | 'admin'
-  verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected'
+  user_type: 'FARMER' | 'WHOLESALER' | 'ADMIN'
+  verification_status?: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED'
   is_active?: boolean
   createdAt: string
   updatedAt: string
@@ -82,7 +82,7 @@ export interface RegisterRequest {
   email: string
   password: string
   phone_number?: string
-  user_type: 'farmer' | 'wholesaler' | 'admin'
+  user_type: 'FARMER' | 'WHOLESALER' | 'ADMIN'
   name?: string
   address?: string
 }
@@ -137,14 +137,14 @@ export interface OfflineAction {
 
 // Account Management Types
 export interface VerificationData {
-  document_type: 'id_card' | 'passport' | 'driver_license' | 'business_license'
+  document_type: 'ID_CARD' | 'PASSPORT' | 'DRIVER_LICENSE' | 'BUSINESS_LICENSE'
   document_number: string
   document_image_url?: string
   additional_info?: string
 }
 
 export interface VerificationStatus {
-  status: 'unverified' | 'pending' | 'verified' | 'rejected'
+  status: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED'
   submitted_at?: string
   reviewed_at?: string
   reviewer_notes?: string

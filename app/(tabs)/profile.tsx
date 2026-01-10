@@ -157,11 +157,11 @@ export default function ProfileScreen() {
 
   const getRoleDisplayName = (role: string) => {
     switch (role) {
-      case 'farmer':
+      case 'FARMER':
         return 'Farmer'
-      case 'wholesaler':
+      case 'WHOLESALER':
         return 'Wholesaler'
-      case 'admin':
+      case 'ADMIN':
         return 'Administrator'
       default:
         return 'User'
@@ -170,11 +170,11 @@ export default function ProfileScreen() {
 
   const getRoleDescription = (role: string) => {
     switch (role) {
-      case 'farmer':
+      case 'FARMER':
         return 'Manage your own farms and agricultural operations'
-      case 'wholesaler':
+      case 'WHOLESALER':
         return 'Access farms from multiple farmers for wholesale operations'
-      case 'admin':
+      case 'ADMIN':
         return 'Full system access and user management capabilities'
       default:
         return 'Standard user access'
