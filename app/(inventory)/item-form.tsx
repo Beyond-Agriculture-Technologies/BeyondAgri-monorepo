@@ -16,8 +16,26 @@ import { Ionicons } from '@expo/vector-icons'
 import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { useInventoryPermissions } from '../../src/hooks/useInventoryPermissions'
-import { APP_COLORS } from '../../src/utils/constants'
+import { APP_COLORS, INVENTORY_DEFAULTS } from '../../src/utils/constants'
 import { InventoryStatusEnum, InventoryItemCreate } from '../../src/types/inventory'
+
+// Validation helper functions
+function isValidDate(dateString: string): boolean {
+  if (!dateString) return true // Optional field
+  const date = new Date(dateString)
+  return date instanceof Date && !isNaN(date.getTime()) && date.getFullYear() > 1900
+}
+
+function isValidNumber(value: string | number | undefined): boolean {
+  if (value === undefined || value === '') return true // Optional
+  const num = typeof value === 'string' ? parseFloat(value) : value
+  return !isNaN(num) && num >= 0
+}
+
+function isValidPositiveNumber(value: string | number): boolean {
+  const num = typeof value === 'string' ? parseFloat(value) : value
+  return !isNaN(num) && num > 0
+}
 
 export default function ItemFormScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>()
@@ -25,10 +43,10 @@ export default function ItemFormScreen() {
   const {
     currentItem,
     itemsLoading,
-    types,
+    inventoryTypes,
     warehouses,
     fetchItemById,
-    fetchTypes,
+    fetchInventoryTypes,
     fetchWarehouses,
     createItem,
     updateItem,
@@ -45,7 +63,7 @@ export default function ItemFormScreen() {
     current_quantity: '',
     unit: 'kg',
     cost_per_unit: '',
-    currency: 'ZAR',
+    currency: INVENTORY_DEFAULTS.CURRENCY as string,
     minimum_quantity: '',
     batch_number: '',
     acquisition_date: '',
@@ -59,7 +77,7 @@ export default function ItemFormScreen() {
 
   useEffect(() => {
     if (permissions.canManageWarehouses) {
-      fetchTypes()
+      fetchInventoryTypes()
       fetchWarehouses()
     }
 
@@ -101,24 +119,66 @@ export default function ItemFormScreen() {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
 
+    // Required field validation
     if (!formData.item_name.trim()) {
-      newErrors.item_name = 'Name is required'
+      newErrors.item_name = 'Item name is required'
     }
 
-    if (!formData.current_quantity || Number(formData.current_quantity) <= 0) {
-      newErrors.current_quantity = 'Valid quantity is required'
-    }
-
-    if (!formData.cost_per_unit || Number(formData.cost_per_unit) <= 0) {
-      newErrors.cost_per_unit = 'Valid unit price is required'
+    if (!formData.current_quantity || !isValidPositiveNumber(formData.current_quantity)) {
+      newErrors.current_quantity = 'Quantity must be a positive number'
     }
 
     if (!formData.unit.trim()) {
-      newErrors.unit = 'Unit is required'
+      newErrors.unit = 'Unit of measure is required'
     }
 
     if (!formData.inventory_type_id) {
       newErrors.inventory_type_id = 'Inventory type is required'
+    }
+
+    // Optional numeric field validation
+    if (formData.cost_per_unit && !isValidNumber(formData.cost_per_unit)) {
+      newErrors.cost_per_unit = 'Cost per unit must be a valid number'
+    }
+
+    if (formData.minimum_quantity && !isValidNumber(formData.minimum_quantity)) {
+      newErrors.minimum_quantity = 'Minimum quantity must be a valid number'
+    }
+
+    // Date validation
+    if (formData.acquisition_date && !isValidDate(formData.acquisition_date)) {
+      newErrors.acquisition_date = 'Invalid acquisition date format'
+    }
+
+    if (formData.expiry_date && !isValidDate(formData.expiry_date)) {
+      newErrors.expiry_date = 'Invalid expiry date format'
+    }
+
+    // Logical validation
+    if (
+      formData.expiry_date &&
+      formData.acquisition_date &&
+      isValidDate(formData.expiry_date) &&
+      isValidDate(formData.acquisition_date)
+    ) {
+      const expiryDate = new Date(formData.expiry_date)
+      const acquisitionDate = new Date(formData.acquisition_date)
+      if (expiryDate <= acquisitionDate) {
+        newErrors.expiry_date = 'Expiry date must be after acquisition date'
+      }
+    }
+
+    if (
+      formData.minimum_quantity &&
+      formData.current_quantity &&
+      isValidNumber(formData.minimum_quantity) &&
+      isValidPositiveNumber(formData.current_quantity)
+    ) {
+      const minQty = Number(formData.minimum_quantity)
+      const currentQty = Number(formData.current_quantity)
+      if (minQty > currentQty) {
+        newErrors.minimum_quantity = 'Minimum quantity cannot exceed current quantity'
+      }
     }
 
     setErrors(newErrors)
@@ -173,7 +233,7 @@ export default function ItemFormScreen() {
           `Failed to ${isEditMode ? 'update' : 'create'} item. Please try again.`
         )
       }
-    } catch (error) {
+    } catch {
       setSaving(false)
       Alert.alert('Error', 'An unexpected error occurred')
     }
@@ -264,8 +324,8 @@ export default function ItemFormScreen() {
                 <Text style={styles.errorText}>{errors.inventory_type_id}</Text>
               )}
               <Text style={styles.helpText}>
-                {types.length > 0
-                  ? `${types.length} types available`
+                {inventoryTypes.length > 0
+                  ? `${inventoryTypes.length} types available`
                   : 'No inventory types configured'}
               </Text>
             </View>
@@ -356,7 +416,7 @@ export default function ItemFormScreen() {
                   style={styles.input}
                   value={formData.currency}
                   onChangeText={value => updateField('currency', value)}
-                  placeholder="ZAR"
+                  placeholder={INVENTORY_DEFAULTS.CURRENCY}
                   placeholderTextColor={APP_COLORS.textSecondary}
                 />
               </View>

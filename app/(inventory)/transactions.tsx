@@ -13,8 +13,13 @@ import { Stack, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { useAppStore } from '../../src/store/app-store'
-import { APP_COLORS } from '../../src/utils/constants'
+import { APP_COLORS, INVENTORY_DEFAULTS } from '../../src/utils/constants'
 import { InventoryTransactionResponse, TransactionTypeEnum } from '../../src/types/inventory'
+import {
+  getTransactionIcon,
+  getTransactionColor,
+  formatTransactionType,
+} from '../../src/utils/inventory-helpers'
 
 export default function TransactionsScreen() {
   const { isOnline } = useAppStore()
@@ -40,54 +45,6 @@ export default function TransactionsScreen() {
   const filteredTransactions = transactions.filter(
     t => filter === 'all' || t.transaction_type === filter
   )
-
-  const getTransactionIcon = (type: TransactionTypeEnum) => {
-    switch (type) {
-      case TransactionTypeEnum.ADD:
-        return 'add-circle'
-      case TransactionTypeEnum.REMOVE:
-        return 'remove-circle'
-      case TransactionTypeEnum.TRANSFER:
-        return 'swap-horizontal'
-      case TransactionTypeEnum.ADJUSTMENT:
-        return 'create'
-      case TransactionTypeEnum.SALE:
-        return 'cash'
-      case TransactionTypeEnum.SPOILAGE:
-        return 'warning'
-      case TransactionTypeEnum.RETURN:
-        return 'return-up-back'
-      default:
-        return 'document'
-    }
-  }
-
-  const getTransactionColor = (type: TransactionTypeEnum) => {
-    switch (type) {
-      case TransactionTypeEnum.ADD:
-        return APP_COLORS.success
-      case TransactionTypeEnum.REMOVE:
-      case TransactionTypeEnum.SPOILAGE:
-        return APP_COLORS.error
-      case TransactionTypeEnum.TRANSFER:
-        return APP_COLORS.info
-      case TransactionTypeEnum.SALE:
-        return APP_COLORS.primary
-      case TransactionTypeEnum.ADJUSTMENT:
-        return APP_COLORS.warning
-      case TransactionTypeEnum.RETURN:
-        return APP_COLORS.secondary
-      default:
-        return APP_COLORS.textSecondary
-    }
-  }
-
-  const formatTransactionType = (type: TransactionTypeEnum) => {
-    return type
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ')
-  }
 
   const renderTransaction = ({ item }: { item: InventoryTransactionResponse }) => {
     const color = getTransactionColor(item.transaction_type)
@@ -156,7 +113,9 @@ export default function TransactionsScreen() {
           )}
 
           {item.total_cost && (
-            <Text style={styles.costText}>Cost: ZAR {Number(item.total_cost).toFixed(2)}</Text>
+            <Text style={styles.costText}>
+              Cost: {INVENTORY_DEFAULTS.CURRENCY} {Number(item.total_cost).toFixed(2)}
+            </Text>
           )}
         </View>
 

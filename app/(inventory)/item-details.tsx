@@ -14,7 +14,11 @@ import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { useInventoryPermissions } from '../../src/hooks/useInventoryPermissions'
 import { APP_COLORS } from '../../src/utils/constants'
-import { TransactionTypeEnum } from '../../src/types/inventory'
+import {
+  getTransactionIcon,
+  getTransactionColor,
+  formatTransactionType,
+} from '../../src/utils/inventory-helpers'
 
 export default function ItemDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -273,7 +277,11 @@ export default function ItemDetailsScreen() {
                 return (
                   <View key={transaction.id} style={styles.transactionCard}>
                     <View style={[styles.transactionIcon, { backgroundColor: `${color}20` }]}>
-                      <Ionicons name={icon as any} size={20} color={color} />
+                      <Ionicons
+                        name={icon as keyof typeof Ionicons.glyphMap}
+                        size={20}
+                        color={color}
+                      />
                     </View>
 
                     <View style={styles.transactionContent}>
@@ -386,61 +394,16 @@ function InfoRow({
   return (
     <View style={styles.infoRow}>
       <View style={styles.infoLabelContainer}>
-        <Ionicons name={icon as any} size={18} color={APP_COLORS.primary} />
+        <Ionicons
+          name={icon as keyof typeof Ionicons.glyphMap}
+          size={18}
+          color={APP_COLORS.primary}
+        />
         <Text style={styles.infoLabel}>{label}</Text>
       </View>
       <Text style={[styles.infoValue, valueColor && { color: valueColor }]}>{value}</Text>
     </View>
   )
-}
-
-// Helper functions for transactions
-function getTransactionIcon(type: TransactionTypeEnum): string {
-  switch (type) {
-    case TransactionTypeEnum.ADD:
-      return 'add-circle'
-    case TransactionTypeEnum.REMOVE:
-      return 'remove-circle'
-    case TransactionTypeEnum.TRANSFER:
-      return 'swap-horizontal'
-    case TransactionTypeEnum.ADJUSTMENT:
-      return 'create'
-    case TransactionTypeEnum.SALE:
-      return 'cash'
-    case TransactionTypeEnum.SPOILAGE:
-      return 'warning'
-    case TransactionTypeEnum.RETURN:
-      return 'return-up-back'
-    default:
-      return 'document'
-  }
-}
-
-function getTransactionColor(type: TransactionTypeEnum): string {
-  switch (type) {
-    case TransactionTypeEnum.ADD:
-      return APP_COLORS.success
-    case TransactionTypeEnum.REMOVE:
-    case TransactionTypeEnum.SPOILAGE:
-      return APP_COLORS.error
-    case TransactionTypeEnum.TRANSFER:
-      return APP_COLORS.info
-    case TransactionTypeEnum.SALE:
-      return APP_COLORS.primary
-    case TransactionTypeEnum.ADJUSTMENT:
-      return APP_COLORS.warning
-    case TransactionTypeEnum.RETURN:
-      return APP_COLORS.secondary
-    default:
-      return APP_COLORS.textSecondary
-  }
-}
-
-function formatTransactionType(type: TransactionTypeEnum): string {
-  return type
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ')
 }
 
 const styles = StyleSheet.create({

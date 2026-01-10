@@ -1,29 +1,29 @@
 // ==================== Enums ====================
 
 export enum InventoryCategoryEnum {
-  HARVEST = 'harvest',
-  MEAT = 'meat',
-  POULTRY = 'poultry',
-  PACKAGING = 'packaging',
-  SUPPLIES = 'supplies',
+  HARVEST = 'HARVEST',
+  MEAT = 'MEAT',
+  POULTRY = 'POULTRY',
+  PACKAGING = 'PACKAGING',
+  SUPPLIES = 'SUPPLIES',
 }
 
 export enum InventoryStatusEnum {
-  AVAILABLE = 'available',
-  RESERVED = 'reserved',
-  SOLD = 'sold',
-  EXPIRED = 'expired',
-  DAMAGED = 'damaged',
+  AVAILABLE = 'AVAILABLE',
+  RESERVED = 'RESERVED',
+  SOLD = 'SOLD',
+  EXPIRED = 'EXPIRED',
+  DAMAGED = 'DAMAGED',
 }
 
 export enum TransactionTypeEnum {
-  ADD = 'add',
-  REMOVE = 'remove',
-  ADJUSTMENT = 'adjustment',
-  TRANSFER = 'transfer',
-  SALE = 'sale',
-  SPOILAGE = 'spoilage',
-  RETURN = 'return',
+  ADD = 'ADD',
+  REMOVE = 'REMOVE',
+  ADJUSTMENT = 'ADJUSTMENT',
+  TRANSFER = 'TRANSFER',
+  SALE = 'SALE',
+  SPOILAGE = 'SPOILAGE',
+  RETURN = 'RETURN',
 }
 
 // ==================== Inventory Types ====================

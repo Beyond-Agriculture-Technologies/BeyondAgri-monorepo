@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   View,
   Text,
@@ -18,7 +18,8 @@ import { useInventoryStore } from '../../src/store/inventory-store'
 import { useAppStore } from '../../src/store/app-store'
 import { useInventoryPermissions } from '../../src/hooks/useInventoryPermissions'
 import { APP_COLORS } from '../../src/utils/constants'
-import { InventoryItemResponse, InventoryStatusEnum } from '../../src/types/inventory'
+import { InventoryItemResponse } from '../../src/types/inventory'
+import { getInventoryStatusColor } from '../../src/utils/inventory-helpers'
 
 type SortOption = 'name' | 'quantity' | 'date' | 'expiry' | 'value'
 type SortDirection = 'asc' | 'desc'
@@ -86,56 +87,57 @@ export default function InventoryListScreen() {
     loadItems()
   }
 
-  const getFilteredAndSortedItems = () => {
+  // Memoized filtering and sorting for better performance
+  const filteredItems = useMemo(() => {
     // Filter by search query
     let filtered = items.filter(item => {
       const matchesSearch = item.item_name.toLowerCase().includes(searchQuery.toLowerCase())
       return matchesSearch
     })
 
-    // Sort items
-    filtered = [...filtered].sort((a, b) => {
-      let comparison = 0
+    // Sort items (only if there are items to sort)
+    if (filtered.length > 0) {
+      filtered = [...filtered].sort((a, b) => {
+        let comparison = 0
 
-      switch (sortBy) {
-        case 'name': {
-          comparison = a.item_name.localeCompare(b.item_name)
-          break
+        switch (sortBy) {
+          case 'name': {
+            comparison = a.item_name.localeCompare(b.item_name)
+            break
+          }
+          case 'quantity': {
+            comparison = a.current_quantity - b.current_quantity
+            break
+          }
+          case 'date': {
+            const dateA = new Date(a.created_at || 0).getTime()
+            const dateB = new Date(b.created_at || 0).getTime()
+            comparison = dateA - dateB
+            break
+          }
+          case 'expiry': {
+            const expiryA = a.expiry_date ? new Date(a.expiry_date).getTime() : Infinity
+            const expiryB = b.expiry_date ? new Date(b.expiry_date).getTime() : Infinity
+            comparison = expiryA - expiryB
+            break
+          }
+          case 'value': {
+            const valueA = a.current_quantity * (Number(a.cost_per_unit) || 0)
+            const valueB = b.current_quantity * (Number(b.cost_per_unit) || 0)
+            comparison = valueA - valueB
+            break
+          }
         }
-        case 'quantity': {
-          comparison = a.current_quantity - b.current_quantity
-          break
-        }
-        case 'date': {
-          const dateA = new Date(a.created_at || 0).getTime()
-          const dateB = new Date(b.created_at || 0).getTime()
-          comparison = dateA - dateB
-          break
-        }
-        case 'expiry': {
-          const expiryA = a.expiry_date ? new Date(a.expiry_date).getTime() : Infinity
-          const expiryB = b.expiry_date ? new Date(b.expiry_date).getTime() : Infinity
-          comparison = expiryA - expiryB
-          break
-        }
-        case 'value': {
-          const valueA = a.current_quantity * (Number(a.cost_per_unit) || 0)
-          const valueB = b.current_quantity * (Number(b.cost_per_unit) || 0)
-          comparison = valueA - valueB
-          break
-        }
-      }
 
-      return sortDirection === 'asc' ? comparison : -comparison
-    })
+        return sortDirection === 'asc' ? comparison : -comparison
+      })
+    }
 
     return filtered
-  }
-
-  const filteredItems = getFilteredAndSortedItems()
+  }, [items, searchQuery, sortBy, sortDirection])
 
   const renderItem = ({ item }: { item: InventoryItemResponse }) => {
-    const statusColor = getStatusColor(item.status)
+    const statusColor = getInventoryStatusColor(item.status)
 
     return (
       <TouchableOpacity
@@ -561,6 +563,12 @@ export default function InventoryListScreen() {
         }
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        initialNumToRender={10}
+        windowSize={10}
       />
 
       {/* Results Count */}
@@ -573,23 +581,6 @@ export default function InventoryListScreen() {
       )}
     </SafeAreaView>
   )
-}
-
-// Helper functions
-function getStatusColor(status: string): string {
-  switch (status) {
-    case InventoryStatusEnum.AVAILABLE:
-      return APP_COLORS.success
-    case InventoryStatusEnum.RESERVED:
-      return APP_COLORS.warning
-    case InventoryStatusEnum.SOLD:
-      return APP_COLORS.info
-    case InventoryStatusEnum.EXPIRED:
-    case InventoryStatusEnum.DAMAGED:
-      return APP_COLORS.error
-    default:
-      return APP_COLORS.textSecondary
-  }
 }
 
 const styles = StyleSheet.create({

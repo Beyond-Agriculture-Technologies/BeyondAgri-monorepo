@@ -28,9 +28,32 @@ import {
 
 class InventoryApiClient {
   private baseURL: string
+  // eslint-disable-next-line no-undef
+  private activeRequests: Map<string, AbortController> = new Map()
+  private readonly REQUEST_TIMEOUT_MS = 30000 // 30 seconds
+  private readonly MAX_RETRIES = 2
 
   constructor() {
     this.baseURL = `${API_FULL_URL}/inventory`
+  }
+
+  /**
+   * Cancel a specific request by key
+   */
+  cancelRequest(requestKey: string): void {
+    const controller = this.activeRequests.get(requestKey)
+    if (controller) {
+      controller.abort()
+      this.activeRequests.delete(requestKey)
+    }
+  }
+
+  /**
+   * Cancel all active requests
+   */
+  cancelAllRequests(): void {
+    this.activeRequests.forEach(controller => controller.abort())
+    this.activeRequests.clear()
   }
 
   private async getHeaders(): Promise<HeadersInit> {
@@ -56,8 +79,21 @@ class InventoryApiClient {
     return filtered.length > 0 ? `?${filtered.join('&')}` : ''
   }
 
-  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+  private async request<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    requestKey?: string
+  ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
+    // eslint-disable-next-line no-undef
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.REQUEST_TIMEOUT_MS)
+
+    // Track this request if key provided
+    if (requestKey) {
+      this.cancelRequest(requestKey) // Cancel any existing request with same key
+      this.activeRequests.set(requestKey, controller)
+    }
 
     try {
       const headers = await this.getHeaders()
@@ -68,7 +104,10 @@ class InventoryApiClient {
           ...headers,
           ...options.headers,
         },
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       // Get response as text first (can only read body once)
       const responseText = await response.text()
@@ -115,10 +154,24 @@ class InventoryApiClient {
         message: data.message,
       }
     } catch (error: any) {
+      clearTimeout(timeoutId)
+
+      // Cleanup request tracking
+      if (requestKey) {
+        this.activeRequests.delete(requestKey)
+      }
+
       console.error('Inventory API request error:', error.message, 'Endpoint:', endpoint)
 
       let userMessage = error.message || 'Network error'
-      if (error.message?.includes('Network request failed') || error.message?.includes('fetch')) {
+
+      // Handle timeout specifically
+      if (error.name === 'AbortError') {
+        userMessage = 'Request timeout - please try again'
+      } else if (
+        error.message?.includes('Network request failed') ||
+        error.message?.includes('fetch')
+      ) {
         userMessage = 'Unable to connect to server. Please check your internet connection.'
       } else if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
         userMessage = 'Session expired. Please log in again.'
@@ -138,6 +191,48 @@ class InventoryApiClient {
         message: userMessage,
       }
     }
+  }
+
+  /**
+   * Wrapper method that retries failed requests with exponential backoff
+   * Only retries network errors, not 4xx client errors
+   */
+  private async requestWithRetry<T>(
+    endpoint: string,
+    options: RequestInit = {},
+    requestKey?: string
+  ): Promise<ApiResponse<T>> {
+    let lastError: any
+
+    for (let attempt = 0; attempt <= this.MAX_RETRIES; attempt++) {
+      try {
+        return await this.request<T>(endpoint, options, requestKey)
+      } catch (error: any) {
+        lastError = error
+
+        // Check if this is a client error (4xx) that shouldn't be retried
+        const is4xxError =
+          error.message?.includes('401') ||
+          error.message?.includes('403') ||
+          error.message?.includes('404') ||
+          error.message?.includes('400')
+
+        // Don't retry client errors or if this was the last attempt
+        if (is4xxError || attempt === this.MAX_RETRIES) {
+          throw error
+        }
+
+        // Wait before retrying with exponential backoff
+        const delay = Math.min(1000 * Math.pow(2, attempt), 5000) // Max 5 seconds
+        await new Promise(resolve => setTimeout(resolve, delay))
+
+        console.log(
+          `Retrying request to ${endpoint} (attempt ${attempt + 2}/${this.MAX_RETRIES + 1})`
+        )
+      }
+    }
+
+    throw lastError
   }
 
   // ==================== Inventory Types ====================

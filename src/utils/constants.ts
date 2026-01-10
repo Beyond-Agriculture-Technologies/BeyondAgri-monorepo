@@ -45,3 +45,9 @@ export const OTP_CONFIG = {
   RESEND_DELAY_MS: 30 * 1000, // 30 seconds
   CODE_LENGTH: 6, // 6-digit OTP code
 } as const
+
+// Inventory Configuration
+export const INVENTORY_DEFAULTS = {
+  CURRENCY: 'ZAR',
+  DEFAULT_COUNTRY: 'ZA',
+} as const

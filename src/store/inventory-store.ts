@@ -1,16 +1,25 @@
 import { create } from 'zustand'
 import {
   InventoryItemResponse,
+  InventoryItemCreate,
+  InventoryItemUpdate,
   WarehouseResponse,
+  WarehouseCreate,
+  WarehouseUpdate,
   InventoryTypeResponse,
+  InventoryTypeCreate,
+  StorageBinResponse,
+  StorageBinCreate,
+  StorageBinUpdate,
+  InventoryTransactionResponse,
   LowStockAlert,
   ExpiringItemAlert,
   InventoryValuationReport,
-  StorageBinResponse,
-  InventoryTransactionResponse,
   InventoryItemFilters,
+  TransactionFilters,
 } from '../types/inventory'
 import { inventoryApi } from '../services/inventoryApi'
+import { getErrorMessage } from '../utils/error-handler'
 
 interface InventoryState {
   // Items
@@ -30,7 +39,6 @@ interface InventoryState {
 
   // Types
   inventoryTypes: InventoryTypeResponse[]
-  types: InventoryTypeResponse[] // Alias for inventoryTypes
   typesLoading: boolean
   typesError: string | null
 
@@ -38,10 +46,12 @@ interface InventoryState {
   lowStockAlerts: LowStockAlert[]
   expiringAlerts: ExpiringItemAlert[]
   alertsLoading: boolean
+  alertsError: string | null
 
   // Reports
   valuation: InventoryValuationReport | null
   valuationLoading: boolean
+  valuationError: string | null
 
   // Transactions
   transactions: InventoryTransactionResponse[]
@@ -51,6 +61,7 @@ interface InventoryState {
   // Batches (grouped items by batch_number)
   batches: Map<string, InventoryItemResponse[]>
   batchesLoading: boolean
+  batchesError: string | null
 
   // Transfer Modal State
   transferModal: {
@@ -64,30 +75,29 @@ interface InventoryState {
   searchFilters: InventoryItemFilters
 
   // Actions - Items
-  fetchItems: (filters?: any) => Promise<void>
+  fetchItems: (filters?: InventoryItemFilters) => Promise<void>
   fetchItem: (itemId: number) => Promise<void>
   fetchItemById: (itemId: number) => Promise<void> // Alias for fetchItem
-  createItem: (data: any) => Promise<InventoryItemResponse | null>
-  updateItem: (itemId: number, data: any) => Promise<InventoryItemResponse | null>
+  createItem: (data: InventoryItemCreate) => Promise<InventoryItemResponse | null>
+  updateItem: (itemId: number, data: InventoryItemUpdate) => Promise<InventoryItemResponse | null>
   deleteItem: (itemId: number) => Promise<boolean>
   clearCurrentItem: () => void
 
   // Actions - Warehouses
   fetchWarehouses: () => Promise<void>
-  createWarehouse: (data: any) => Promise<WarehouseResponse | null>
-  updateWarehouse: (warehouseId: number, data: any) => Promise<WarehouseResponse | null>
+  createWarehouse: (data: WarehouseCreate) => Promise<WarehouseResponse | null>
+  updateWarehouse: (warehouseId: number, data: WarehouseUpdate) => Promise<WarehouseResponse | null>
   deleteWarehouse: (warehouseId: number) => Promise<boolean>
 
   // Actions - Bins
   fetchBins: (warehouseId: number) => Promise<void>
-  createBin: (warehouseId: number, data: any) => Promise<StorageBinResponse | null>
-  updateBin: (binId: number, data: any) => Promise<StorageBinResponse | null>
+  createBin: (warehouseId: number, data: StorageBinCreate) => Promise<StorageBinResponse | null>
+  updateBin: (binId: number, data: StorageBinUpdate) => Promise<StorageBinResponse | null>
   deleteBin: (binId: number) => Promise<boolean>
 
   // Actions - Types
   fetchInventoryTypes: () => Promise<void>
-  fetchTypes: () => Promise<void> // Alias for fetchInventoryTypes
-  createInventoryType: (data: any) => Promise<InventoryTypeResponse | null>
+  createInventoryType: (data: InventoryTypeCreate) => Promise<InventoryTypeResponse | null>
 
   // Actions - Alerts
   fetchLowStockAlerts: () => Promise<void>
@@ -103,7 +113,7 @@ interface InventoryState {
   closeTransferModal: () => void
 
   // Actions - Transactions
-  fetchTransactions: (itemId?: number, filters?: any) => Promise<void>
+  fetchTransactions: (itemId?: number, filters?: TransactionFilters) => Promise<void>
 
   // Actions - Batches
   fetchBatches: () => Promise<void>
@@ -132,16 +142,17 @@ const initialState = {
   binsLoading: false,
 
   inventoryTypes: [],
-  types: [], // Alias for inventoryTypes
   typesLoading: false,
   typesError: null,
 
   lowStockAlerts: [],
   expiringAlerts: [],
   alertsLoading: false,
+  alertsError: null,
 
   valuation: null,
   valuationLoading: false,
+  valuationError: null,
 
   transactions: [],
   transactionsLoading: false,
@@ -149,6 +160,7 @@ const initialState = {
 
   batches: new Map(),
   batchesLoading: false,
+  batchesError: null,
 
   transferModal: {
     open: false,
@@ -174,8 +186,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
       } else {
         set({ itemsError: result.message, itemsLoading: false })
       }
-    } catch (error: any) {
-      set({ itemsError: error.message, itemsLoading: false })
+    } catch (error: unknown) {
+      set({ itemsError: getErrorMessage(error), itemsLoading: false })
     }
   },
 
@@ -188,8 +200,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
       } else {
         set({ itemsError: result.message, itemsLoading: false })
       }
-    } catch (error: any) {
-      set({ itemsError: error.message, itemsLoading: false })
+    } catch (error: unknown) {
+      set({ itemsError: getErrorMessage(error), itemsLoading: false })
     }
   },
 
@@ -212,8 +224,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ itemsError: result.message, itemsLoading: false })
         return null
       }
-    } catch (error: any) {
-      set({ itemsError: error.message, itemsLoading: false })
+    } catch (error: unknown) {
+      set({ itemsError: getErrorMessage(error), itemsLoading: false })
       return null
     }
   },
@@ -233,8 +245,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ itemsError: result.message, itemsLoading: false })
         return null
       }
-    } catch (error: any) {
-      set({ itemsError: error.message, itemsLoading: false })
+    } catch (error: unknown) {
+      set({ itemsError: getErrorMessage(error), itemsLoading: false })
       return null
     }
   },
@@ -254,8 +266,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ itemsError: result.message, itemsLoading: false })
         return false
       }
-    } catch (error: any) {
-      set({ itemsError: error.message, itemsLoading: false })
+    } catch (error: unknown) {
+      set({ itemsError: getErrorMessage(error), itemsLoading: false })
       return false
     }
   },
@@ -275,8 +287,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
       } else {
         set({ warehousesError: result.message, warehousesLoading: false })
       }
-    } catch (error: any) {
-      set({ warehousesError: error.message, warehousesLoading: false })
+    } catch (error: unknown) {
+      set({ warehousesError: getErrorMessage(error), warehousesLoading: false })
     }
   },
 
@@ -294,8 +306,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ warehousesError: result.message, warehousesLoading: false })
         return null
       }
-    } catch (error: any) {
-      set({ warehousesError: error.message, warehousesLoading: false })
+    } catch (error: unknown) {
+      set({ warehousesError: getErrorMessage(error), warehousesLoading: false })
       return null
     }
   },
@@ -316,8 +328,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ warehousesError: result.message, warehousesLoading: false })
         return null
       }
-    } catch (error: any) {
-      set({ warehousesError: error.message, warehousesLoading: false })
+    } catch (error: unknown) {
+      set({ warehousesError: getErrorMessage(error), warehousesLoading: false })
       return null
     }
   },
@@ -336,8 +348,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ warehousesError: result.message, warehousesLoading: false })
         return false
       }
-    } catch (error: any) {
-      set({ warehousesError: error.message, warehousesLoading: false })
+    } catch (error: unknown) {
+      set({ warehousesError: getErrorMessage(error), warehousesLoading: false })
       return false
     }
   },
@@ -356,7 +368,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
       } else {
         set({ binsLoading: false })
       }
-    } catch (error: any) {
+    } catch {
       set({ binsLoading: false })
     }
   },
@@ -378,7 +390,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ binsLoading: false })
         return null
       }
-    } catch (error: any) {
+    } catch {
       set({ binsLoading: false })
       return null
     }
@@ -403,7 +415,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ binsLoading: false })
         return null
       }
-    } catch (error: any) {
+    } catch {
       set({ binsLoading: false })
       return null
     }
@@ -428,7 +440,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ binsLoading: false })
         return false
       }
-    } catch (error: any) {
+    } catch {
       set({ binsLoading: false })
       return false
     }
@@ -441,21 +453,16 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     try {
       const result = await inventoryApi.listInventoryTypes()
       if (result.success) {
-        set({ inventoryTypes: result.data, types: result.data, typesLoading: false })
+        set({ inventoryTypes: result.data, typesLoading: false })
       } else {
         set({ typesError: result.message, typesLoading: false })
       }
-    } catch (error: any) {
-      set({ typesError: error.message, typesLoading: false })
+    } catch (error: unknown) {
+      set({ typesError: getErrorMessage(error), typesLoading: false })
     }
   },
 
-  fetchTypes: async () => {
-    // Alias for fetchInventoryTypes
-    return get().fetchInventoryTypes()
-  },
-
-  createInventoryType: async (data: any) => {
+  createInventoryType: async (data: InventoryTypeCreate) => {
     set({ typesLoading: true, typesError: null })
     try {
       const result = await inventoryApi.createInventoryType(data)
@@ -470,8 +477,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ typesError: result.message, typesLoading: false })
         return null
       }
-    } catch (error: any) {
-      set({ typesError: error.message, typesLoading: false })
+    } catch (error: unknown) {
+      set({ typesError: getErrorMessage(error), typesLoading: false })
       return null
     }
   },
@@ -479,30 +486,36 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
   // ==================== Alerts ====================
 
   fetchLowStockAlerts: async () => {
-    set({ alertsLoading: true })
+    set({ alertsLoading: true, alertsError: null })
     try {
       const result = await inventoryApi.getLowStockAlerts()
       if (result.success) {
         set({ lowStockAlerts: result.data, alertsLoading: false })
       } else {
-        set({ alertsLoading: false })
+        set({
+          alertsLoading: false,
+          alertsError: result.message || 'Failed to fetch low stock alerts',
+        })
       }
-    } catch (error: any) {
-      set({ alertsLoading: false })
+    } catch (error: unknown) {
+      set({ alertsLoading: false, alertsError: getErrorMessage(error) })
     }
   },
 
   fetchExpiringAlerts: async (days: number = 7) => {
-    set({ alertsLoading: true })
+    set({ alertsLoading: true, alertsError: null })
     try {
       const result = await inventoryApi.getExpiringItems(days)
       if (result.success) {
         set({ expiringAlerts: result.data, alertsLoading: false })
       } else {
-        set({ alertsLoading: false })
+        set({
+          alertsLoading: false,
+          alertsError: result.message || 'Failed to fetch expiring items',
+        })
       }
-    } catch (error: any) {
-      set({ alertsLoading: false })
+    } catch (error: unknown) {
+      set({ alertsLoading: false, alertsError: getErrorMessage(error) })
     }
   },
 
@@ -515,7 +528,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         return result.data.count
       }
       return 0
-    } catch (error: any) {
+    } catch {
       return 0
     }
   },
@@ -523,16 +536,19 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
   // ==================== Reports ====================
 
   fetchValuation: async () => {
-    set({ valuationLoading: true })
+    set({ valuationLoading: true, valuationError: null })
     try {
       const result = await inventoryApi.getInventoryValuation()
       if (result.success) {
         set({ valuation: result.data, valuationLoading: false })
       } else {
-        set({ valuationLoading: false })
+        set({
+          valuationLoading: false,
+          valuationError: result.message || 'Failed to fetch inventory valuation',
+        })
       }
-    } catch (error: any) {
-      set({ valuationLoading: false })
+    } catch (error: unknown) {
+      set({ valuationLoading: false, valuationError: getErrorMessage(error) })
     }
   },
 
@@ -554,8 +570,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         set({ itemsError: result.message, itemsLoading: false })
         return false
       }
-    } catch (error: any) {
-      set({ itemsError: error.message, itemsLoading: false })
+    } catch (error: unknown) {
+      set({ itemsError: getErrorMessage(error), itemsLoading: false })
       return false
     }
   },
@@ -584,12 +600,12 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
 
   // ==================== Transactions ====================
 
-  fetchTransactions: async (itemId?: number, filters?: Record<string, unknown>) => {
+  fetchTransactions: async (itemId?: number, filters?: TransactionFilters) => {
     set({ transactionsLoading: true, transactionsError: null })
     try {
       if (itemId) {
         // Fetch transactions for a specific item
-        const result = await inventoryApi.getItemTransactions(itemId, filters as any)
+        const result = await inventoryApi.getItemTransactions(itemId, filters)
         if (result.success) {
           set({ transactions: result.data, transactionsLoading: false })
         } else {
@@ -597,7 +613,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         }
       } else {
         // Fetch all transactions (global history)
-        const result = await inventoryApi.getAllTransactions(filters as any)
+        const result = await inventoryApi.getAllTransactions(filters)
         if (result.success) {
           set({ transactions: result.data, transactionsLoading: false })
         } else {
@@ -605,7 +621,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch transactions'
+      const errorMessage =
+        error instanceof Error ? getErrorMessage(error) : 'Failed to fetch transactions'
       set({ transactionsError: errorMessage, transactionsLoading: false })
     }
   },
@@ -613,7 +630,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
   // ==================== Batches ====================
 
   fetchBatches: async () => {
-    set({ batchesLoading: true })
+    set({ batchesLoading: true, batchesError: null })
     try {
       const result = await inventoryApi.listInventoryItems()
       if (result.success) {
@@ -623,20 +640,23 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
             if (!batchMap.has(item.batch_number)) {
               batchMap.set(item.batch_number, [])
             }
-            batchMap.get(item.batch_number)!.push(item)
+            const batchItems = batchMap.get(item.batch_number)
+            if (batchItems) {
+              batchItems.push(item)
+            }
           }
         })
         set({ batches: batchMap, batchesLoading: false })
       } else {
-        set({ batchesLoading: false })
+        set({ batchesLoading: false, batchesError: result.message || 'Failed to fetch batches' })
       }
-    } catch (error: any) {
-      set({ batchesLoading: false })
+    } catch (error: unknown) {
+      set({ batchesLoading: false, batchesError: getErrorMessage(error) })
     }
   },
 
   fetchBatchItems: async (batchNumber: string) => {
-    set({ batchesLoading: true })
+    set({ batchesLoading: true, batchesError: null })
     try {
       const result = await inventoryApi.listInventoryItems({ batch_number: batchNumber })
       if (result.success) {
@@ -644,10 +664,13 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
         batches.set(batchNumber, result.data)
         set({ batches, batchesLoading: false })
       } else {
-        set({ batchesLoading: false })
+        set({
+          batchesLoading: false,
+          batchesError: result.message || `Failed to fetch batch items for ${batchNumber}`,
+        })
       }
-    } catch (error: any) {
-      set({ batchesLoading: false })
+    } catch (error: unknown) {
+      set({ batchesLoading: false, batchesError: getErrorMessage(error) })
     }
   },
 
