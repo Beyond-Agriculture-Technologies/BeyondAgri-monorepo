@@ -1,8 +1,10 @@
+import logging
 from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.config import settings
 from app.schemas.auth import TokenData
@@ -10,6 +12,9 @@ from app.schemas.account import AccountProfile
 from app.services.authentication import auth_service, get_auth_service_with_db, AuthenticationError
 from app.services.account_service import AccountService
 from app.db.session import get_db
+from app.models.account import AccountTypeEnum, AccountStatusEnum
+
+logger = logging.getLogger(__name__)
 
 security = HTTPBearer()
 
@@ -44,17 +49,28 @@ async def get_current_account(
             return AccountProfile.from_account(account)
         else:
             # Account not found in local database
+            logger.warning(f"Account not found in local database for user_sub={user_info.get('user_sub')}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Account not found in local database"
             )
 
-    except AuthenticationError:
+    except AuthenticationError as e:
+        logger.debug(f"Authentication error validating token: {e}")
         raise credentials_exception
-    except Exception as e:
+    except HTTPException:
+        raise
+    except SQLAlchemyError as e:
+        logger.error(f"Database error retrieving account: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving account: {str(e)}"
+            detail="Database error occurred while retrieving account"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error retrieving account: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error retrieving account"
         )
 
 
@@ -65,7 +81,9 @@ async def get_current_active_account(
     Dependency to get the current active account.
     Ensures the account is active and not disabled.
     """
-    if not current_account.is_active or current_account.status in ["disabled", "suspended"]:
+    # Use enum values for comparison (UPPERCASE)
+    inactive_statuses = [AccountStatusEnum.DISABLED.value, AccountStatusEnum.SUSPENDED.value]
+    if not current_account.is_active or current_account.status in inactive_statuses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Account is inactive or disabled"
@@ -79,7 +97,7 @@ async def get_current_farmer_account(
     """
     Dependency to ensure the current account is a farmer.
     """
-    if current_account.account_type != "farmer":
+    if current_account.account_type != AccountTypeEnum.FARMER.value:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. Farmer account required."
@@ -93,7 +111,7 @@ async def get_current_wholesaler_account(
     """
     Dependency to ensure the current account is a wholesaler.
     """
-    if current_account.account_type != "wholesaler":
+    if current_account.account_type != AccountTypeEnum.WHOLESALER.value:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. Wholesaler account required."
@@ -107,7 +125,7 @@ async def get_current_admin_account(
     """
     Dependency to ensure the current account is an admin.
     """
-    if current_account.account_type != "admin":
+    if current_account.account_type != AccountTypeEnum.ADMIN.value:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. Admin account required."
@@ -121,7 +139,8 @@ async def get_current_business_account(
     """
     Dependency to ensure the current account is a business (wholesaler or admin).
     """
-    if current_account.account_type not in ["wholesaler", "admin"]:
+    business_types = [AccountTypeEnum.WHOLESALER.value, AccountTypeEnum.ADMIN.value]
+    if current_account.account_type not in business_types:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied. Business account required."

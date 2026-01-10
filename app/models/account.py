@@ -6,16 +6,18 @@ from app.db.base import BaseModel
 
 
 class AccountTypeEnum(str, enum.Enum):
-    FARMER = "farmer"
-    WHOLESALER = "wholesaler"
-    ADMIN = "admin"
+    """Account types - values must match database enum (UPPERCASE)"""
+    FARMER = "FARMER"
+    WHOLESALER = "WHOLESALER"
+    ADMIN = "ADMIN"
 
 
 class AccountStatusEnum(str, enum.Enum):
-    ACTIVE = "active"
-    SUSPENDED = "suspended"
-    DISABLED = "disabled"
-    PENDING_VERIFICATION = "pending_verification"
+    """Account status - values must match database enum (UPPERCASE)"""
+    ACTIVE = "ACTIVE"
+    SUSPENDED = "SUSPENDED"
+    DISABLED = "DISABLED"
+    PENDING_VERIFICATION = "PENDING_VERIFICATION"
 
 
 class Account(BaseModel):

@@ -8,20 +8,22 @@ from app.db.base import BaseModel
 
 
 class VerificationTypeEnum(str, enum.Enum):
-    IDENTITY = "identity"
-    BUSINESS = "business"
-    FARM = "farm"
-    ADDRESS = "address"
-    PHONE = "phone"
-    EMAIL = "email"
+    """Verification types - values must match database enum (UPPERCASE)"""
+    IDENTITY = "IDENTITY"
+    BUSINESS = "BUSINESS"
+    FARM = "FARM"
+    ADDRESS = "ADDRESS"
+    PHONE = "PHONE"
+    EMAIL = "EMAIL"
 
 
 class VerificationStatusEnum(str, enum.Enum):
-    PENDING = "pending"
-    UNDER_REVIEW = "under_review"
-    APPROVED = "approved"
-    REJECTED = "rejected"
-    EXPIRED = "expired"
+    """Verification status - values must match database enum (UPPERCASE)"""
+    PENDING = "PENDING"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    EXPIRED = "EXPIRED"
 
 
 class VerificationRecord(BaseModel):

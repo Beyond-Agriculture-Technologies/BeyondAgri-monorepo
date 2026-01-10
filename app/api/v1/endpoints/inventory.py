@@ -93,11 +93,11 @@ async def get_inventory_type(
     """
     inventory_type = InventoryService.get_inventory_type(db=db, type_id=type_id)
     if not inventory_type:
-        raise HTTPException(status_code=404, detail="Inventory type not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inventory type not found")
 
     # Check permission: must be system default or owned by current account
     if inventory_type.account_id is not None and inventory_type.account_id != current_account.id:
-        raise HTTPException(status_code=403, detail="Not authorized to access this inventory type")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to access this inventory type")
 
     return inventory_type
 
@@ -115,10 +115,10 @@ async def update_inventory_type(
     # Verify ownership
     existing = InventoryService.get_inventory_type(db=db, type_id=type_id)
     if not existing:
-        raise HTTPException(status_code=404, detail="Inventory type not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inventory type not found")
 
     if existing.account_id != current_account.id:
-        raise HTTPException(status_code=403, detail="Cannot update system defaults or types owned by others")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot update system defaults or types owned by others")
 
     updated = InventoryService.update_inventory_type(db=db, type_id=type_id, update_data=update_data)
     return updated
@@ -136,14 +136,14 @@ async def delete_inventory_type(
     # Verify ownership
     existing = InventoryService.get_inventory_type(db=db, type_id=type_id)
     if not existing:
-        raise HTTPException(status_code=404, detail="Inventory type not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inventory type not found")
 
     if existing.account_id != current_account.id:
-        raise HTTPException(status_code=403, detail="Cannot delete system defaults or types owned by others")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot delete system defaults or types owned by others")
 
     success = InventoryService.delete_inventory_type(db=db, type_id=type_id)
     if not success:
-        raise HTTPException(status_code=400, detail="Cannot delete inventory type (may be in use)")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot delete inventory type (may be in use)")
 
 
 # ==================== Warehouse Endpoints ====================
@@ -209,7 +209,7 @@ async def get_warehouse(
     """
     warehouse = InventoryService.get_warehouse(db=db, warehouse_id=warehouse_id, account_id=current_account.id)
     if not warehouse:
-        raise HTTPException(status_code=404, detail="Warehouse not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found")
     return warehouse
 
 
@@ -230,7 +230,7 @@ async def update_warehouse(
         update_data=update_data
     )
     if not warehouse:
-        raise HTTPException(status_code=404, detail="Warehouse not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found")
     return warehouse
 
 
@@ -245,7 +245,7 @@ async def delete_warehouse(
     """
     success = InventoryService.delete_warehouse(db=db, warehouse_id=warehouse_id, account_id=current_account.id)
     if not success:
-        raise HTTPException(status_code=404, detail="Warehouse not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found")
 
 
 # ==================== Storage Bin Endpoints ====================
@@ -289,7 +289,7 @@ async def create_storage_bin(
             account_id=current_account.id
         )
         if not storage_bin:
-            raise HTTPException(status_code=404, detail="Warehouse not found or not owned by you")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found or not owned by you")
         return storage_bin
     except IntegrityError:
         raise HTTPException(
@@ -321,7 +321,7 @@ async def update_storage_bin(
         update_data=update_data
     )
     if not storage_bin:
-        raise HTTPException(status_code=404, detail="Storage bin not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Storage bin not found")
     return storage_bin
 
 
@@ -336,7 +336,7 @@ async def delete_storage_bin(
     """
     success = InventoryService.delete_storage_bin(db=db, bin_id=bin_id, account_id=current_account.id)
     if not success:
-        raise HTTPException(status_code=404, detail="Storage bin not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Storage bin not found")
 
 
 # ==================== Inventory Item Endpoints ====================
@@ -421,7 +421,7 @@ async def get_inventory_item(
     """
     item = InventoryService.get_inventory_item(db=db, item_id=item_id, account_id=current_account.id)
     if not item:
-        raise HTTPException(status_code=404, detail="Inventory item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inventory item not found")
     return item
 
 
@@ -444,7 +444,7 @@ async def update_inventory_item(
         performed_by_account_id=current_account.id
     )
     if not item:
-        raise HTTPException(status_code=404, detail="Inventory item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inventory item not found")
     return item
 
 
@@ -459,7 +459,7 @@ async def delete_inventory_item(
     """
     success = InventoryService.delete_inventory_item(db=db, item_id=item_id, account_id=current_account.id)
     if not success:
-        raise HTTPException(status_code=404, detail="Inventory item not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inventory item not found")
 
 
 # ==================== Transaction Endpoints ====================
@@ -568,10 +568,10 @@ async def create_transaction(
             performed_by_account_id=current_account.id
         )
         if not transaction:
-            raise HTTPException(status_code=404, detail="Inventory item not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inventory item not found")
         return transaction
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except IntegrityError as e:
         logger.error(f"Integrity error creating transaction: {e}")
         raise HTTPException(
@@ -607,10 +607,10 @@ async def transfer_inventory_item(
             performed_by_account_id=current_account.id
         )
         if not item:
-            raise HTTPException(status_code=404, detail="Inventory item not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Inventory item not found")
         return item
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 # ==================== Alert Endpoints ====================

@@ -1,7 +1,7 @@
 from typing import Dict, Any, Optional, List
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.models import (
     Account, AccountTypeEnum, AccountStatusEnum,
@@ -42,11 +42,15 @@ class AccountService:
             IntegrityError: If account already exists
         """
         try:
+            # Normalize account_type to enum (handles both lowercase and UPPERCASE input)
+            account_type_upper = account_type.upper() if isinstance(account_type, str) else account_type
+            account_type_enum = AccountTypeEnum(account_type_upper)
+
             # Create the main account
             account = Account(
                 external_auth_id=external_auth_id,
                 email=email,
-                account_type=AccountTypeEnum(account_type),
+                account_type=account_type_enum,
                 status=AccountStatusEnum.ACTIVE,  # Auth provider account is already confirmed
                 is_verified=False,  # Requires separate verification process
                 is_active=True,
@@ -66,8 +70,8 @@ class AccountService:
             )
             self.db.add(user_profile)
 
-            # Create type-specific profiles
-            if account_type == "farmer":
+            # Create type-specific profiles using enum comparison
+            if account_type_enum == AccountTypeEnum.FARMER:
                 farmer_profile = FarmerProfile(
                     account_id=account.id,
                     farm_name=additional_data.get("farm_name"),
@@ -80,13 +84,13 @@ class AccountService:
                 )
                 self.db.add(farmer_profile)
 
-            elif account_type in ["wholesaler", "admin"]:
+            elif account_type_enum in [AccountTypeEnum.WHOLESALER, AccountTypeEnum.ADMIN]:
                 business_profile = BusinessProfile(
                     account_id=account.id,
                     business_name=additional_data.get("business_name", f"{additional_data.get('name', email)} Business"),
                     business_license=additional_data.get("business_license"),
                     business_address=additional_data.get("business_address", additional_data.get("address")),
-                    business_type=account_type,
+                    business_type=account_type_enum.value,
                     verification_documents={},
                     business_categories={},
                     service_areas={},
@@ -94,14 +98,14 @@ class AccountService:
                 )
                 self.db.add(business_profile)
 
-            # Assign default role
-            role = self.db.query(Role).filter(Role.name == account_type).first()
+            # Assign default role (role names should match enum values)
+            role = self.db.query(Role).filter(Role.name == account_type_enum.value).first()
             if role:
                 account_role = AccountRole(
                     account_id=account.id,
                     role_id=role.id,
                     assigned_by="system",
-                    assigned_at=datetime.utcnow()
+                    assigned_at=datetime.now(timezone.utc)
                 )
                 self.db.add(account_role)
 
@@ -159,7 +163,7 @@ class AccountService:
         """
         Update account's last login timestamp.
         """
-        account.last_login_at = datetime.utcnow()
+        account.last_login_at = datetime.now(timezone.utc)
         account.login_count += 1
 
         self.db.commit()
@@ -207,7 +211,7 @@ class AccountService:
             status=VerificationStatusEnum.PENDING,
             documents=documents,
             verification_metadata=metadata or {},
-            submitted_at=datetime.utcnow()
+            submitted_at=datetime.now(timezone.utc)
         )
         self.db.add(verification)
 
