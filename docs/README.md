@@ -104,11 +104,25 @@ curl -X GET http://localhost:8000/api/v1/inventory/items \
 
 [→ Full Inventory Documentation](./api/inventory/overview.md)
 
-### Marketplace (Coming in Phase 3)
-- Product listings
-- Order management
-- Pricing tiers
-- Search and filtering
+### Marketplace (Phase 3 - ✅ Complete)
+
+#### Public Browse Endpoints (Wholesaler/Guest)
+- `GET /api/v1/marketplace/listings` - Browse listings with filters & pagination
+- `GET /api/v1/marketplace/listings/{id}` - Get listing detail
+- `GET /api/v1/marketplace/provinces` - Get provinces with active listings
+- `GET /api/v1/marketplace/categories` - Get available product categories
+
+#### Farmer Listing Management
+- `GET /api/v1/marketplace/my-listings` - List own listings
+- `POST /api/v1/marketplace/my-listings` - Create new listing
+- `GET /api/v1/marketplace/my-listings/{id}` - Get own listing
+- `PUT /api/v1/marketplace/my-listings/{id}` - Update listing
+- `POST /api/v1/marketplace/my-listings/{id}/publish` - Publish draft listing
+- `POST /api/v1/marketplace/my-listings/{id}/pause` - Pause active listing
+- `POST /api/v1/marketplace/my-listings/{id}/resume` - Resume paused listing
+- `DELETE /api/v1/marketplace/my-listings/{id}` - Archive listing
+
+[→ Full Marketplace Documentation](./api/marketplace/overview.md)
 
 ## Common HTTP Headers
 
@@ -292,11 +306,12 @@ const createInventoryItem = async (itemData) => {
 - Livestock and animal measurements
 - Automatic inventory creation from harvests
 
-### 📅 Phase 3: Product Catalog & Marketplace
-- Product listings with photos
-- Tiered pricing (retail, wholesale, bulk)
-- Search and filtering
-- Product availability tracking
+### ✅ Phase 3: Product Catalog & Marketplace (Complete)
+- Product listings with photos and categories
+- Browse-only marketplace for wholesalers
+- Search by title/description
+- Filter by category, province, price range
+- Farmer listing management (draft, publish, pause, archive)
 
 ### 📅 Phase 4: Order Management
 - Order creation and tracking
@@ -335,6 +350,8 @@ const createInventoryItem = async (itemData) => {
   - [Transactions](./api/inventory/transactions.md)
   - [Alerts](./api/inventory/alerts.md)
   - [Reports](./api/inventory/reports.md)
+- [Marketplace](./api/marketplace/)
+  - [Overview](./api/marketplace/overview.md)
 
 ### Data Models
 - [Account Models](./models/account-models.md)
@@ -354,6 +371,6 @@ const createInventoryItem = async (itemData) => {
 
 ---
 
-**Last Updated:** 2025-10-10
-**API Version:** v1.0.0
-**Documentation Version:** 1.0
+**Last Updated:** 2026-01-10
+**API Version:** v1.1.0
+**Documentation Version:** 1.1

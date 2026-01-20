@@ -250,9 +250,16 @@ class AuthenticationService:
                         address=user_attributes.get('address')
                     )
 
+                    # Ensure phone number is saved to profile (safeguard)
+                    if account.profile and phone_number:
+                        if not account.profile.phone_number:
+                            account.profile.phone_number = phone_number
+                            logger.info(f"Phone number {phone_number} saved to profile for {email}")
+
                     # Mark phone as verified (Cognito already verified it)
                     account.phone_verified_at = datetime.utcnow()
                     self.db.commit()
+                    self.db.refresh(account)
 
                     logger.info(f"Local account created for {email}")
 
@@ -331,14 +338,14 @@ class AuthenticationService:
                     # User not found with this phone number
                     logger.warning(f"Login attempt with unregistered phone: {normalized_phone}")
                     raise UserNotFoundError(
-                        "No account found. Please check your credentials or register."
+                        "No account found with this phone number. Please check your credentials or register."
                     )
 
                 # Check if phone is verified
                 if not account.phone_verified_at:
                     logger.warning(f"Login attempt with unverified phone: {normalized_phone}")
                     raise InvalidCredentialsError(
-                        "Please verify your phone number before logging in"
+                        "Phone number not verified. Please verify your phone number before logging in with it, or use your email address instead."
                     )
 
                 # Use the account's email for Cognito authentication

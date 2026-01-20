@@ -46,7 +46,7 @@ class UserLogin(BaseModel):
         """Validate that username is either a valid email or phone number."""
         from app.utils.phone_validation import detect_login_identifier_type
 
-        identifier_type = detect_login_identifier_type(v)
+        identifier_type, _ = detect_login_identifier_type(v)
 
         if identifier_type == "unknown":
             raise ValueError(
@@ -90,7 +90,7 @@ class PasswordResetRequest(BaseModel):
         """Validate that input is either valid email or phone number."""
         from app.utils.phone_validation import detect_login_identifier_type
 
-        identifier_type = detect_login_identifier_type(v)
+        identifier_type, _ = detect_login_identifier_type(v)
 
         if identifier_type == "unknown":
             raise ValueError(
@@ -119,7 +119,7 @@ class PasswordResetConfirm(BaseModel):
         """Validate that input is either valid email or phone number."""
         from app.utils.phone_validation import detect_login_identifier_type
 
-        identifier_type = detect_login_identifier_type(v)
+        identifier_type, _ = detect_login_identifier_type(v)
 
         if identifier_type == "unknown":
             raise ValueError(
