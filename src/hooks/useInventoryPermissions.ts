@@ -44,7 +44,9 @@ const ALL_PERMISSIONS: InventoryPermissionSet = {
  */
 export const useInventoryPermissions = () => {
   const user = useAuthStore(state => state.user)
-  const userType = user?.user_type || 'FARMER'
+  // Normalize to uppercase to handle backend returning lowercase values
+  const rawUserType = user?.user_type || 'FARMER'
+  const userType = rawUserType.toUpperCase() as 'FARMER' | 'WHOLESALER' | 'ADMIN'
 
   // If RBAC is disabled, return all permissions as true
   const permissions = DISABLE_RBAC ? ALL_PERMISSIONS : InventoryPermissions[userType]

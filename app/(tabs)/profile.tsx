@@ -156,7 +156,7 @@ export default function ProfileScreen() {
   }
 
   const getRoleDisplayName = (role: string) => {
-    switch (role) {
+    switch (role.toUpperCase()) {
       case 'FARMER':
         return 'Farmer'
       case 'WHOLESALER':
@@ -169,7 +169,7 @@ export default function ProfileScreen() {
   }
 
   const getRoleDescription = (role: string) => {
-    switch (role) {
+    switch (role.toUpperCase()) {
       case 'FARMER':
         return 'Manage your own farms and agricultural operations'
       case 'WHOLESALER':
