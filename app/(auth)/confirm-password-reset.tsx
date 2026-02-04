@@ -14,6 +14,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { BackendAuthService } from '../../src/services/auth'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 
 export default function ConfirmPasswordResetScreen() {
   const { email } = useLocalSearchParams<{ email: string }>()
@@ -60,7 +61,7 @@ export default function ConfirmPasswordResetScreen() {
       } else {
         Alert.alert('Error', result.error || 'Failed to reset password')
       }
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'An unexpected error occurred')
     } finally {
       setIsLoading(false)
@@ -92,6 +93,7 @@ export default function ConfirmPasswordResetScreen() {
                 value={confirmationCode}
                 onChangeText={setConfirmationCode}
                 placeholder="Enter verification code"
+                placeholderTextColor={APP_COLORS.placeholder}
                 keyboardType="number-pad"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -105,6 +107,7 @@ export default function ConfirmPasswordResetScreen() {
                 value={newPassword}
                 onChangeText={setNewPassword}
                 placeholder="Enter new password"
+                placeholderTextColor={APP_COLORS.placeholder}
                 secureTextEntry
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -118,6 +121,7 @@ export default function ConfirmPasswordResetScreen() {
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
                 placeholder="Confirm new password"
+                placeholderTextColor={APP_COLORS.placeholder}
                 secureTextEntry
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -169,12 +173,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     lineHeight: 22,
   },
@@ -186,18 +191,20 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.inputBorder,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    backgroundColor: APP_COLORS.surface,
+    fontFamily: FONTS.regular,
+    backgroundColor: APP_COLORS.inputBackground,
+    color: APP_COLORS.text,
   },
   confirmButton: {
     backgroundColor: APP_COLORS.primary,
@@ -210,9 +217,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   confirmButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   resendLink: {
     alignItems: 'center',
@@ -220,10 +227,11 @@ const styles = StyleSheet.create({
   },
   resendLinkText: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
   },
   resendLinkTextBold: {
     color: APP_COLORS.primary,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
 })

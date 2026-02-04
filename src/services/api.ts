@@ -76,10 +76,11 @@ class ApiClient {
 
       return {
         success: true,
-        data: data.data || (data as any),
+        data: (data.data ?? data) as T,
         message: data.message,
       }
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err instanceof Error ? err : new Error(String(err))
       // Enhanced error logging
       const errorInfo = {
         url,
@@ -106,7 +107,7 @@ class ApiClient {
 
       return {
         success: false,
-        data: null as any,
+        data: null as unknown as T,
         message: userMessage,
       }
     }
@@ -148,7 +149,7 @@ class ApiClient {
     return BackendAuthService.getCurrentUser()
   }
 
-  async updateUserProfile(updates: any) {
+  async updateUserProfile(updates: Record<string, unknown>) {
     return this.request('/accounts/profile', {
       method: 'PUT',
       body: JSON.stringify(updates),
@@ -162,7 +163,7 @@ class ApiClient {
     })
   }
 
-  async submitVerification(verificationData: any) {
+  async submitVerification(verificationData: Record<string, unknown>) {
     return this.request('/accounts/verification/submit', {
       method: 'POST',
       body: JSON.stringify(verificationData),
@@ -197,18 +198,19 @@ class ApiClient {
   async uploadPhoto(farmId: string, photoUri: string, description?: string) {
     try {
       const formData = new FormData()
+      // React Native's FormData accepts objects with uri/type/name for file uploads
       formData.append('photo', {
         uri: photoUri,
         type: 'image/jpeg',
         name: 'farm-photo.jpg',
-      } as any)
+      } as unknown as Blob)
 
       if (description) {
         formData.append('description', description)
       }
 
       const headers = await this.getHeaders()
-      delete (headers as any)['Content-Type'] // Let the browser set the content type for FormData
+      delete headers['Content-Type'] // Let the browser set the content type for FormData
 
       const response = await fetch(`${this.baseURL}/farms/${farmId}/photos`, {
         method: 'POST',

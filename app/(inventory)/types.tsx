@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { useInventoryPermissions } from '../../src/hooks/useInventoryPermissions'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import {
   InventoryTypeResponse,
   InventoryTypeCreate,
@@ -234,7 +235,7 @@ export default function InventoryTypesScreen() {
             </Text>
             {permissions.canManageInventoryTypes && (
               <TouchableOpacity style={styles.emptyButton} onPress={() => setShowAddModal(true)}>
-                <Ionicons name="add" size={20} color="white" />
+                <Ionicons name="add" size={20} color={APP_COLORS.textOnPrimary} />
                 <Text style={styles.emptyButtonText}>Add Type</Text>
               </TouchableOpacity>
             )}
@@ -339,7 +340,7 @@ export default function InventoryTypesScreen() {
                   <Switch
                     value={formData.perishable}
                     onValueChange={value => setFormData({ ...formData, perishable: value })}
-                    trackColor={{ false: '#e5e7eb', true: APP_COLORS.primary }}
+                    trackColor={{ false: APP_COLORS.border, true: APP_COLORS.primary }}
                     thumbColor="white"
                   />
                 </View>
@@ -450,11 +451,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   typeHeader: {
     flexDirection: 'row',
@@ -480,7 +478,7 @@ const styles = StyleSheet.create({
   },
   typeName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
@@ -500,7 +498,7 @@ const styles = StyleSheet.create({
   perishableText: {
     fontSize: 12,
     color: APP_COLORS.warning,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   description: {
     fontSize: 14,
@@ -526,7 +524,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,
@@ -548,18 +546,18 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: APP_COLORS.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: APP_COLORS.surface,
+    backgroundColor: APP_COLORS.surfaceElevated,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -570,11 +568,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   modalBody: {
@@ -586,7 +584,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
@@ -594,13 +592,14 @@ const styles = StyleSheet.create({
     color: APP_COLORS.error,
   },
   input: {
-    backgroundColor: APP_COLORS.background,
+    backgroundColor: APP_COLORS.inputBackground,
     borderRadius: 8,
     padding: 12,
     fontSize: 15,
     color: APP_COLORS.text,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.inputBorder,
+    fontFamily: FONTS.regular,
   },
   textArea: {
     height: 80,
@@ -617,7 +616,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: APP_COLORS.background,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.border,
   },
   categoryOptionActive: {
     borderColor: APP_COLORS.primary,
@@ -629,7 +628,7 @@ const styles = StyleSheet.create({
   },
   categoryOptionTextActive: {
     color: APP_COLORS.primary,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   switchRow: {
     flexDirection: 'row',
@@ -646,7 +645,7 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: APP_COLORS.border,
   },
   modalButtonSecondary: {
     flex: 1,
@@ -655,11 +654,11 @@ const styles = StyleSheet.create({
     backgroundColor: APP_COLORS.background,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.border,
   },
   modalButtonSecondaryText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   modalButtonPrimary: {
@@ -671,7 +670,7 @@ const styles = StyleSheet.create({
   },
   modalButtonPrimaryText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
   },
 })

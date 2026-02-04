@@ -1,6 +1,39 @@
 import * as SQLite from 'expo-sqlite'
 import { Farm, Photo, OfflineAction } from '../types'
 
+/** Row shape returned by SQLite for the farms table */
+interface FarmRow {
+  id: string
+  name: string
+  location: string
+  latitude: number
+  longitude: number
+  area: number
+  ownerId: string
+  createdAt: string
+  updatedAt: string
+  syncStatus: string
+}
+
+/** Row shape returned by SQLite for the photos table */
+interface PhotoRow {
+  id: string
+  farmId: string
+  uri: string
+  description: string | null
+  timestamp: string
+  syncStatus: string
+}
+
+/** Row shape returned by SQLite for the offline_actions table */
+interface OfflineActionRow {
+  id: string
+  type: string
+  payload: string
+  timestamp: string
+  retryCount: number
+}
+
 class DatabaseService {
   private db: SQLite.SQLiteDatabase | null = null
   private isInitialized: boolean = false
@@ -364,12 +397,12 @@ class DatabaseService {
       const result = await this.db.getAllAsync(
         'SELECT * FROM offline_actions ORDER BY timestamp ASC'
       )
-      return result.map((row: any) => ({
-        id: row.id as string,
+      return (result as OfflineActionRow[]).map(row => ({
+        id: row.id,
         type: row.type as OfflineAction['type'],
-        payload: JSON.parse(row.payload as string),
-        timestamp: row.timestamp as string,
-        retryCount: row.retryCount as number,
+        payload: JSON.parse(row.payload),
+        timestamp: row.timestamp,
+        retryCount: row.retryCount,
       }))
     } catch (error) {
       console.error('Error fetching offline actions from database:', error)
@@ -418,31 +451,33 @@ class DatabaseService {
   }
 
   // Helper methods
-  private mapRowToFarm(row: any): Farm {
+  private mapRowToFarm(row: unknown): Farm {
+    const r = row as FarmRow
     return {
-      id: row.id,
-      name: row.name,
-      location: row.location,
+      id: r.id,
+      name: r.name,
+      location: r.location,
       coordinates: {
-        latitude: row.latitude,
-        longitude: row.longitude,
+        latitude: r.latitude,
+        longitude: r.longitude,
       },
-      area: row.area,
-      ownerId: row.ownerId,
-      createdAt: row.createdAt,
-      updatedAt: row.updatedAt,
-      syncStatus: row.syncStatus,
+      area: r.area,
+      ownerId: r.ownerId,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt,
+      syncStatus: r.syncStatus as Farm['syncStatus'],
     }
   }
 
-  private mapRowToPhoto(row: any): Photo {
+  private mapRowToPhoto(row: unknown): Photo {
+    const r = row as PhotoRow
     return {
-      id: row.id,
-      farmId: row.farmId,
-      uri: row.uri,
-      description: row.description,
-      timestamp: row.timestamp,
-      syncStatus: row.syncStatus,
+      id: r.id,
+      farmId: r.farmId,
+      uri: r.uri,
+      description: r.description ?? undefined,
+      timestamp: r.timestamp,
+      syncStatus: r.syncStatus as Photo['syncStatus'],
     }
   }
 

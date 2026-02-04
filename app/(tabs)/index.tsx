@@ -5,7 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAuthStore } from '../../src/store/auth-store'
 import { useAppStore } from '../../src/store/app-store'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { dbService } from '../../src/services/database'
+import { GlassCard } from '../../src/components/ui/GlassCard'
+import { GradientCard } from '../../src/components/ui/GradientCard'
 
 export default function DashboardScreen() {
   const insets = useSafeAreaInsets()
@@ -61,47 +64,103 @@ export default function DashboardScreen() {
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView
         style={styles.scrollView}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={APP_COLORS.primary}
+          />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={styles.greeting}>Good day,</Text>
             <Text style={styles.userName}>{user?.name || 'Welcome'}</Text>
             <Text style={styles.userRole}>{getRoleDisplayName(user?.user_type || '')}</Text>
           </View>
           <View style={styles.statusContainer}>
             <View style={[styles.statusIndicator, isOnline ? styles.online : styles.offline]}>
-              <Ionicons name={isOnline ? 'wifi' : 'cloud-offline'} size={16} color="white" />
-              <Text style={styles.statusText}>{isOnline ? 'Online' : 'Offline'}</Text>
+              <Ionicons
+                name={isOnline ? 'wifi' : 'cloud-offline'}
+                size={14}
+                color={isOnline ? APP_COLORS.success : APP_COLORS.warning}
+              />
+              <Text
+                style={[
+                  styles.statusText,
+                  { color: isOnline ? APP_COLORS.success : APP_COLORS.warning },
+                ]}
+              >
+                {isOnline ? 'Online' : 'Offline'}
+              </Text>
             </View>
           </View>
+        </View>
+
+        {/* Hero Card */}
+        <View style={styles.heroSection}>
+          <GradientCard
+            colors={['rgba(34, 197, 94, 0.12)', 'rgba(34, 197, 94, 0.02)']}
+            style={styles.heroCard}
+          >
+            <View style={styles.heroContent}>
+              <View style={styles.heroIconCircle}>
+                <Ionicons name="leaf" size={28} color={APP_COLORS.primary} />
+              </View>
+              <Text style={styles.heroTitle}>
+                {stats.totalFarms === 0 ? 'Get Started' : 'Your farms are growing'}
+              </Text>
+              <Text style={styles.heroSubtitle}>
+                {stats.totalFarms === 0
+                  ? 'Add your first farm to start tracking your agriculture.'
+                  : `Managing ${stats.totalFarms} farm${stats.totalFarms > 1 ? 's' : ''} with ${stats.totalPhotos} photos captured.`}
+              </Text>
+              <TouchableOpacity style={styles.heroCta}>
+                <Text style={styles.heroCtaText}>
+                  {stats.totalFarms === 0 ? 'Add Farm' : 'View Farms'}
+                </Text>
+                <Ionicons name="arrow-forward" size={16} color={APP_COLORS.textOnPrimary} />
+              </TouchableOpacity>
+            </View>
+          </GradientCard>
         </View>
 
         {/* Stats Cards */}
         <View style={styles.statsContainer}>
           <View style={styles.statsGrid}>
-            <View style={[styles.statCard, styles.primaryCard]}>
-              <Ionicons name="leaf" size={24} color={APP_COLORS.primary} />
-              <Text style={styles.statNumber}>{stats.totalFarms}</Text>
-              <Text style={styles.statLabel}>Active Farms</Text>
-            </View>
+            <GlassCard style={styles.statCardOuter}>
+              <View style={styles.statCardInner}>
+                <View style={[styles.statIconCircle, { backgroundColor: APP_COLORS.primaryDim }]}>
+                  <Ionicons name="leaf" size={20} color={APP_COLORS.primary} />
+                </View>
+                <Text style={styles.statNumber}>{stats.totalFarms}</Text>
+                <Text style={styles.statLabel}>Active Farms</Text>
+              </View>
+            </GlassCard>
 
-            <View style={[styles.statCard, styles.secondaryCard]}>
-              <Ionicons name="camera" size={24} color={APP_COLORS.secondary} />
-              <Text style={styles.statNumber}>{stats.totalPhotos}</Text>
-              <Text style={styles.statLabel}>Photos</Text>
-            </View>
+            <GlassCard style={styles.statCardOuter}>
+              <View style={styles.statCardInner}>
+                <View style={[styles.statIconCircle, { backgroundColor: APP_COLORS.infoDim }]}>
+                  <Ionicons name="camera" size={20} color={APP_COLORS.info} />
+                </View>
+                <Text style={styles.statNumber}>{stats.totalPhotos}</Text>
+                <Text style={styles.statLabel}>Photos</Text>
+              </View>
+            </GlassCard>
           </View>
 
           {stats.pendingSync > 0 && (
-            <View style={[styles.statCard, styles.warningCard, styles.fullWidth]}>
+            <GlassCard style={styles.syncCardOuter}>
               <View style={styles.syncRow}>
-                <Ionicons name="sync" size={20} color={APP_COLORS.warning} />
+                <View style={[styles.statIconCircle, { backgroundColor: APP_COLORS.warningDim }]}>
+                  <Ionicons name="sync" size={18} color={APP_COLORS.warning} />
+                </View>
                 <Text style={styles.syncText}>{stats.pendingSync} items pending sync</Text>
                 {isSyncing && <Ionicons name="reload" size={16} color={APP_COLORS.warning} />}
               </View>
-            </View>
+            </GlassCard>
           )}
         </View>
 
@@ -109,37 +168,55 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.actionsGrid}>
-            <TouchableOpacity style={styles.actionCard}>
-              <Ionicons name="add-circle" size={32} color={APP_COLORS.primary} />
-              <Text style={styles.actionLabel}>Add Farm</Text>
+            <TouchableOpacity style={styles.actionCardWrapper}>
+              <GlassCard style={styles.actionCardOuter}>
+                <View style={styles.actionCardInner}>
+                  <View
+                    style={[styles.actionIconCircle, { backgroundColor: APP_COLORS.primaryDim }]}
+                  >
+                    <Ionicons name="add-circle" size={24} color={APP_COLORS.primary} />
+                  </View>
+                  <Text style={styles.actionLabel}>Add Farm</Text>
+                </View>
+              </GlassCard>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCard}>
-              <Ionicons name="camera" size={32} color={APP_COLORS.secondary} />
-              <Text style={styles.actionLabel}>Take Photo</Text>
+            <TouchableOpacity style={styles.actionCardWrapper}>
+              <GlassCard style={styles.actionCardOuter}>
+                <View style={styles.actionCardInner}>
+                  <View style={[styles.actionIconCircle, { backgroundColor: APP_COLORS.infoDim }]}>
+                    <Ionicons name="camera" size={24} color={APP_COLORS.info} />
+                  </View>
+                  <Text style={styles.actionLabel}>Take Photo</Text>
+                </View>
+              </GlassCard>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCard}>
-              <Ionicons name="location" size={32} color={APP_COLORS.success} />
-              <Text style={styles.actionLabel}>View Map</Text>
+            <TouchableOpacity style={styles.actionCardWrapper}>
+              <GlassCard style={styles.actionCardOuter}>
+                <View style={styles.actionCardInner}>
+                  <View
+                    style={[styles.actionIconCircle, { backgroundColor: APP_COLORS.successDim }]}
+                  >
+                    <Ionicons name="location" size={24} color={APP_COLORS.success} />
+                  </View>
+                  <Text style={styles.actionLabel}>View Map</Text>
+                </View>
+              </GlassCard>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCard}>
-              <Ionicons name="sync" size={32} color={APP_COLORS.warning} />
-              <Text style={styles.actionLabel}>Sync Data</Text>
+            <TouchableOpacity style={styles.actionCardWrapper}>
+              <GlassCard style={styles.actionCardOuter}>
+                <View style={styles.actionCardInner}>
+                  <View
+                    style={[styles.actionIconCircle, { backgroundColor: APP_COLORS.warningDim }]}
+                  >
+                    <Ionicons name="sync" size={24} color={APP_COLORS.warning} />
+                  </View>
+                  <Text style={styles.actionLabel}>Sync Data</Text>
+                </View>
+              </GlassCard>
             </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Recent Activity */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
-          <View style={styles.activityCard}>
-            <Text style={styles.activityText}>
-              {stats.totalFarms === 0
-                ? 'No farms added yet. Start by adding your first farm!'
-                : 'Your farms are ready for management. Add photos and track your progress.'}
-            </Text>
           </View>
         </View>
       </ScrollView>
@@ -155,33 +232,39 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 100,
+  },
   header: {
     padding: 20,
-    backgroundColor: APP_COLORS.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
+  headerLeft: {
+    flex: 1,
+  },
   greeting: {
+    fontFamily: FONTS.regular,
     fontSize: 16,
     color: APP_COLORS.textSecondary,
   },
   userName: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
+    fontSize: 28,
     color: APP_COLORS.text,
     marginTop: 4,
+    letterSpacing: -0.5,
   },
   userRole: {
+    fontFamily: FONTS.medium,
     fontSize: 14,
     color: APP_COLORS.primary,
-    fontWeight: '500',
     marginTop: 2,
   },
   statusContainer: {
     alignItems: 'flex-end',
+    paddingTop: 4,
   },
   statusIndicator: {
     flexDirection: 'row',
@@ -191,16 +274,64 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   online: {
-    backgroundColor: APP_COLORS.success,
+    backgroundColor: APP_COLORS.successDim,
   },
   offline: {
-    backgroundColor: APP_COLORS.warning,
+    backgroundColor: APP_COLORS.warningDim,
   },
   statusText: {
-    color: 'white',
+    fontFamily: FONTS.medium,
     fontSize: 12,
-    fontWeight: '500',
     marginLeft: 4,
+  },
+  heroSection: {
+    paddingHorizontal: 20,
+    marginBottom: 4,
+  },
+  heroCard: {
+    borderWidth: 1,
+    borderColor: APP_COLORS.glassBorder,
+  },
+  heroContent: {
+    padding: 20,
+    alignItems: 'flex-start',
+  },
+  heroIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: APP_COLORS.primaryDim,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  heroTitle: {
+    fontFamily: FONTS.bold,
+    fontSize: 22,
+    color: APP_COLORS.text,
+    letterSpacing: -0.3,
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    fontFamily: FONTS.regular,
+    fontSize: 14,
+    color: APP_COLORS.textSecondary,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  heroCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: APP_COLORS.primary,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+    gap: 8,
+  },
+  heroCtaText: {
+    fontFamily: FONTS.semiBold,
+    fontSize: 14,
+    color: APP_COLORS.textOnPrimary,
   },
   statsContainer: {
     padding: 20,
@@ -210,64 +341,55 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 12,
   },
-  statCard: {
+  statCardOuter: {
     flex: 1,
-    backgroundColor: APP_COLORS.surface,
-    padding: 20,
-    borderRadius: 16,
+    padding: 0,
+  },
+  statCardInner: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
-  primaryCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: APP_COLORS.primary,
-  },
-  secondaryCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: APP_COLORS.secondary,
-  },
-  warningCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: APP_COLORS.warning,
-  },
-  fullWidth: {
-    flex: 1,
+  statIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
   },
   statNumber: {
+    fontFamily: FONTS.bold,
     fontSize: 28,
-    fontWeight: 'bold',
     color: APP_COLORS.text,
-    marginTop: 8,
+    letterSpacing: -0.3,
   },
   statLabel: {
+    fontFamily: FONTS.regular,
     fontSize: 12,
     color: APP_COLORS.textSecondary,
     marginTop: 4,
     textAlign: 'center',
   },
+  syncCardOuter: {
+    padding: 0,
+  },
   syncRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   syncText: {
+    fontFamily: FONTS.medium,
     fontSize: 14,
     color: APP_COLORS.warning,
-    marginLeft: 8,
-    marginRight: 8,
-    fontWeight: '500',
   },
   section: {
     padding: 20,
     paddingTop: 0,
   },
   sectionTitle: {
+    fontFamily: FONTS.semiBold,
     fontSize: 18,
-    fontWeight: '600',
     color: APP_COLORS.text,
     marginBottom: 16,
   },
@@ -276,39 +398,28 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: 12,
   },
-  actionCard: {
-    width: '48%',
-    backgroundColor: APP_COLORS.surface,
-    padding: 20,
-    borderRadius: 16,
+  actionCardWrapper: {
+    width: '47%',
+  },
+  actionCardOuter: {
+    padding: 0,
+  },
+  actionCardInner: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    paddingVertical: 4,
+  },
+  actionIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
   },
   actionLabel: {
+    fontFamily: FONTS.medium,
     fontSize: 14,
     color: APP_COLORS.text,
-    marginTop: 8,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  activityCard: {
-    backgroundColor: APP_COLORS.surface,
-    padding: 20,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  activityText: {
-    fontSize: 14,
-    color: APP_COLORS.textSecondary,
-    lineHeight: 20,
     textAlign: 'center',
   },
 })

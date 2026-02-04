@@ -1,3 +1,5 @@
+import { DARK_COLORS } from '../theme/colors'
+
 // API Configuration
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://api.beyondagri.com'
 export const API_VERSION = process.env.EXPO_PUBLIC_API_VERSION || 'v1'
@@ -9,19 +11,10 @@ export const ENABLE_HIDDEN_FEATURES = process.env.EXPO_PUBLIC_ENABLE_HIDDEN_FEAT
 // RBAC Configuration
 export const DISABLE_RBAC = process.env.EXPO_PUBLIC_DISABLE_RBAC === 'true'
 
-// App Constants
+// App Constants - Dark Future Theme
 export const APP_COLORS = {
-  primary: '#22c55e',
-  secondary: '#3b82f6',
-  background: '#f8fafc',
-  surface: '#ffffff',
-  error: '#ef4444',
-  warning: '#f59e0b',
-  success: '#10b981',
-  info: '#3b82f6',
-  text: '#1f2937',
-  textSecondary: '#6b7280',
-}
+  ...DARK_COLORS,
+} as const
 
 export const SCREEN_NAMES = {
   AUTH: 'Auth',

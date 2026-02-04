@@ -10,20 +10,25 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
-import { router, Stack } from 'expo-router'
+import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { useAppStore } from '../../src/store/app-store'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { LowStockAlert, ExpiringItemAlert } from '../../src/types/inventory'
 
 type TabType = 'low-stock' | 'expiring' | 'expired'
 
 export default function AlertsScreen() {
+  const { tab } = useLocalSearchParams<{ tab?: string }>()
   const { isOnline } = useAppStore()
   const { lowStockAlerts, expiringAlerts, fetchLowStockAlerts, fetchExpiringAlerts } =
     useInventoryStore()
 
-  const [activeTab, setActiveTab] = useState<TabType>('low-stock')
+  const validTabs: TabType[] = ['low-stock', 'expiring', 'expired']
+  const initialTab: TabType = validTabs.includes(tab as TabType) ? (tab as TabType) : 'low-stock'
+
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab)
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -342,6 +347,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: APP_COLORS.textSecondary,
+    fontFamily: FONTS.regular,
   },
   summaryContainer: {
     flexDirection: 'row',
@@ -350,19 +356,16 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   summaryCount: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
     marginTop: 4,
   },
@@ -371,6 +374,7 @@ const styles = StyleSheet.create({
     color: APP_COLORS.textSecondary,
     marginTop: 2,
     textAlign: 'center',
+    fontFamily: FONTS.regular,
   },
   tabContainer: {
     flexDirection: 'row',
@@ -383,19 +387,21 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surfaceElevated,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   tabActive: {
     backgroundColor: APP_COLORS.primary,
   },
   tabText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.textSecondary,
   },
   tabTextActive: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
   },
   offlineBanner: {
     flexDirection: 'row',
@@ -406,24 +412,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   offlineText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   listContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   alertCard: {
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   alertHeader: {
     flexDirection: 'row',
@@ -444,7 +447,7 @@ const styles = StyleSheet.create({
   },
   alertTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 2,
   },
@@ -467,7 +470,7 @@ const styles = StyleSheet.create({
   },
   alertDetailValue: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.text,
   },
   warningText: {
@@ -482,7 +485,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: APP_COLORS.background,
+    borderTopColor: APP_COLORS.border,
   },
   urgencyBadge: {
     paddingHorizontal: 12,
@@ -492,8 +495,8 @@ const styles = StyleSheet.create({
   },
   urgencyText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: 'white',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
   },
   emptyContainer: {
     flex: 1,
@@ -503,7 +506,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,

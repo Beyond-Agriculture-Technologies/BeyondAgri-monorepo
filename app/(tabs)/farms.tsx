@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Farm } from '../../src/types'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { dbService } from '../../src/services/database'
 import { useAppStore } from '../../src/store/app-store'
 
@@ -49,7 +50,18 @@ export default function FarmsScreen() {
                 : styles.failed,
           ]}
         >
-          <Text style={styles.syncStatusText}>{item.syncStatus}</Text>
+          <Text
+            style={[
+              styles.syncStatusText,
+              item.syncStatus === 'synced'
+                ? { color: APP_COLORS.success }
+                : item.syncStatus === 'pending'
+                  ? { color: APP_COLORS.warning }
+                  : { color: APP_COLORS.error },
+            ]}
+          >
+            {item.syncStatus}
+          </Text>
         </View>
       </View>
 
@@ -91,7 +103,7 @@ export default function FarmsScreen() {
         Add your first farm to start managing your agricultural operations
       </Text>
       <TouchableOpacity style={styles.addButton}>
-        <Ionicons name="add" size={20} color="white" />
+        <Ionicons name="add" size={20} color={APP_COLORS.textOnPrimary} />
         <Text style={styles.addButtonText}>Add Your First Farm</Text>
       </TouchableOpacity>
     </View>
@@ -145,18 +157,19 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: APP_COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   headerInfo: {
     flex: 1,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
   },
   headerSubtitle: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     marginTop: 2,
   },
@@ -166,37 +179,41 @@ const styles = StyleSheet.create({
   offlineBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fef3c7',
+    backgroundColor: APP_COLORS.warningDim,
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#fde68a',
+    borderBottomColor: APP_COLORS.border,
   },
   offlineText: {
     fontSize: 12,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.warning,
     marginLeft: 8,
     flex: 1,
   },
   list: {
     padding: 16,
+    paddingBottom: 100,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     padding: 32,
+    paddingBottom: 100,
   },
   emptyState: {
     alignItems: 'center',
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
@@ -211,9 +228,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   addButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     marginLeft: 8,
   },
   farmCard: {
@@ -221,11 +238,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   farmHeader: {
     flexDirection: 'row',
@@ -238,12 +252,13 @@ const styles = StyleSheet.create({
   },
   farmName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
   farmLocation: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
   },
   syncStatus: {
@@ -252,17 +267,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   synced: {
-    backgroundColor: '#dcfce7',
+    backgroundColor: APP_COLORS.successDim,
   },
   pending: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: APP_COLORS.warningDim,
   },
   failed: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: APP_COLORS.errorDim,
   },
   syncStatusText: {
     fontSize: 10,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     textTransform: 'uppercase',
   },
   farmDetails: {
@@ -276,6 +291,7 @@ const styles = StyleSheet.create({
   },
   farmDetailText: {
     fontSize: 12,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     marginLeft: 4,
   },
@@ -284,7 +300,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
+    borderTopColor: APP_COLORS.borderLight,
   },
   actionButton: {
     flexDirection: 'row',
@@ -292,12 +308,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
-    backgroundColor: '#f9fafb',
+    backgroundColor: APP_COLORS.glass,
   },
   actionText: {
     fontSize: 12,
     color: APP_COLORS.text,
     marginLeft: 4,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
 })

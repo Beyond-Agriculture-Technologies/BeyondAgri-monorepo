@@ -14,6 +14,7 @@ import { Stack } from 'expo-router'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { useAppStore } from '../../src/store/app-store'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 
 type ReportType = 'valuation' | 'batch' | 'movement'
 
@@ -303,7 +304,7 @@ export default function ReportsScreen() {
         }
       >
         {renderActiveReport()}
-        <View style={{ height: 40 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
   )
@@ -360,19 +361,21 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 12,
     borderRadius: 10,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surfaceElevated,
     gap: 6,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   reportTabActive: {
     backgroundColor: APP_COLORS.primary,
   },
   reportTabText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.textSecondary,
   },
   reportTabTextActive: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
   },
   offlineBanner: {
     flexDirection: 'row',
@@ -383,9 +386,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   offlineText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   scrollView: {
     flex: 1,
@@ -400,22 +403,19 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   summaryIcon: {
     marginBottom: 8,
   },
   summaryValue: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
     marginBottom: 4,
     textAlign: 'center',
@@ -430,14 +430,16 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 12,
   },
   categoryBreakdown: {
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   categoryRow: {
     flexDirection: 'row',
@@ -445,7 +447,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: APP_COLORS.background,
+    borderBottomColor: APP_COLORS.border,
   },
   categoryInfo: {
     flexDirection: 'row',
@@ -466,7 +468,7 @@ const styles = StyleSheet.create({
   },
   categoryValue: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   categoryPercentage: {
@@ -475,9 +477,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   statusBreakdown: {
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   statusRow: {
     flexDirection: 'row',
@@ -485,7 +489,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: APP_COLORS.background,
+    borderBottomColor: APP_COLORS.border,
   },
   statusInfo: {
     flexDirection: 'row',
@@ -503,13 +507,15 @@ const styles = StyleSheet.create({
   },
   statusValue: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   warehouseBreakdown: {
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   warehouseRow: {
     flexDirection: 'row',
@@ -517,7 +523,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: APP_COLORS.background,
+    borderBottomColor: APP_COLORS.border,
   },
   warehouseInfo: {
     flexDirection: 'row',
@@ -530,7 +536,7 @@ const styles = StyleSheet.create({
   },
   warehouseValue: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   emptyContainer: {
@@ -541,7 +547,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,

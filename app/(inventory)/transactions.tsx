@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { useAppStore } from '../../src/store/app-store'
 import { APP_COLORS, INVENTORY_DEFAULTS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { InventoryTransactionResponse, TransactionTypeEnum } from '../../src/types/inventory'
 import {
   getTransactionIcon,
@@ -238,15 +239,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     backgroundColor: APP_COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   filterButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: APP_COLORS.background,
+    backgroundColor: APP_COLORS.surfaceElevated,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.border,
   },
   filterButtonActive: {
     backgroundColor: APP_COLORS.primary,
@@ -255,10 +256,10 @@ const styles = StyleSheet.create({
   filterButtonText: {
     fontSize: 14,
     color: APP_COLORS.text,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   filterButtonTextActive: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
   },
   offlineBanner: {
     flexDirection: 'row',
@@ -269,9 +270,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   offlineText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   errorBanner: {
     flexDirection: 'row',
@@ -283,9 +284,9 @@ const styles = StyleSheet.create({
   },
   errorBannerText: {
     flex: 1,
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   retryButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -294,12 +295,13 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   retryButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   list: {
     padding: 16,
+    paddingBottom: 100,
   },
   transactionCard: {
     flexDirection: 'row',
@@ -307,11 +309,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
     alignItems: 'center',
   },
   iconContainer: {
@@ -333,12 +332,12 @@ const styles = StyleSheet.create({
   },
   transactionType: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   quantityChange: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
   },
   itemInfoContainer: {
     flexDirection: 'row',
@@ -349,7 +348,7 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.primary,
   },
   itemSku: {
@@ -400,7 +399,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,

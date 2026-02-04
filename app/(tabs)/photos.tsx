@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { Photo } from '../../src/types'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { dbService } from '../../src/services/database'
 import { useAppStore } from '../../src/store/app-store'
 
@@ -87,7 +88,7 @@ export default function PhotosScreen() {
         Start documenting your farms by taking photos of crops, equipment, and progress
       </Text>
       <TouchableOpacity style={styles.cameraButton}>
-        <Ionicons name="camera" size={20} color="white" />
+        <Ionicons name="camera" size={20} color={APP_COLORS.textOnPrimary} />
         <Text style={styles.cameraButtonText}>Take Your First Photo</Text>
       </TouchableOpacity>
     </View>
@@ -143,18 +144,19 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: APP_COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   headerInfo: {
     flex: 1,
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
   },
   headerSubtitle: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     marginTop: 2,
   },
@@ -164,19 +166,21 @@ const styles = StyleSheet.create({
   offlineBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fef3c7',
+    backgroundColor: APP_COLORS.warningDim,
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#fde68a',
+    borderBottomColor: APP_COLORS.border,
   },
   offlineText: {
     fontSize: 12,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.warning,
     marginLeft: 8,
     flex: 1,
   },
   list: {
     padding: 16,
+    paddingBottom: 100,
   },
   row: {
     justifyContent: 'space-between',
@@ -185,19 +189,21 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 32,
+    paddingBottom: 100,
   },
   emptyState: {
     alignItems: 'center',
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
@@ -212,9 +218,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   cameraButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     marginLeft: 8,
   },
   photoCard: {
@@ -222,11 +228,8 @@ const styles = StyleSheet.create({
     backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   imageContainer: {
     position: 'relative',
@@ -236,7 +239,7 @@ const styles = StyleSheet.create({
     height: imageSize,
     borderTopLeftRadius: 12,
     borderTopRightRadius: 12,
-    backgroundColor: '#f3f4f6',
+    backgroundColor: APP_COLORS.surfaceHover,
   },
   syncBadge: {
     position: 'absolute',
@@ -263,11 +266,12 @@ const styles = StyleSheet.create({
   photoDescription: {
     fontSize: 14,
     color: APP_COLORS.text,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     marginBottom: 4,
   },
   photoDate: {
     fontSize: 12,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
   },
 })

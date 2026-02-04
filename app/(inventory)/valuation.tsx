@@ -14,6 +14,7 @@ import { Stack } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 
 const SCREEN_WIDTH = Dimensions.get('window').width
 
@@ -393,11 +394,8 @@ const styles = StyleSheet.create({
     margin: 16,
     padding: 20,
     borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   totalIconContainer: {
     width: 64,
@@ -419,7 +417,7 @@ const styles = StyleSheet.create({
   },
   totalValue: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
@@ -446,18 +444,18 @@ const styles = StyleSheet.create({
   },
   filterTabText: {
     fontSize: 13,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.text,
   },
   filterTabTextActive: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
   },
   section: {
     padding: 16,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 16,
   },
@@ -466,11 +464,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   chartHeader: {
     flexDirection: 'row',
@@ -480,7 +475,7 @@ const styles = StyleSheet.create({
   },
   chartTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   barChart: {
@@ -492,7 +487,7 @@ const styles = StyleSheet.create({
   barLabel: {
     fontSize: 13,
     color: APP_COLORS.text,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     marginBottom: 4,
   },
   barContainer: {
@@ -507,7 +502,7 @@ const styles = StyleSheet.create({
   },
   barValue: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   pieChartContainer: {
@@ -541,7 +536,7 @@ const styles = StyleSheet.create({
   },
   legendLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.text,
     marginBottom: 2,
   },
@@ -562,15 +557,12 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   statValue: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
   },
   statLabel: {

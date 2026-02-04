@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 
 interface TransferModalProps {
   visible: boolean
@@ -405,11 +406,11 @@ export default function TransferModal({ visible, onClose, onSuccess }: TransferM
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color="white" />
+                  <ActivityIndicator color={APP_COLORS.textOnPrimary} />
                 ) : (
                   <>
                     <Text style={styles.primaryButtonText}>Confirm Transfer</Text>
-                    <Ionicons name="checkmark" size={20} color="white" />
+                    <Ionicons name="checkmark" size={20} color={APP_COLORS.textOnPrimary} />
                   </>
                 )}
               </TouchableOpacity>
@@ -424,11 +425,11 @@ export default function TransferModal({ visible, onClose, onSuccess }: TransferM
 const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: APP_COLORS.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: APP_COLORS.surface,
+    backgroundColor: APP_COLORS.surfaceElevated,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -439,7 +440,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -448,7 +449,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   progressContainer: {
@@ -457,7 +458,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   progressStep: {
     alignItems: 'center',
@@ -467,7 +468,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: APP_COLORS.border,
   },
   progressDotActive: {
     backgroundColor: APP_COLORS.primary,
@@ -479,18 +480,18 @@ const styles = StyleSheet.create({
   progressLine: {
     flex: 1,
     height: 2,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: APP_COLORS.border,
     marginHorizontal: 4,
   },
   itemInfo: {
     padding: 16,
-    backgroundColor: '#f9fafb',
+    backgroundColor: APP_COLORS.surfaceHover,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   itemName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
@@ -505,7 +506,7 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 12,
   },
@@ -535,7 +536,7 @@ const styles = StyleSheet.create({
   },
   optionName: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.text,
   },
   optionMeta: {
@@ -550,20 +551,21 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: APP_COLORS.background,
+    backgroundColor: APP_COLORS.inputBackground,
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
     color: APP_COLORS.text,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.inputBorder,
+    fontFamily: FONTS.regular,
   },
   inputUnit: {
     position: 'absolute',
     right: 16,
     fontSize: 14,
     color: APP_COLORS.textSecondary,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   textArea: {
     height: 80,
@@ -584,12 +586,12 @@ const styles = StyleSheet.create({
   confirmLabel: {
     fontSize: 14,
     color: APP_COLORS.textSecondary,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   confirmValue: {
     fontSize: 14,
     color: APP_COLORS.text,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     flex: 1,
     textAlign: 'right',
   },
@@ -603,7 +605,7 @@ const styles = StyleSheet.create({
   backButtonText: {
     fontSize: 15,
     color: APP_COLORS.primary,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   emptyState: {
     padding: 32,
@@ -616,7 +618,7 @@ const styles = StyleSheet.create({
   footer: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: APP_COLORS.border,
   },
   primaryButton: {
     backgroundColor: APP_COLORS.primary,
@@ -632,8 +634,8 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
   },
   cancelButton: {
     backgroundColor: 'transparent',
@@ -645,7 +647,7 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.textSecondary,
   },
 })

@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BackendAuthService } from '../../src/services/auth'
 import { useAuthStore } from '../../src/store/auth-store'
 import { APP_COLORS, OTP_CONFIG } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { RegisterRequest } from '../../src/types'
 import { isValidPhoneNumber, normalizePhoneNumber } from '../../src/utils/phone-validation'
 import { getErrorMessage } from '../../src/utils/error-handler'
@@ -201,6 +202,7 @@ export default function RegisterScreen() {
                   value={formData.email}
                   onChangeText={text => setFormData(prev => ({ ...prev, email: text }))}
                   placeholder="Enter your email"
+                  placeholderTextColor={APP_COLORS.placeholder}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -215,6 +217,7 @@ export default function RegisterScreen() {
                   value={formData.name}
                   onChangeText={text => setFormData(prev => ({ ...prev, name: text }))}
                   placeholder="Enter your full name"
+                  placeholderTextColor={APP_COLORS.placeholder}
                   autoCapitalize="words"
                 />
               </View>
@@ -227,6 +230,7 @@ export default function RegisterScreen() {
                   value={formData.phone_number}
                   onChangeText={text => setFormData(prev => ({ ...prev, phone_number: text }))}
                   placeholder="+27821234567 or 0821234567"
+                  placeholderTextColor={APP_COLORS.placeholder}
                   keyboardType="phone-pad"
                 />
                 <Text style={styles.helperText}>You will receive a verification code via SMS</Text>
@@ -240,6 +244,7 @@ export default function RegisterScreen() {
                   value={formData.address}
                   onChangeText={text => setFormData(prev => ({ ...prev, address: text }))}
                   placeholder="Enter your address"
+                  placeholderTextColor={APP_COLORS.placeholder}
                   multiline
                   numberOfLines={3}
                 />
@@ -253,6 +258,7 @@ export default function RegisterScreen() {
                   value={formData.password}
                   onChangeText={text => setFormData(prev => ({ ...prev, password: text }))}
                   placeholder="Enter your password"
+                  placeholderTextColor={APP_COLORS.placeholder}
                   secureTextEntry
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -267,6 +273,7 @@ export default function RegisterScreen() {
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   placeholder="Confirm your password"
+                  placeholderTextColor={APP_COLORS.placeholder}
                   secureTextEntry
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -321,12 +328,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     lineHeight: 22,
   },
@@ -338,18 +346,20 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.inputBorder,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    backgroundColor: APP_COLORS.surface,
+    fontFamily: FONTS.regular,
+    backgroundColor: APP_COLORS.inputBackground,
+    color: APP_COLORS.text,
   },
   textArea: {
     height: 80,
@@ -362,17 +372,17 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.inputBorder,
     backgroundColor: APP_COLORS.surface,
     alignItems: 'center',
   },
   roleOptionSelected: {
     borderColor: APP_COLORS.primary,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: APP_COLORS.primaryDim,
   },
   roleLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 8,
     marginBottom: 4,
@@ -382,6 +392,7 @@ const styles = StyleSheet.create({
   },
   roleDescription: {
     fontSize: 12,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
   },
@@ -396,9 +407,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   registerButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   signInLink: {
     alignItems: 'center',
@@ -406,14 +417,16 @@ const styles = StyleSheet.create({
   },
   signInLinkText: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
   },
   signInLinkTextBold: {
     color: APP_COLORS.primary,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   helperText: {
     fontSize: 12,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     marginTop: 4,
   },

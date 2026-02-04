@@ -16,6 +16,7 @@ import { useMarketplaceStore } from '../../src/store/marketplace-store'
 import { useMarketplacePermissions } from '../../src/hooks/useMarketplacePermissions'
 import { useAppStore } from '../../src/store/app-store'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { ProductListingFull, ListingStatusEnum } from '../../src/types/marketplace'
 import {
   formatPricePerUnit,
@@ -171,7 +172,7 @@ export default function MyListingsScreen() {
                   style={[styles.actionBtn, styles.primaryActionBtn]}
                   onPress={() => handlePublish(item)}
                 >
-                  <Ionicons name="rocket-outline" size={18} color="#fff" />
+                  <Ionicons name="rocket-outline" size={18} color={APP_COLORS.textOnPrimary} />
                   <Text style={styles.actionTextWhite}>Publish</Text>
                 </TouchableOpacity>
               )}
@@ -181,7 +182,7 @@ export default function MyListingsScreen() {
                   style={[styles.actionBtn, styles.warningActionBtn]}
                   onPress={() => handlePause(item)}
                 >
-                  <Ionicons name="pause-outline" size={18} color="#fff" />
+                  <Ionicons name="pause-outline" size={18} color={APP_COLORS.textOnPrimary} />
                   <Text style={styles.actionTextWhite}>Pause</Text>
                 </TouchableOpacity>
               )}
@@ -191,7 +192,7 @@ export default function MyListingsScreen() {
                   style={[styles.actionBtn, styles.primaryActionBtn]}
                   onPress={() => handleResume(item)}
                 >
-                  <Ionicons name="play-outline" size={18} color="#fff" />
+                  <Ionicons name="play-outline" size={18} color={APP_COLORS.textOnPrimary} />
                   <Text style={styles.actionTextWhite}>Resume</Text>
                 </TouchableOpacity>
               )}
@@ -270,7 +271,7 @@ export default function MyListingsScreen() {
             style={styles.createButton}
             onPress={() => router.push('/(marketplace)/listing-form')}
           >
-            <Ionicons name="add" size={20} color="#fff" />
+            <Ionicons name="add" size={20} color={APP_COLORS.textOnPrimary} />
             <Text style={styles.createButtonText}>Create Listing</Text>
           </TouchableOpacity>
         )}
@@ -315,7 +316,7 @@ export default function MyListingsScreen() {
           style={styles.fab}
           onPress={() => router.push('/(marketplace)/listing-form')}
         >
-          <Ionicons name="add" size={28} color="#fff" />
+          <Ionicons name="add" size={28} color={APP_COLORS.textOnPrimary} />
         </TouchableOpacity>
       )}
     </SafeAreaView>
@@ -352,7 +353,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
   },
   filterTabs: {
@@ -372,10 +373,10 @@ const styles = StyleSheet.create({
   filterTabText: {
     fontSize: 14,
     color: APP_COLORS.text,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   filterTabTextActive: {
-    color: '#fff',
+    color: APP_COLORS.textOnPrimary,
   },
   resultsBar: {
     flexDirection: 'row',
@@ -390,11 +391,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -409,7 +407,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   dateText: {
     fontSize: 12,
@@ -417,7 +415,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
@@ -434,7 +432,7 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.primary,
   },
   quantityText: {
@@ -446,7 +444,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
+    borderTopColor: APP_COLORS.border,
   },
   actionBtn: {
     flexDirection: 'row',
@@ -466,12 +464,12 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 13,
     color: APP_COLORS.primary,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   actionTextWhite: {
     fontSize: 13,
-    color: '#fff',
-    fontWeight: '500',
+    color: APP_COLORS.textOnPrimary,
+    fontFamily: FONTS.medium,
   },
   loadingRow: {
     paddingVertical: 12,
@@ -484,7 +482,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,
@@ -505,9 +503,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   createButtonText: {
-    color: '#fff',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   fab: {
     position: 'absolute',
@@ -519,10 +517,7 @@ const styles = StyleSheet.create({
     backgroundColor: APP_COLORS.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 6,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
 })
