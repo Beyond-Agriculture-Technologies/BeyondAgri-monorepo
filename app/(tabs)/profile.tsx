@@ -9,6 +9,7 @@ import { BackendAuthService } from '../../src/services/auth'
 import { dbService } from '../../src/services/database'
 import { apiClient } from '../../src/services/api'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { VerificationStatus, UserRole, Permission } from '../../src/types'
 
 export default function ProfileScreen() {
@@ -17,7 +18,7 @@ export default function ProfileScreen() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [verificationStatus, setVerificationStatus] = useState<VerificationStatus | null>(null)
   const [userRoles, setUserRoles] = useState<UserRole[]>([])
-  const [permissions, setPermissions] = useState<Permission[]>([])
+  const [_permissions, setPermissions] = useState<Permission[]>([])
   const [loadingAccountData, setLoadingAccountData] = useState(false)
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export default function ProfileScreen() {
           try {
             await BackendAuthService.signOut()
             router.replace('/(auth)')
-          } catch (error) {
+          } catch (_error) {
             Alert.alert('Error', 'Failed to sign out')
           } finally {
             setIsLoggingOut(false)
@@ -89,7 +90,7 @@ export default function ProfileScreen() {
             try {
               await dbService.clearAllData()
               Alert.alert('Success', 'Local data has been cleared')
-            } catch (error) {
+            } catch (_error) {
               Alert.alert('Error', 'Failed to clear data')
             }
           },
@@ -142,7 +143,7 @@ export default function ProfileScreen() {
                           result.message || 'Failed to delete account. Please try again.'
                         )
                       }
-                    } catch (error) {
+                    } catch (_error) {
                       Alert.alert('Error', 'An unexpected error occurred. Please try again.')
                     }
                   },
@@ -209,7 +210,11 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
         {/* User Info */}
         <View style={styles.userSection}>
           <View style={styles.avatar}>
@@ -439,25 +444,26 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   avatar: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: APP_COLORS.primaryDim,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
   userName: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     marginBottom: 16,
   },
@@ -466,12 +472,13 @@ const styles = StyleSheet.create({
   },
   roleTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.primary,
     marginBottom: 4,
   },
   roleDescription: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
@@ -481,7 +488,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 16,
   },
@@ -489,11 +496,8 @@ const styles = StyleSheet.create({
     backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   statusRow: {
     flexDirection: 'row',
@@ -507,23 +511,21 @@ const styles = StyleSheet.create({
   },
   statusLabel: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.text,
     marginLeft: 12,
   },
   statusValue: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.text,
   },
   infoCard: {
     backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   infoRow: {
     flexDirection: 'row',
@@ -531,15 +533,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: APP_COLORS.borderLight,
   },
   infoLabel: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.text,
   },
   infoValue: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.textSecondary,
   },
   actionButton: {
@@ -550,11 +553,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   actionLeft: {
     flexDirection: 'row',
@@ -562,6 +562,7 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.text,
     marginLeft: 12,
   },
@@ -573,6 +574,8 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     marginTop: 8,
+    backgroundColor: APP_COLORS.errorDim,
+    borderColor: APP_COLORS.errorDim,
   },
   logoutText: {
     color: APP_COLORS.error,
@@ -583,12 +586,13 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
   footerSubtext: {
     fontSize: 12,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
   },
@@ -596,11 +600,8 @@ const styles = StyleSheet.create({
     backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   verificationRow: {
     flexDirection: 'row',
@@ -614,12 +615,13 @@ const styles = StyleSheet.create({
   },
   verificationLabel: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.text,
     marginLeft: 12,
   },
   verificationValue: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.text,
   },
   loadingContainer: {
@@ -628,6 +630,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
   },
 })

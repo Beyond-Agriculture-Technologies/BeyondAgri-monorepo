@@ -14,6 +14,7 @@ import { Stack, router } from 'expo-router'
 import { Ionicons } from '@expo/vector-icons'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { InventoryItemResponse } from '../../src/types/inventory'
 
 interface BatchGroup {
@@ -273,7 +274,7 @@ export default function BatchesScreen() {
           placeholder="Search by batch number..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholderTextColor={APP_COLORS.textSecondary}
+          placeholderTextColor={APP_COLORS.placeholder}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
@@ -322,30 +323,29 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: APP_COLORS.surface,
+    backgroundColor: APP_COLORS.inputBackground,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.inputBorder,
     gap: 12,
   },
   searchInput: {
     flex: 1,
     fontSize: 16,
     color: APP_COLORS.text,
+    fontFamily: FONTS.regular,
   },
   list: {
     padding: 16,
+    paddingBottom: 100,
   },
   batchCard: {
     backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
     overflow: 'hidden',
   },
   batchHeader: {
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
   },
   batchNumber: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
@@ -392,14 +392,14 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   expandIcon: {
     marginLeft: 4,
   },
   batchDetails: {
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: APP_COLORS.border,
     padding: 16,
     paddingTop: 12,
   },
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
@@ -427,13 +427,13 @@ const styles = StyleSheet.create({
   },
   timelineValue: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.text,
   },
   timelineDivider: {
     width: 1,
     height: 30,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: APP_COLORS.border,
   },
   itemsSection: {
     marginBottom: 16,
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   itemRowLast: {
     borderBottomWidth: 0,
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,

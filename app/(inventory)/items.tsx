@@ -18,6 +18,7 @@ import { useInventoryStore } from '../../src/store/inventory-store'
 import { useAppStore } from '../../src/store/app-store'
 import { useInventoryPermissions } from '../../src/hooks/useInventoryPermissions'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { InventoryItemResponse } from '../../src/types/inventory'
 import { getInventoryStatusColor } from '../../src/utils/inventory-helpers'
 
@@ -166,7 +167,7 @@ export default function InventoryListScreen() {
 
           <View style={styles.detailRow}>
             <Ionicons name="cash-outline" size={16} color={APP_COLORS.textSecondary} />
-            <Text style={styles.detailText}>
+            <Text style={styles.priceDetailText}>
               {item.currency} {item.cost_per_unit ? Number(item.cost_per_unit).toFixed(2) : '0.00'}
             </Text>
           </View>
@@ -216,7 +217,7 @@ export default function InventoryListScreen() {
           style={styles.addButton}
           onPress={() => router.push('/(inventory)/item-form')}
         >
-          <Ionicons name="add" size={20} color="white" />
+          <Ionicons name="add" size={20} color={APP_COLORS.textOnPrimary} />
           <Text style={styles.addButtonText}>Add Item</Text>
         </TouchableOpacity>
       )}
@@ -268,7 +269,7 @@ export default function InventoryListScreen() {
           placeholder="Search items..."
           value={searchQuery}
           onChangeText={setSearchQuery}
-          placeholderTextColor={APP_COLORS.textSecondary}
+          placeholderTextColor={APP_COLORS.placeholder}
         />
         {searchQuery.length > 0 && (
           <TouchableOpacity onPress={() => setSearchQuery('')}>
@@ -293,7 +294,7 @@ export default function InventoryListScreen() {
               size={16}
               color={
                 selectedWarehouse !== 'all' || batchNumber !== ''
-                  ? 'white'
+                  ? APP_COLORS.textOnPrimary
                   : APP_COLORS.textSecondary
               }
             />
@@ -346,7 +347,9 @@ export default function InventoryListScreen() {
             <Ionicons
               name="grid"
               size={16}
-              color={selectedCategory !== 'all' ? 'white' : APP_COLORS.textSecondary}
+              color={
+                selectedCategory !== 'all' ? APP_COLORS.textOnPrimary : APP_COLORS.textSecondary
+              }
             />
             <Text
               style={[
@@ -386,7 +389,7 @@ export default function InventoryListScreen() {
             batchNumber !== '' ||
             sortBy !== 'name') && (
             <TouchableOpacity style={styles.clearFilterChip} onPress={handleClearAllFilters}>
-              <Ionicons name="close" size={16} color="white" />
+              <Ionicons name="close" size={16} color={APP_COLORS.textOnPrimary} />
               <Text style={styles.clearFilterText}>Clear All</Text>
             </TouchableOpacity>
           )}
@@ -501,7 +504,7 @@ export default function InventoryListScreen() {
                   placeholder="Enter batch number..."
                   value={batchNumber}
                   onChangeText={setBatchNumber}
-                  placeholderTextColor={APP_COLORS.textSecondary}
+                  placeholderTextColor={APP_COLORS.placeholder}
                 />
               </View>
             </ScrollView>
@@ -530,7 +533,7 @@ export default function InventoryListScreen() {
       {/* Offline Indicator */}
       {!isOnline && (
         <View style={styles.offlineBanner}>
-          <Ionicons name="cloud-offline" size={16} color="white" />
+          <Ionicons name="cloud-offline" size={16} color={APP_COLORS.textOnPrimary} />
           <Text style={styles.offlineText}>Viewing cached data</Text>
         </View>
       )}
@@ -538,7 +541,7 @@ export default function InventoryListScreen() {
       {/* Error Banner */}
       {itemsError && (
         <View style={styles.errorBanner}>
-          <Ionicons name="alert-circle" size={20} color="white" />
+          <Ionicons name="alert-circle" size={20} color={APP_COLORS.text} />
           <Text style={styles.errorBannerText} numberOfLines={2}>
             {itemsError}
           </Text>
@@ -596,6 +599,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
   },
   headerButton: {
@@ -604,22 +608,20 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.inputBackground,
     margin: 16,
     marginBottom: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.inputBorder,
   },
   searchInput: {
     flex: 1,
     marginLeft: 8,
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.text,
   },
   filterBar: {
@@ -636,9 +638,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     marginRight: 8,
     borderRadius: 20,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surfaceElevated,
     borderWidth: 1,
-    borderColor: APP_COLORS.textSecondary,
+    borderColor: APP_COLORS.border,
   },
   filterChipActive: {
     backgroundColor: APP_COLORS.primary,
@@ -647,11 +649,12 @@ const styles = StyleSheet.create({
   filterChipText: {
     marginLeft: 6,
     fontSize: 14,
+    fontFamily: FONTS.medium,
     color: APP_COLORS.textSecondary,
     textTransform: 'capitalize',
   },
   filterChipTextActive: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
   },
   clearFilterChip: {
     paddingHorizontal: 16,
@@ -661,7 +664,8 @@ const styles = StyleSheet.create({
   },
   clearFilterText: {
     fontSize: 14,
-    color: 'white',
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.text,
   },
   offlineBanner: {
     flexDirection: 'row',
@@ -672,49 +676,46 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   offlineText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   errorBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: APP_COLORS.error,
+    backgroundColor: APP_COLORS.errorDim,
     paddingVertical: 12,
     paddingHorizontal: 16,
     gap: 10,
   },
   errorBannerText: {
     flex: 1,
-    color: 'white',
+    color: APP_COLORS.error,
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   retryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: APP_COLORS.glass,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 6,
   },
   retryButtonText: {
-    color: 'white',
+    color: APP_COLORS.text,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   listContent: {
     padding: 16,
-    paddingBottom: 80,
+    paddingBottom: 100,
   },
   itemCard: {
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -730,7 +731,7 @@ const styles = StyleSheet.create({
   },
   itemName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     flex: 1,
   },
@@ -741,8 +742,8 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: 'white',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
     textTransform: 'capitalize',
   },
   itemDetails: {
@@ -758,7 +759,13 @@ const styles = StyleSheet.create({
   },
   detailText: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
+  },
+  priceDetailText: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.primary,
   },
   warningRow: {
     flexDirection: 'row',
@@ -769,15 +776,16 @@ const styles = StyleSheet.create({
   warningText: {
     fontSize: 14,
     color: APP_COLORS.warning,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   errorText: {
     fontSize: 14,
     color: APP_COLORS.error,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   expiryText: {
     fontSize: 12,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     marginTop: 8,
   },
@@ -789,13 +797,14 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,
   },
   emptyText: {
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
     marginBottom: 24,
@@ -811,34 +820,35 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   resultsFooter: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surfaceElevated,
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderTopWidth: 1,
-    borderTopColor: APP_COLORS.background,
+    borderTopColor: APP_COLORS.border,
   },
   resultsText: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
   },
   // Modal Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: APP_COLORS.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: APP_COLORS.surface,
+    backgroundColor: APP_COLORS.surfaceElevated,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '80%',
@@ -849,11 +859,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   modalBody: {
@@ -865,7 +875,7 @@ const styles = StyleSheet.create({
   },
   filterSectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 12,
   },
@@ -876,7 +886,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: APP_COLORS.background,
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 8,
     borderWidth: 2,
     borderColor: 'transparent',
@@ -884,14 +894,15 @@ const styles = StyleSheet.create({
   },
   sortOptionActive: {
     borderColor: APP_COLORS.primary,
-    backgroundColor: `${APP_COLORS.primary}10`,
+    backgroundColor: APP_COLORS.primaryDim,
   },
   sortOptionText: {
     fontSize: 15,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.text,
   },
   sortOptionTextActive: {
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.primary,
   },
   warehouseOptions: {
@@ -899,51 +910,53 @@ const styles = StyleSheet.create({
   },
   warehouseOption: {
     padding: 12,
-    backgroundColor: APP_COLORS.background,
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 8,
     borderWidth: 2,
     borderColor: 'transparent',
   },
   warehouseOptionActive: {
     borderColor: APP_COLORS.primary,
-    backgroundColor: `${APP_COLORS.primary}10`,
+    backgroundColor: APP_COLORS.primaryDim,
   },
   warehouseOptionText: {
     fontSize: 15,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.text,
   },
   warehouseOptionTextActive: {
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.primary,
   },
   filterInput: {
-    backgroundColor: APP_COLORS.background,
+    backgroundColor: APP_COLORS.inputBackground,
     borderRadius: 8,
     padding: 12,
     fontSize: 15,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.text,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.inputBorder,
   },
   modalFooter: {
     flexDirection: 'row',
     padding: 20,
     gap: 12,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: APP_COLORS.border,
   },
   modalButtonSecondary: {
     flex: 1,
     padding: 16,
     borderRadius: 12,
-    backgroundColor: APP_COLORS.background,
+    backgroundColor: APP_COLORS.surface,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.border,
   },
   modalButtonSecondaryText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   modalButtonPrimary: {
@@ -955,7 +968,7 @@ const styles = StyleSheet.create({
   },
   modalButtonPrimaryText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
   },
 })

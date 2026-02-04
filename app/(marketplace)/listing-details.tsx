@@ -14,6 +14,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { useMarketplaceStore } from '../../src/store/marketplace-store'
 import { useMarketplacePermissions } from '../../src/hooks/useMarketplacePermissions'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import {
   formatPricePerUnit,
   formatAvailability,
@@ -183,7 +184,7 @@ export default function ListingDetailsScreen() {
           )}
           {listing.is_featured && (
             <View style={styles.featuredBadge}>
-              <Ionicons name="star" size={12} color="#f59e0b" />
+              <Ionicons name="star" size={12} color={APP_COLORS.warning} />
               <Text style={styles.featuredText}>Featured</Text>
             </View>
           )}
@@ -279,7 +280,7 @@ export default function ListingDetailsScreen() {
               </View>
               {permissions.canContactFarmers && (
                 <TouchableOpacity style={styles.contactButton} onPress={handleContact}>
-                  <Ionicons name="chatbubble" size={20} color="#fff" />
+                  <Ionicons name="chatbubble" size={20} color={APP_COLORS.textOnPrimary} />
                 </TouchableOpacity>
               )}
             </View>
@@ -320,7 +321,7 @@ export default function ListingDetailsScreen() {
                   onPress={handlePublish}
                   disabled={actionLoading}
                 >
-                  <Ionicons name="rocket" size={20} color="#fff" />
+                  <Ionicons name="rocket" size={20} color={APP_COLORS.textOnPrimary} />
                   <Text style={styles.actionButtonTextWhite}>Publish</Text>
                 </TouchableOpacity>
               )}
@@ -330,7 +331,7 @@ export default function ListingDetailsScreen() {
                   onPress={handlePause}
                   disabled={actionLoading}
                 >
-                  <Ionicons name="pause" size={20} color="#fff" />
+                  <Ionicons name="pause" size={20} color={APP_COLORS.textOnPrimary} />
                   <Text style={styles.actionButtonTextWhite}>Pause</Text>
                 </TouchableOpacity>
               )}
@@ -340,7 +341,7 @@ export default function ListingDetailsScreen() {
                   onPress={handleResume}
                   disabled={actionLoading}
                 >
-                  <Ionicons name="play" size={20} color="#fff" />
+                  <Ionicons name="play" size={20} color={APP_COLORS.textOnPrimary} />
                   <Text style={styles.actionButtonTextWhite}>Resume</Text>
                 </TouchableOpacity>
               )}
@@ -350,7 +351,7 @@ export default function ListingDetailsScreen() {
                   onPress={handleArchive}
                   disabled={actionLoading}
                 >
-                  <Ionicons name="archive" size={20} color="#fff" />
+                  <Ionicons name="archive" size={20} color={APP_COLORS.textOnPrimary} />
                   <Text style={styles.actionButtonTextWhite}>Archive</Text>
                 </TouchableOpacity>
               )}
@@ -358,14 +359,14 @@ export default function ListingDetailsScreen() {
           </View>
         )}
 
-        <View style={{ height: 32 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Bottom CTA for non-owners */}
       {!isOwnListing && permissions.canContactFarmers && (
         <View style={styles.bottomCTA}>
           <TouchableOpacity style={styles.ctaButton} onPress={handleContact}>
-            <Ionicons name="chatbubble" size={20} color="#fff" />
+            <Ionicons name="chatbubble" size={20} color={APP_COLORS.textOnPrimary} />
             <Text style={styles.ctaButtonText}>Contact Seller</Text>
           </TouchableOpacity>
         </View>
@@ -396,14 +397,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   backButton: {
     padding: 8,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   editButton: {
@@ -431,7 +432,7 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   statusBadge: {
     paddingHorizontal: 12,
@@ -440,12 +441,12 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   featuredBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fef3c7',
+    backgroundColor: APP_COLORS.warningDim,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -453,12 +454,12 @@ const styles = StyleSheet.create({
   },
   featuredText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#f59e0b',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.warning,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
     marginBottom: 16,
   },
@@ -468,11 +469,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   priceMain: {
     flex: 1,
@@ -485,17 +483,17 @@ const styles = StyleSheet.create({
   },
   priceValue: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.primary,
   },
   availabilityValue: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   priceDivider: {
     width: 1,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: APP_COLORS.border,
     marginHorizontal: 16,
   },
   infoCard: {
@@ -506,6 +504,8 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 16,
     gap: 8,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   infoText: {
     fontSize: 14,
@@ -516,7 +516,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 12,
   },
@@ -531,20 +531,20 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   qualityBadge: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: APP_COLORS.infoDim,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
   },
   qualityText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#2563eb',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.info,
   },
   certBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#dcfce7',
+    backgroundColor: APP_COLORS.successDim,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -552,8 +552,8 @@ const styles = StyleSheet.create({
   },
   certText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#16a34a',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.success,
   },
   locationRow: {
     flexDirection: 'row',
@@ -570,17 +570,14 @@ const styles = StyleSheet.create({
     backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   farmerIcon: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: APP_COLORS.primaryDim,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -590,7 +587,7 @@ const styles = StyleSheet.create({
   },
   farmName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 2,
   },
@@ -610,6 +607,8 @@ const styles = StyleSheet.create({
     backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   timelineRow: {
     flexDirection: 'row',
@@ -624,7 +623,7 @@ const styles = StyleSheet.create({
   timelineValue: {
     fontSize: 14,
     color: APP_COLORS.text,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   actionsCard: {
     flexDirection: 'row',
@@ -649,15 +648,15 @@ const styles = StyleSheet.create({
     backgroundColor: APP_COLORS.error,
   },
   actionButtonTextWhite: {
-    color: '#fff',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   bottomCTA: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    backgroundColor: APP_COLORS.surface,
+    borderTopColor: APP_COLORS.border,
+    backgroundColor: APP_COLORS.surfaceElevated,
   },
   ctaButton: {
     flexDirection: 'row',
@@ -669,8 +668,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   ctaButtonText: {
-    color: '#fff',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
 })

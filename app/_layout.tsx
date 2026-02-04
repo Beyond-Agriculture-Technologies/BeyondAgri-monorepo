@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native'
+import { View, ActivityIndicator, StyleSheet } from 'react-native'
+import * as SplashScreen from 'expo-splash-screen'
+import { useFonts } from 'expo-font'
 import NetInfo from '@react-native-community/netinfo'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { useAppStore } from '../src/store/app-store'
@@ -10,10 +12,22 @@ import { BackendAuthService } from '../src/services/auth'
 import { dbService } from '../src/services/database'
 import { API_FULL_URL, ENABLE_HIDDEN_FEATURES, APP_COLORS } from '../src/utils/constants'
 
+SplashScreen.preventAutoHideAsync()
+
 export default function RootLayout() {
   const setIsOnline = useAppStore(state => state.setIsOnline)
   const setAuthenticated = useAuthStore(state => state.setAuthenticated)
   const [isDbReady, setIsDbReady] = useState(false)
+
+  /* eslint-disable @typescript-eslint/no-require-imports */
+  const [fontsLoaded] = useFonts({
+    'PlusJakartaSans-Regular': require('../assets/fonts/PlusJakartaSans-Regular.ttf'),
+    'PlusJakartaSans-Medium': require('../assets/fonts/PlusJakartaSans-Medium.ttf'),
+    'PlusJakartaSans-SemiBold': require('../assets/fonts/PlusJakartaSans-SemiBold.ttf'),
+    'PlusJakartaSans-Bold': require('../assets/fonts/PlusJakartaSans-Bold.ttf'),
+    'PlusJakartaSans-ExtraBold': require('../assets/fonts/PlusJakartaSans-ExtraBold.ttf'),
+  })
+  /* eslint-enable @typescript-eslint/no-require-imports */
 
   useEffect(() => {
     // Initialize app
@@ -72,13 +86,17 @@ export default function RootLayout() {
     return () => unsubscribe()
   }, [])
 
-  // Show loading screen while database initializes
-  if (!isDbReady) {
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded && isDbReady) {
+      await SplashScreen.hideAsync()
+    }
+  }, [fontsLoaded, isDbReady])
+
+  if (!fontsLoaded || !isDbReady) {
     return (
       <SafeAreaProvider>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={APP_COLORS.primary} />
-          <Text style={styles.loadingText}>Initializing BeyondAgri...</Text>
         </View>
       </SafeAreaProvider>
     )
@@ -86,11 +104,13 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
-      </Stack>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+        <StatusBar style="light" />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+      </View>
     </SafeAreaProvider>
   )
 }
@@ -101,11 +121,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: APP_COLORS.background,
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: APP_COLORS.text,
-    fontWeight: '500',
   },
 })

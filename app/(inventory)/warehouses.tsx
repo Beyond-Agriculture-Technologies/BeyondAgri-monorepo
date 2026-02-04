@@ -18,6 +18,7 @@ import { useInventoryStore } from '../../src/store/inventory-store'
 import { useAppStore } from '../../src/store/app-store'
 import { useInventoryPermissions } from '../../src/hooks/useInventoryPermissions'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { WarehouseResponse, WarehouseCreate } from '../../src/types/inventory'
 
 export default function WarehousesScreen() {
@@ -214,7 +215,7 @@ export default function WarehousesScreen() {
       <Text style={styles.emptyText}>Add your first warehouse to get started</Text>
       {permissions.canManageWarehouses && (
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Ionicons name="add" size={20} color="white" />
+          <Ionicons name="add" size={20} color={APP_COLORS.textOnPrimary} />
           <Text style={styles.addButtonText}>Add Warehouse</Text>
         </TouchableOpacity>
       )}
@@ -332,7 +333,7 @@ export default function WarehousesScreen() {
                 value={formData.warehouse_name}
                 onChangeText={text => setFormData(prev => ({ ...prev, warehouse_name: text }))}
                 placeholder="e.g., Main Storage Facility"
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
               />
             </View>
 
@@ -343,7 +344,7 @@ export default function WarehousesScreen() {
                 value={formData.address}
                 onChangeText={text => setFormData(prev => ({ ...prev, address: text }))}
                 placeholder="e.g., 123 Farm Road"
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
               />
             </View>
 
@@ -354,7 +355,7 @@ export default function WarehousesScreen() {
                 value={formData.city}
                 onChangeText={text => setFormData(prev => ({ ...prev, city: text }))}
                 placeholder="e.g., Cape Town"
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
               />
             </View>
 
@@ -365,7 +366,7 @@ export default function WarehousesScreen() {
                 value={formData.province}
                 onChangeText={text => setFormData(prev => ({ ...prev, province: text }))}
                 placeholder="e.g., Western Cape"
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
               />
             </View>
 
@@ -377,7 +378,7 @@ export default function WarehousesScreen() {
                 onChangeText={text => setFormData(prev => ({ ...prev, storage_capacity: text }))}
                 placeholder="e.g., 10000"
                 keyboardType="numeric"
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
               />
               <Text style={styles.helpText}>Maximum storage capacity in kg</Text>
             </View>
@@ -402,6 +403,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: APP_COLORS.textSecondary,
+    fontFamily: FONTS.regular,
   },
   headerButton: {
     marginRight: 8,
@@ -410,25 +412,23 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   statCard: {
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   statValue: {
     fontSize: 32,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.primary,
   },
   statLabel: {
     fontSize: 14,
     color: APP_COLORS.textSecondary,
     marginTop: 4,
+    fontFamily: FONTS.regular,
   },
   offlineBanner: {
     flexDirection: 'row',
@@ -439,9 +439,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   offlineText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   errorBanner: {
     flexDirection: 'row',
@@ -453,9 +453,9 @@ const styles = StyleSheet.create({
   },
   errorBannerText: {
     flex: 1,
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   retryButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -464,24 +464,21 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   retryButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   listContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   warehouseCard: {
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   warehouseHeader: {
     flexDirection: 'row',
@@ -502,7 +499,7 @@ const styles = StyleSheet.create({
   },
   warehouseName: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
@@ -533,7 +530,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: APP_COLORS.background,
+    borderTopColor: APP_COLORS.border,
   },
   actionButton: {
     flex: 1,
@@ -546,11 +543,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   deleteAction: {
-    backgroundColor: '#fee',
+    backgroundColor: APP_COLORS.errorDim,
   },
   actionButtonText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.primary,
   },
   deleteText: {
@@ -564,7 +561,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,
@@ -585,9 +582,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   addButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   modalContainer: {
     flex: 1,
@@ -599,9 +596,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surfaceElevated,
     borderBottomWidth: 1,
-    borderBottomColor: APP_COLORS.background,
+    borderBottomColor: APP_COLORS.border,
   },
   cancelText: {
     fontSize: 16,
@@ -609,12 +606,12 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   saveText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.primary,
   },
   modalContent: {
@@ -625,7 +622,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
@@ -633,14 +630,15 @@ const styles = StyleSheet.create({
     color: APP_COLORS.error,
   },
   input: {
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.inputBackground,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
     color: APP_COLORS.text,
     borderWidth: 1,
-    borderColor: APP_COLORS.background,
+    borderColor: APP_COLORS.inputBorder,
+    fontFamily: FONTS.regular,
   },
   helpText: {
     fontSize: 13,

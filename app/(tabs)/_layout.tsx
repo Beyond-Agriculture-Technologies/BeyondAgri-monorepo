@@ -1,33 +1,41 @@
 import { Tabs } from 'expo-router'
+import { StyleSheet } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { BlurView } from 'expo-blur'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: APP_COLORS.primary,
-        tabBarInactiveTintColor: APP_COLORS.textSecondary,
+        tabBarInactiveTintColor: APP_COLORS.textTertiary,
         tabBarStyle: {
-          backgroundColor: APP_COLORS.surface,
+          position: 'absolute',
+          backgroundColor: 'rgba(10, 10, 10, 0.80)',
           borderTopWidth: 1,
-          borderTopColor: '#e5e7eb',
+          borderTopColor: APP_COLORS.glassBorder,
           paddingBottom: 8,
           paddingTop: 8,
           height: 88,
         },
+        tabBarBackground: () => (
+          <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+        ),
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '500',
+          fontFamily: FONTS.medium,
+          fontSize: 11,
         },
         headerStyle: {
-          backgroundColor: APP_COLORS.surface,
-          borderBottomWidth: 1,
-          borderBottomColor: '#e5e7eb',
+          backgroundColor: APP_COLORS.background,
+          borderBottomWidth: 0,
+          shadowOpacity: 0,
+          elevation: 0,
         },
         headerTitleStyle: {
+          fontFamily: FONTS.semiBold,
           fontSize: 18,
-          fontWeight: '600',
           color: APP_COLORS.text,
         },
       }}
@@ -35,8 +43,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          headerTitle: 'Dashboard',
+          title: 'Home',
+          headerShown: false,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
@@ -65,7 +73,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="marketplace"
         options={{
-          title: 'Marketplace',
+          title: 'Market',
           headerTitle: 'Marketplace',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="storefront-outline" size={size} color={color} />

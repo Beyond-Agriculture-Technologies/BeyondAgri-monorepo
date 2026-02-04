@@ -13,7 +13,6 @@ import {
 
 class MarketplaceApiClient {
   private baseURL: string
-  // eslint-disable-next-line no-undef
   private activeRequests: Map<string, AbortController> = new Map()
   private readonly REQUEST_TIMEOUT_MS = 30000 // 30 seconds
   private readonly MAX_RETRIES = 2
@@ -72,7 +71,6 @@ class MarketplaceApiClient {
     requestKey?: string
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
-    // eslint-disable-next-line no-undef
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), this.REQUEST_TIMEOUT_MS)
 
@@ -103,7 +101,7 @@ class MarketplaceApiClient {
       let data: unknown
       try {
         data = JSON.parse(responseText)
-      } catch (jsonError) {
+      } catch (_jsonError) {
         // Response is not valid JSON
         console.error(
           'Non-JSON response from server:',

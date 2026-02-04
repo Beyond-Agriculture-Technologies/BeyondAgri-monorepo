@@ -18,6 +18,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { useMarketplaceStore } from '../../src/store/marketplace-store'
 import { useMarketplacePermissions } from '../../src/hooks/useMarketplacePermissions'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import {
   ProductCategoryEnum,
   CreateListingRequest,
@@ -229,7 +230,7 @@ export default function ListingFormScreen() {
           Alert.alert('Error', 'Failed to create listing')
         }
       }
-    } catch (error) {
+    } catch (_error) {
       Alert.alert('Error', 'Something went wrong')
     } finally {
       setSaving(false)
@@ -343,7 +344,9 @@ export default function ListingFormScreen() {
                     <Ionicons
                       name={getCategoryIcon(cat)}
                       size={18}
-                      color={formData.category === cat ? '#fff' : getCategoryColor(cat)}
+                      color={
+                        formData.category === cat ? APP_COLORS.textOnPrimary : getCategoryColor(cat)
+                      }
                     />
                     <Text
                       style={[
@@ -570,13 +573,15 @@ export default function ListingFormScreen() {
               <Switch
                 value={formData.publish_immediately}
                 onValueChange={v => updateField('publish_immediately', v)}
-                trackColor={{ false: '#e5e7eb', true: APP_COLORS.primary + '60' }}
-                thumbColor={formData.publish_immediately ? APP_COLORS.primary : '#f4f4f5'}
+                trackColor={{ false: APP_COLORS.border, true: APP_COLORS.primary + '60' }}
+                thumbColor={
+                  formData.publish_immediately ? APP_COLORS.primary : APP_COLORS.textSecondary
+                }
               />
             </View>
           )}
 
-          <View style={{ height: 32 }} />
+          <View style={{ height: 100 }} />
         </ScrollView>
 
         {/* Submit Button */}
@@ -587,7 +592,7 @@ export default function ListingFormScreen() {
             disabled={saving}
           >
             {saving ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={APP_COLORS.textOnPrimary} />
             ) : (
               <>
                 <Ionicons
@@ -595,7 +600,7 @@ export default function ListingFormScreen() {
                     isEditMode ? 'checkmark' : formData.publish_immediately ? 'rocket' : 'document'
                   }
                   size={20}
-                  color="#fff"
+                  color={APP_COLORS.textOnPrimary}
                 />
                 <Text style={styles.submitButtonText}>
                   {isEditMode
@@ -631,7 +636,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,
@@ -648,14 +653,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   backButton: {
     padding: 8,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   scrollView: {
@@ -668,19 +673,20 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: APP_COLORS.surface,
+    backgroundColor: APP_COLORS.inputBackground,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
     color: APP_COLORS.text,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.inputBorder,
+    fontFamily: FONTS.regular,
   },
   inputError: {
     borderColor: APP_COLORS.error,
@@ -698,7 +704,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   pickerButton: {
-    backgroundColor: APP_COLORS.surface,
+    backgroundColor: APP_COLORS.inputBackground,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -706,7 +712,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.inputBorder,
   },
   pickerButtonContent: {
     flexDirection: 'row',
@@ -716,13 +722,14 @@ const styles = StyleSheet.create({
   pickerButtonText: {
     fontSize: 16,
     color: APP_COLORS.text,
+    fontFamily: FONTS.regular,
   },
   optionsContainer: {
-    backgroundColor: APP_COLORS.surface,
+    backgroundColor: APP_COLORS.surfaceElevated,
     borderRadius: 12,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.border,
     overflow: 'hidden',
   },
   option: {
@@ -732,7 +739,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: APP_COLORS.border,
   },
   optionSelected: {
     backgroundColor: APP_COLORS.primary,
@@ -742,7 +749,7 @@ const styles = StyleSheet.create({
     color: APP_COLORS.text,
   },
   optionTextSelected: {
-    color: '#fff',
+    color: APP_COLORS.textOnPrimary,
   },
   priceInputRow: {
     flexDirection: 'row',
@@ -750,7 +757,7 @@ const styles = StyleSheet.create({
   },
   currencyPrefix: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginRight: 8,
   },
@@ -777,7 +784,7 @@ const styles = StyleSheet.create({
   },
   switchTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   switchDescription: {
@@ -788,8 +795,8 @@ const styles = StyleSheet.create({
   footer: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    backgroundColor: APP_COLORS.surface,
+    borderTopColor: APP_COLORS.border,
+    backgroundColor: APP_COLORS.surfaceElevated,
   },
   submitButton: {
     flexDirection: 'row',
@@ -804,8 +811,8 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   submitButtonText: {
-    color: '#fff',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
 })

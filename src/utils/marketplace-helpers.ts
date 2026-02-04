@@ -120,13 +120,13 @@ export function getCategoryColor(category: ProductCategoryEnum | string): string
     case ProductCategoryEnum.HARVEST:
       return APP_COLORS.success
     case ProductCategoryEnum.MEAT:
-      return '#dc2626' // Red
+      return APP_COLORS.error
     case ProductCategoryEnum.POULTRY:
-      return '#f59e0b' // Amber
+      return APP_COLORS.warning
     case ProductCategoryEnum.DAIRY:
-      return '#3b82f6' // Blue
+      return APP_COLORS.info
     case ProductCategoryEnum.GRAINS:
-      return '#a855f7' // Purple
+      return APP_COLORS.purple
     case ProductCategoryEnum.OTHER:
       return APP_COLORS.textSecondary
     default:

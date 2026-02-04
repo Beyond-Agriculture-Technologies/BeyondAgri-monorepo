@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { BackendAuthService } from '../../src/services/auth'
 import { useAuthStore } from '../../src/store/auth-store'
 import { APP_COLORS, OTP_CONFIG } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import {
   formatOTPCode,
   isValidOTPCode,
@@ -245,6 +246,7 @@ export default function ConfirmRegistrationScreen() {
                   }
                 }}
                 placeholder="000 000"
+                placeholderTextColor={APP_COLORS.placeholder}
                 keyboardType="number-pad"
                 autoFocus
                 maxLength={OTP_CONFIG.CODE_LENGTH + 1} // 6 digits + 1 space
@@ -268,7 +270,7 @@ export default function ConfirmRegistrationScreen() {
               disabled={isVerifying || otpCode.length !== OTP_CONFIG.CODE_LENGTH}
             >
               {isVerifying ? (
-                <ActivityIndicator color="white" />
+                <ActivityIndicator color={APP_COLORS.textOnPrimary} />
               ) : (
                 <Text style={styles.verifyButtonText}>Verify Code</Text>
               )}
@@ -333,26 +335,27 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: APP_COLORS.primaryDim,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
     marginBottom: 12,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
   },
   phoneNumber: {
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   form: {
@@ -364,7 +367,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 12,
   },
@@ -375,18 +378,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 20,
     fontSize: 32,
-    fontWeight: 'bold',
-    backgroundColor: APP_COLORS.surface,
+    fontFamily: FONTS.bold,
+    backgroundColor: APP_COLORS.inputBackground,
+    color: APP_COLORS.text,
     letterSpacing: 8,
     width: '100%',
   },
   timerText: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     marginTop: 8,
   },
   expiredText: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.error,
     marginTop: 8,
   },
@@ -401,9 +407,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   verifyButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   resendButton: {
     alignItems: 'center',
@@ -413,7 +419,7 @@ const styles = StyleSheet.create({
   resendButtonText: {
     fontSize: 14,
     color: APP_COLORS.primary,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   resendButtonTextDisabled: {
     color: APP_COLORS.textSecondary,
@@ -427,6 +433,7 @@ const styles = StyleSheet.create({
   },
   helpText: {
     fontSize: 12,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
     flex: 1,

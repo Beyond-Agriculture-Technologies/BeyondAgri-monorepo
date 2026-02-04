@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { BackendAuthService } from '../../src/services/auth'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { isPhoneNumber, normalizePhoneNumber } from '../../src/utils/phone-validation'
 import { getErrorMessage } from '../../src/utils/error-handler'
 
@@ -107,6 +108,7 @@ export default function LoginScreen() {
                   value={identifier}
                   onChangeText={handleIdentifierChange}
                   placeholder="Enter email or phone"
+                  placeholderTextColor={APP_COLORS.placeholder}
                   keyboardType="default"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -133,6 +135,7 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Enter your password"
+                placeholderTextColor={APP_COLORS.placeholder}
                 secureTextEntry
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -188,12 +191,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
+    fontFamily: FONTS.extraBold,
     color: APP_COLORS.primary,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
@@ -206,7 +210,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
@@ -215,12 +219,14 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.inputBorder,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    backgroundColor: APP_COLORS.surface,
+    fontFamily: FONTS.regular,
+    backgroundColor: APP_COLORS.inputBackground,
+    color: APP_COLORS.text,
   },
   inputTypeIndicator: {
     position: 'absolute',
@@ -229,6 +235,7 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 12,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     marginTop: 4,
   },
@@ -243,9 +250,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   loginButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   footer: {
     alignItems: 'center',
@@ -258,15 +265,16 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     fontSize: 14,
     color: APP_COLORS.primary,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   registerLinkText: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
   },
   registerLinkTextBold: {
     color: APP_COLORS.primary,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
 })

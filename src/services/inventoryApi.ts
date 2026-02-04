@@ -28,10 +28,8 @@ import {
 
 class InventoryApiClient {
   private baseURL: string
-  // eslint-disable-next-line no-undef
   private activeRequests: Map<string, AbortController> = new Map()
   private readonly REQUEST_TIMEOUT_MS = 30000 // 30 seconds
-  private readonly MAX_RETRIES = 2
 
   constructor() {
     this.baseURL = `${API_FULL_URL}/inventory`
@@ -69,12 +67,12 @@ class InventoryApiClient {
     return headers
   }
 
-  private buildQueryString(params?: Record<string, any>): string {
+  private buildQueryString(params?: Record<string, unknown>): string {
     if (!params) return ''
 
     const filtered = Object.entries(params)
       .filter(([_, value]) => value !== undefined && value !== null)
-      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
 
     return filtered.length > 0 ? `?${filtered.join('&')}` : ''
   }
@@ -85,7 +83,6 @@ class InventoryApiClient {
     requestKey?: string
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
-    // eslint-disable-next-line no-undef
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), this.REQUEST_TIMEOUT_MS)
 
@@ -113,10 +110,10 @@ class InventoryApiClient {
       const responseText = await response.text()
 
       // Try to parse as JSON
-      let data: any
+      let data: Record<string, unknown>
       try {
         data = JSON.parse(responseText)
-      } catch (jsonError) {
+      } catch (_jsonError) {
         // Response is not valid JSON
         console.error(
           'Non-JSON response from server:',
@@ -141,19 +138,19 @@ class InventoryApiClient {
       // Check if response was successful
       if (!response.ok) {
         const errorMessage =
-          data.detail ||
-          data.message ||
-          data.error ||
+          (data.detail as string) ||
+          (data.message as string) ||
+          (data.error as string) ||
           `HTTP ${response.status}: ${response.statusText}`
         throw new Error(errorMessage)
       }
 
       return {
         success: true,
-        data: data.data || data,
-        message: data.message,
+        data: (data.data ?? data) as T,
+        message: data.message as string | undefined,
       }
-    } catch (error: any) {
+    } catch (err: unknown) {
       clearTimeout(timeoutId)
 
       // Cleanup request tracking
@@ -161,6 +158,7 @@ class InventoryApiClient {
         this.activeRequests.delete(requestKey)
       }
 
+      const error = err instanceof Error ? err : new Error(String(err))
       console.error('Inventory API request error:', error.message, 'Endpoint:', endpoint)
 
       let userMessage = error.message || 'Network error'
@@ -187,52 +185,10 @@ class InventoryApiClient {
 
       return {
         success: false,
-        data: null as any,
+        data: null as unknown as T,
         message: userMessage,
       }
     }
-  }
-
-  /**
-   * Wrapper method that retries failed requests with exponential backoff
-   * Only retries network errors, not 4xx client errors
-   */
-  private async requestWithRetry<T>(
-    endpoint: string,
-    options: RequestInit = {},
-    requestKey?: string
-  ): Promise<ApiResponse<T>> {
-    let lastError: any
-
-    for (let attempt = 0; attempt <= this.MAX_RETRIES; attempt++) {
-      try {
-        return await this.request<T>(endpoint, options, requestKey)
-      } catch (error: any) {
-        lastError = error
-
-        // Check if this is a client error (4xx) that shouldn't be retried
-        const is4xxError =
-          error.message?.includes('401') ||
-          error.message?.includes('403') ||
-          error.message?.includes('404') ||
-          error.message?.includes('400')
-
-        // Don't retry client errors or if this was the last attempt
-        if (is4xxError || attempt === this.MAX_RETRIES) {
-          throw error
-        }
-
-        // Wait before retrying with exponential backoff
-        const delay = Math.min(1000 * Math.pow(2, attempt), 5000) // Max 5 seconds
-        await new Promise(resolve => setTimeout(resolve, delay))
-
-        console.log(
-          `Retrying request to ${endpoint} (attempt ${attempt + 2}/${this.MAX_RETRIES + 1})`
-        )
-      }
-    }
-
-    throw lastError
   }
 
   // ==================== Inventory Types ====================
@@ -240,7 +196,7 @@ class InventoryApiClient {
   async listInventoryTypes(
     filters?: InventoryTypeFilters
   ): Promise<ApiResponse<InventoryTypeResponse[]>> {
-    const queryString = this.buildQueryString(filters)
+    const queryString = this.buildQueryString(filters as Record<string, unknown>)
     return this.request<InventoryTypeResponse[]>(`/types${queryString}`)
   }
 
@@ -276,7 +232,7 @@ class InventoryApiClient {
   // ==================== Warehouses ====================
 
   async listWarehouses(filters?: WarehouseFilters): Promise<ApiResponse<WarehouseResponse[]>> {
-    const queryString = this.buildQueryString(filters)
+    const queryString = this.buildQueryString(filters as Record<string, unknown>)
     return this.request<WarehouseResponse[]>(`/warehouses${queryString}`)
   }
 
@@ -313,7 +269,7 @@ class InventoryApiClient {
     warehouseId: number,
     filters?: StorageBinFilters
   ): Promise<ApiResponse<StorageBinResponse[]>> {
-    const queryString = this.buildQueryString(filters)
+    const queryString = this.buildQueryString(filters as Record<string, unknown>)
     return this.request<StorageBinResponse[]>(`/warehouses/${warehouseId}/bins${queryString}`)
   }
 
@@ -348,7 +304,7 @@ class InventoryApiClient {
   async listInventoryItems(
     filters?: InventoryItemFilters
   ): Promise<ApiResponse<InventoryItemResponse[]>> {
-    const queryString = this.buildQueryString(filters)
+    const queryString = this.buildQueryString(filters as Record<string, unknown>)
     return this.request<InventoryItemResponse[]>(`/items${queryString}`)
   }
 
@@ -386,7 +342,7 @@ class InventoryApiClient {
   async getAllTransactions(
     filters?: TransactionFilters
   ): Promise<ApiResponse<InventoryTransactionResponse[]>> {
-    const queryString = this.buildQueryString(filters)
+    const queryString = this.buildQueryString(filters as Record<string, unknown>)
     return this.request<InventoryTransactionResponse[]>(`/transactions${queryString}`)
   }
 
@@ -394,7 +350,7 @@ class InventoryApiClient {
     itemId: number,
     filters?: TransactionFilters
   ): Promise<ApiResponse<InventoryTransactionResponse[]>> {
-    const queryString = this.buildQueryString(filters)
+    const queryString = this.buildQueryString(filters as Record<string, unknown>)
     return this.request<InventoryTransactionResponse[]>(
       `/items/${itemId}/transactions${queryString}`
     )

@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 
 const SCREEN_HEIGHT_BREAKPOINT = 700
 
@@ -68,7 +69,7 @@ export default function WelcomeScreen() {
               activeOpacity={0.8}
             >
               <Text style={styles.primaryButtonText}>Create Account</Text>
-              <Ionicons name="arrow-forward" size={20} color="white" />
+              <Ionicons name="arrow-forward" size={20} color={APP_COLORS.textOnPrimary} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -134,7 +135,7 @@ export default function WelcomeScreen() {
             activeOpacity={0.8}
           >
             <Text style={styles.primaryButtonText}>Create Account</Text>
-            <Ionicons name="arrow-forward" size={20} color="white" />
+            <Ionicons name="arrow-forward" size={20} color={APP_COLORS.textOnPrimary} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -199,24 +200,20 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: APP_COLORS.primaryDim,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: APP_COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
   appName: {
     fontSize: 36,
-    fontWeight: 'bold',
-    color: APP_COLORS.text,
+    fontFamily: FONTS.extraBold,
+    color: APP_COLORS.primary,
     marginBottom: 8,
   },
   tagline: {
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
     maxWidth: 280,
@@ -233,7 +230,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: APP_COLORS.primaryDim,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -244,12 +241,13 @@ const styles = StyleSheet.create({
   },
   featureTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
   featureDescription: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     lineHeight: 20,
   },
@@ -265,17 +263,12 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 12,
-    shadowColor: APP_COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
     gap: 8,
   },
   primaryButtonText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: 'white',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
   },
   secondaryButton: {
     backgroundColor: 'transparent',
@@ -288,7 +281,7 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.primary,
   },
   footer: {
@@ -297,11 +290,12 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 18,
   },
-  // Compact layout styles for taller screens (≥700px)
+  // Compact layout styles for taller screens (>=700px)
   compactContent: {
     flex: 1,
     paddingHorizontal: 24,
@@ -316,24 +310,20 @@ const styles = StyleSheet.create({
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: APP_COLORS.primaryDim,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
-    shadowColor: APP_COLORS.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
   appNameCompact: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: APP_COLORS.text,
+    fontFamily: FONTS.extraBold,
+    color: APP_COLORS.primary,
     marginBottom: 6,
   },
   taglineCompact: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
     maxWidth: 280,
@@ -352,19 +342,20 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: '#f0fdf4',
+    backgroundColor: APP_COLORS.primaryDim,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   featureTitleCompact: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 2,
   },
   featureDescriptionCompact: {
     fontSize: 13,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     lineHeight: 18,
   },
@@ -378,6 +369,7 @@ const styles = StyleSheet.create({
   },
   footerTextCompact: {
     fontSize: 11,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
   },

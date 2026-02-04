@@ -177,7 +177,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
 
   // ==================== Items ====================
 
-  fetchItems: async (filters?: any) => {
+  fetchItems: async (filters?: InventoryItemFilters) => {
     set({ itemsLoading: true, itemsError: null })
     try {
       const result = await inventoryApi.listInventoryItems(filters)
@@ -210,7 +210,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     return get().fetchItem(itemId)
   },
 
-  createItem: async (data: any) => {
+  createItem: async (data: InventoryItemCreate) => {
     set({ itemsLoading: true, itemsError: null })
     try {
       const result = await inventoryApi.createInventoryItem(data)
@@ -230,7 +230,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     }
   },
 
-  updateItem: async (itemId: number, data: any) => {
+  updateItem: async (itemId: number, data: InventoryItemUpdate) => {
     set({ itemsLoading: true, itemsError: null })
     try {
       const result = await inventoryApi.updateInventoryItem(itemId, data)
@@ -292,7 +292,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     }
   },
 
-  createWarehouse: async (data: any) => {
+  createWarehouse: async (data: WarehouseCreate) => {
     set({ warehousesLoading: true, warehousesError: null })
     try {
       const result = await inventoryApi.createWarehouse(data)
@@ -312,7 +312,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     }
   },
 
-  updateWarehouse: async (warehouseId: number, data: any) => {
+  updateWarehouse: async (warehouseId: number, data: WarehouseUpdate) => {
     set({ warehousesLoading: true, warehousesError: null })
     try {
       const result = await inventoryApi.updateWarehouse(warehouseId, data)
@@ -373,7 +373,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     }
   },
 
-  createBin: async (warehouseId: number, data: any) => {
+  createBin: async (warehouseId: number, data: StorageBinCreate) => {
     set({ binsLoading: true })
     try {
       const result = await inventoryApi.createStorageBin(warehouseId, data)
@@ -396,7 +396,7 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
     }
   },
 
-  updateBin: async (binId: number, data: any) => {
+  updateBin: async (binId: number, data: StorageBinUpdate) => {
     set({ binsLoading: true })
     try {
       const result = await inventoryApi.updateStorageBin(binId, data)
@@ -469,7 +469,6 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
       if (result.success) {
         set(state => ({
           inventoryTypes: [...state.inventoryTypes, result.data],
-          types: [...state.inventoryTypes, result.data],
           typesLoading: false,
         }))
         return result.data
@@ -620,10 +619,8 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
           set({ transactionsError: result.message, transactionsLoading: false })
         }
       }
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? getErrorMessage(error) : 'Failed to fetch transactions'
-      set({ transactionsError: errorMessage, transactionsLoading: false })
+    } catch (error: unknown) {
+      set({ transactionsError: getErrorMessage(error), transactionsLoading: false })
     }
   },
 
@@ -692,6 +689,6 @@ export const useInventoryStore = create<InventoryState>((set, get) => ({
   // ==================== Reset ====================
 
   reset: () => {
-    set(initialState)
+    set({ ...initialState, batches: new Map() })
   },
 }))

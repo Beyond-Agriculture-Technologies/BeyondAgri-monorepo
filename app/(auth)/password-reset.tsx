@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { BackendAuthService } from '../../src/services/auth'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { isPhoneNumber, normalizePhoneNumber } from '../../src/utils/phone-validation'
 import { getErrorMessage } from '../../src/utils/error-handler'
 
@@ -100,6 +101,7 @@ export default function PasswordResetScreen() {
                   value={identifier}
                   onChangeText={handleIdentifierChange}
                   placeholder="Enter email or phone"
+                  placeholderTextColor={APP_COLORS.placeholder}
                   keyboardType="default"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -161,12 +163,13 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     lineHeight: 22,
   },
@@ -178,7 +181,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
@@ -187,12 +190,14 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.inputBorder,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    backgroundColor: APP_COLORS.surface,
+    fontFamily: FONTS.regular,
+    backgroundColor: APP_COLORS.inputBackground,
+    color: APP_COLORS.text,
   },
   inputTypeIndicator: {
     position: 'absolute',
@@ -210,9 +215,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   resetButtonText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   backToLoginLink: {
     alignItems: 'center',
@@ -220,10 +225,11 @@ const styles = StyleSheet.create({
   },
   backToLoginLinkText: {
     fontSize: 14,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
   },
   backToLoginLinkTextBold: {
     color: APP_COLORS.primary,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
 })

@@ -14,6 +14,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { useInventoryPermissions } from '../../src/hooks/useInventoryPermissions'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import {
   getTransactionIcon,
   getTransactionColor,
@@ -127,14 +128,14 @@ export default function ItemDetailsScreen() {
 
           {item.is_low_stock && (
             <View style={[styles.alertBadge, { backgroundColor: APP_COLORS.warning }]}>
-              <Ionicons name="warning" size={16} color="white" />
+              <Ionicons name="warning" size={16} color={APP_COLORS.textOnPrimary} />
               <Text style={styles.alertText}>Low Stock</Text>
             </View>
           )}
 
           {item.is_expired && (
             <View style={[styles.alertBadge, { backgroundColor: APP_COLORS.error }]}>
-              <Ionicons name="alert-circle" size={16} color="white" />
+              <Ionicons name="alert-circle" size={16} color={APP_COLORS.textOnPrimary} />
               <Text style={styles.alertText}>Expired</Text>
             </View>
           )}
@@ -349,7 +350,7 @@ export default function ItemDetailsScreen() {
                 style={[styles.actionButton, styles.editButton]}
                 onPress={handleEdit}
               >
-                <Ionicons name="create-outline" size={20} color="white" />
+                <Ionicons name="create-outline" size={20} color={APP_COLORS.textOnPrimary} />
                 <Text style={styles.actionButtonText}>Edit Item</Text>
               </TouchableOpacity>
             )}
@@ -361,10 +362,10 @@ export default function ItemDetailsScreen() {
                 disabled={deleting}
               >
                 {deleting ? (
-                  <ActivityIndicator size="small" color="white" />
+                  <ActivityIndicator size="small" color={APP_COLORS.textOnPrimary} />
                 ) : (
                   <>
-                    <Ionicons name="trash-outline" size={20} color="white" />
+                    <Ionicons name="trash-outline" size={20} color={APP_COLORS.textOnPrimary} />
                     <Text style={styles.actionButtonText}>Delete Item</Text>
                   </>
                 )}
@@ -373,7 +374,7 @@ export default function ItemDetailsScreen() {
           </View>
         )}
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
     </SafeAreaView>
   )
@@ -420,6 +421,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     fontSize: 16,
     color: APP_COLORS.textSecondary,
+    fontFamily: FONTS.regular,
   },
   headerButton: {
     marginRight: 8,
@@ -429,13 +431,13 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderBottomWidth: 1,
-    borderBottomColor: APP_COLORS.background,
+    borderBottomColor: APP_COLORS.border,
   },
   itemName: {
     fontSize: 24,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
     marginBottom: 12,
   },
@@ -448,8 +450,8 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
     textTransform: 'capitalize',
   },
   statusSection: {
@@ -457,7 +459,7 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     padding: 16,
     gap: 8,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
   },
   statusBadge: {
     paddingHorizontal: 12,
@@ -467,8 +469,8 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
     textTransform: 'capitalize',
   },
   alertBadge: {
@@ -481,8 +483,8 @@ const styles = StyleSheet.create({
   },
   alertText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: 'white',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
   },
   section: {
     marginTop: 16,
@@ -490,14 +492,16 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 12,
   },
   infoCard: {
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   infoRow: {
     flexDirection: 'row',
@@ -505,7 +509,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: APP_COLORS.background,
+    borderBottomColor: APP_COLORS.border,
   },
   infoLabelContainer: {
     flexDirection: 'row',
@@ -516,23 +520,27 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 15,
     color: APP_COLORS.textSecondary,
+    fontFamily: FONTS.regular,
   },
   infoValue: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     textAlign: 'right',
     flex: 1,
   },
   descriptionCard: {
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 16,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   descriptionText: {
     fontSize: 15,
     lineHeight: 22,
     color: APP_COLORS.text,
+    fontFamily: FONTS.regular,
   },
   actionsSection: {
     marginTop: 24,
@@ -555,8 +563,8 @@ const styles = StyleSheet.create({
   },
   actionButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
   },
   // Transaction History Styles
   sectionHeader: {
@@ -574,47 +582,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   countBadgeText: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
   },
   transactionsLoadingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     gap: 12,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   transactionsLoadingText: {
     fontSize: 14,
     color: APP_COLORS.textSecondary,
+    fontFamily: FONTS.regular,
   },
   emptyTransactions: {
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   emptyTransactionsText: {
     fontSize: 15,
     color: APP_COLORS.textSecondary,
     marginTop: 12,
+    fontFamily: FONTS.regular,
   },
   transactionCard: {
     flexDirection: 'row',
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   transactionIcon: {
     width: 40,
@@ -634,41 +645,46 @@ const styles = StyleSheet.create({
   },
   transactionType: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   transactionQuantity: {
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: FONTS.bold,
   },
   transactionDate: {
     fontSize: 13,
     color: APP_COLORS.textSecondary,
+    fontFamily: FONTS.regular,
   },
   transactionNotes: {
     fontSize: 13,
     color: APP_COLORS.textSecondary,
     fontStyle: 'italic',
     marginTop: 2,
+    fontFamily: FONTS.regular,
   },
   transactionQuantityFlow: {
     fontSize: 13,
     color: APP_COLORS.textSecondary,
     marginTop: 2,
+    fontFamily: FONTS.regular,
   },
   showMoreButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surface,
     borderRadius: 12,
     marginTop: 4,
     gap: 6,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   showMoreText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.primary,
   },
 })

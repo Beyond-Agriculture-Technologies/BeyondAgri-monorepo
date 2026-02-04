@@ -16,6 +16,7 @@ import { router, useLocalSearchParams } from 'expo-router'
 import { useMarketplaceStore } from '../../src/store/marketplace-store'
 import { useAppStore } from '../../src/store/app-store'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { ProductListingBrowse, ProductCategoryEnum } from '../../src/types/marketplace'
 import {
   formatPricePerUnit,
@@ -469,7 +470,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: 16,
-    paddingBottom: 24,
+    paddingBottom: 100,
   },
   header: {
     paddingTop: 8,
@@ -486,7 +487,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.text,
   },
   searchContainer: {
@@ -547,11 +548,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -566,12 +564,12 @@ const styles = StyleSheet.create({
   },
   categoryText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   featuredBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fef3c7',
+    backgroundColor: APP_COLORS.warningDim,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
@@ -579,12 +577,12 @@ const styles = StyleSheet.create({
   },
   featuredText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#f59e0b',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.warning,
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 4,
   },
@@ -603,7 +601,7 @@ const styles = StyleSheet.create({
   },
   priceText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONTS.bold,
     color: APP_COLORS.primary,
   },
   availabilityText: {
@@ -616,7 +614,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
+    borderTopColor: APP_COLORS.border,
   },
   farmerInfo: {
     flexDirection: 'row',
@@ -627,7 +625,7 @@ const styles = StyleSheet.create({
   farmerName: {
     fontSize: 13,
     color: APP_COLORS.primary,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   locationInfo: {
     flexDirection: 'row',
@@ -645,7 +643,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginTop: 16,
     marginBottom: 8,
@@ -663,9 +661,9 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   clearButtonText: {
-    color: '#fff',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
   footerLoader: {
     paddingVertical: 20,
@@ -682,17 +680,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: APP_COLORS.border,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
   },
   clearText: {
     fontSize: 16,
     color: APP_COLORS.primary,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
   },
   modalContent: {
     flex: 1,
@@ -703,7 +701,7 @@ const styles = StyleSheet.create({
   },
   filterLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 12,
   },
@@ -716,9 +714,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: APP_COLORS.surface,
+    backgroundColor: APP_COLORS.surfaceElevated,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.border,
   },
   optionChipActive: {
     backgroundColor: APP_COLORS.primary,
@@ -729,7 +727,7 @@ const styles = StyleSheet.create({
     color: APP_COLORS.text,
   },
   optionChipTextActive: {
-    color: '#fff',
+    color: APP_COLORS.textOnPrimary,
   },
   priceInputs: {
     flexDirection: 'row',
@@ -738,14 +736,15 @@ const styles = StyleSheet.create({
   },
   priceInput: {
     flex: 1,
-    backgroundColor: APP_COLORS.surface,
+    backgroundColor: APP_COLORS.inputBackground,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
     color: APP_COLORS.text,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: APP_COLORS.inputBorder,
+    fontFamily: FONTS.regular,
   },
   priceInputError: {
     borderColor: APP_COLORS.error,
@@ -762,7 +761,7 @@ const styles = StyleSheet.create({
   modalFooter: {
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
+    borderTopColor: APP_COLORS.border,
   },
   applyButton: {
     backgroundColor: APP_COLORS.primary,
@@ -771,8 +770,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   applyButtonText: {
-    color: '#fff',
+    color: APP_COLORS.textOnPrimary,
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
   },
 })

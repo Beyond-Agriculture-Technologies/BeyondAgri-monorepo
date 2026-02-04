@@ -15,6 +15,7 @@ import { useMarketplaceStore } from '../../src/store/marketplace-store'
 import { useAppStore } from '../../src/store/app-store'
 import { useMarketplacePermissions } from '../../src/hooks/useMarketplacePermissions'
 import { APP_COLORS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { ListingStatusEnum } from '../../src/types/marketplace'
 import {
   getListingStatusColor,
@@ -22,6 +23,7 @@ import {
   getCategoryColor,
   getCategoryIcon,
 } from '../../src/utils/marketplace-helpers'
+import { GlassCard } from '../../src/components/ui/GlassCard'
 
 export default function MarketplaceDashboard() {
   const { isOnline } = useAppStore()
@@ -75,7 +77,7 @@ export default function MarketplaceDashboard() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={[]}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={APP_COLORS.primary} />
           <Text style={styles.loadingText}>Loading marketplace...</Text>
@@ -85,9 +87,10 @@ export default function MarketplaceDashboard() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={[]}>
       <ScrollView
         style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -117,29 +120,37 @@ export default function MarketplaceDashboard() {
         {/* Farmer Stats */}
         {isFarmer && (
           <View style={styles.statsSection}>
-            <View style={[styles.statCard, activeListings > 0 && styles.activeCard]}>
-              <View style={styles.statIcon}>
-                <Ionicons name="checkmark-circle" size={24} color={APP_COLORS.success} />
+            <GlassCard
+              style={[styles.statCardOuter, activeListings > 0 && styles.activeCardBorder]}
+            >
+              <View style={styles.statCardInner}>
+                <View style={[styles.statIconBg, { backgroundColor: APP_COLORS.successDim }]}>
+                  <Ionicons name="checkmark-circle" size={20} color={APP_COLORS.success} />
+                </View>
+                <Text style={styles.statValue}>{activeListings}</Text>
+                <Text style={styles.statLabel}>Active</Text>
               </View>
-              <Text style={styles.statValue}>{activeListings}</Text>
-              <Text style={styles.statLabel}>Active</Text>
-            </View>
+            </GlassCard>
 
-            <View style={styles.statCard}>
-              <View style={styles.statIcon}>
-                <Ionicons name="document" size={24} color={APP_COLORS.textSecondary} />
+            <GlassCard style={styles.statCardOuter}>
+              <View style={styles.statCardInner}>
+                <View style={[styles.statIconBg, { backgroundColor: APP_COLORS.glass }]}>
+                  <Ionicons name="document" size={20} color={APP_COLORS.textSecondary} />
+                </View>
+                <Text style={styles.statValue}>{draftListings}</Text>
+                <Text style={styles.statLabel}>Drafts</Text>
               </View>
-              <Text style={styles.statValue}>{draftListings}</Text>
-              <Text style={styles.statLabel}>Drafts</Text>
-            </View>
+            </GlassCard>
 
-            <View style={styles.statCard}>
-              <View style={styles.statIcon}>
-                <Ionicons name="pause-circle" size={24} color={APP_COLORS.warning} />
+            <GlassCard style={styles.statCardOuter}>
+              <View style={styles.statCardInner}>
+                <View style={[styles.statIconBg, { backgroundColor: APP_COLORS.warningDim }]}>
+                  <Ionicons name="pause-circle" size={20} color={APP_COLORS.warning} />
+                </View>
+                <Text style={styles.statValue}>{pausedListings}</Text>
+                <Text style={styles.statLabel}>Paused</Text>
               </View>
-              <Text style={styles.statValue}>{pausedListings}</Text>
-              <Text style={styles.statLabel}>Paused</Text>
-            </View>
+            </GlassCard>
           </View>
         )}
 
@@ -184,28 +195,31 @@ export default function MarketplaceDashboard() {
             {browseListings.slice(0, 3).map(listing => (
               <TouchableOpacity
                 key={listing.id}
-                style={styles.listingCard}
                 onPress={() => router.push(`/(marketplace)/listing-details?id=${listing.id}`)}
               >
-                <View style={styles.listingLeft}>
-                  <Text style={styles.listingTitle} numberOfLines={1}>
-                    {listing.title}
-                  </Text>
-                  <Text style={styles.listingCategory}>
-                    {listing.category.charAt(0) + listing.category.slice(1).toLowerCase()}
-                  </Text>
-                  {listing.farm_name && (
-                    <Text style={styles.listingFarm} numberOfLines={1}>
-                      {listing.farm_name}
-                    </Text>
-                  )}
-                </View>
-                <View style={styles.listingRight}>
-                  <Text style={styles.listingPrice}>
-                    {listing.currency} {parseFloat(listing.price_per_unit).toFixed(2)}
-                  </Text>
-                  <Text style={styles.listingUnit}>per {listing.unit}</Text>
-                </View>
+                <GlassCard style={styles.listingCardOuter}>
+                  <View style={styles.listingRow}>
+                    <View style={styles.listingLeft}>
+                      <Text style={styles.listingTitle} numberOfLines={1}>
+                        {listing.title}
+                      </Text>
+                      <Text style={styles.listingCategory}>
+                        {listing.category.charAt(0) + listing.category.slice(1).toLowerCase()}
+                      </Text>
+                      {listing.farm_name && (
+                        <Text style={styles.listingFarm} numberOfLines={1}>
+                          {listing.farm_name}
+                        </Text>
+                      )}
+                    </View>
+                    <View style={styles.listingRight}>
+                      <Text style={styles.listingPrice}>
+                        {listing.currency} {parseFloat(listing.price_per_unit).toFixed(2)}
+                      </Text>
+                      <Text style={styles.listingUnit}>per {listing.unit}</Text>
+                    </View>
+                  </View>
+                </GlassCard>
               </TouchableOpacity>
             ))}
           </View>
@@ -223,37 +237,40 @@ export default function MarketplaceDashboard() {
             {myListings.slice(0, 3).map(listing => (
               <TouchableOpacity
                 key={listing.id}
-                style={styles.listingCard}
                 onPress={() => router.push(`/(marketplace)/listing-details?id=${listing.id}`)}
               >
-                <View style={styles.listingLeft}>
-                  <Text style={styles.listingTitle} numberOfLines={1}>
-                    {listing.title}
-                  </Text>
-                  <View style={styles.statusRow}>
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        { backgroundColor: getListingStatusColor(listing.status) + '20' },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.statusText,
-                          { color: getListingStatusColor(listing.status) },
-                        ]}
-                      >
-                        {getListingStatusLabel(listing.status)}
+                <GlassCard style={styles.listingCardOuter}>
+                  <View style={styles.listingRow}>
+                    <View style={styles.listingLeft}>
+                      <Text style={styles.listingTitle} numberOfLines={1}>
+                        {listing.title}
                       </Text>
+                      <View style={styles.statusRow}>
+                        <View
+                          style={[
+                            styles.statusBadge,
+                            { backgroundColor: getListingStatusColor(listing.status) + '20' },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.statusText,
+                              { color: getListingStatusColor(listing.status) },
+                            ]}
+                          >
+                            {getListingStatusLabel(listing.status)}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <View style={styles.listingRight}>
+                      <Text style={styles.listingPrice}>
+                        {listing.currency} {parseFloat(listing.price_per_unit).toFixed(2)}
+                      </Text>
+                      <Text style={styles.listingUnit}>per {listing.unit}</Text>
                     </View>
                   </View>
-                </View>
-                <View style={styles.listingRight}>
-                  <Text style={styles.listingPrice}>
-                    {listing.currency} {parseFloat(listing.price_per_unit).toFixed(2)}
-                  </Text>
-                  <Text style={styles.listingUnit}>per {listing.unit}</Text>
-                </View>
+                </GlassCard>
               </TouchableOpacity>
             ))}
           </View>
@@ -264,39 +281,42 @@ export default function MarketplaceDashboard() {
           <Text style={styles.sectionTitle}>Quick Actions</Text>
 
           {permissions.canCreateListings && (
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => router.push('/(marketplace)/listing-form')}
-            >
-              <View style={styles.actionLeft}>
-                <Ionicons name="add-circle" size={24} color={APP_COLORS.primary} />
-                <Text style={styles.actionText}>Create New Listing</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
+            <TouchableOpacity onPress={() => router.push('/(marketplace)/listing-form')}>
+              <GlassCard style={styles.actionOuter}>
+                <View style={styles.actionRow}>
+                  <View style={styles.actionLeft}>
+                    <Ionicons name="add-circle" size={24} color={APP_COLORS.primary} />
+                    <Text style={styles.actionText}>Create New Listing</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textTertiary} />
+                </View>
+              </GlassCard>
             </TouchableOpacity>
           )}
 
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => router.push('/(marketplace)/browse')}
-          >
-            <View style={styles.actionLeft}>
-              <Ionicons name="search" size={24} color={APP_COLORS.primary} />
-              <Text style={styles.actionText}>Browse All Listings</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
+          <TouchableOpacity onPress={() => router.push('/(marketplace)/browse')}>
+            <GlassCard style={styles.actionOuter}>
+              <View style={styles.actionRow}>
+                <View style={styles.actionLeft}>
+                  <Ionicons name="search" size={24} color={APP_COLORS.primary} />
+                  <Text style={styles.actionText}>Browse All Listings</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textTertiary} />
+              </View>
+            </GlassCard>
           </TouchableOpacity>
 
           {isFarmer && (
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => router.push('/(marketplace)/my-listings')}
-            >
-              <View style={styles.actionLeft}>
-                <Ionicons name="list" size={24} color={APP_COLORS.primary} />
-                <Text style={styles.actionText}>Manage My Listings</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
+            <TouchableOpacity onPress={() => router.push('/(marketplace)/my-listings')}>
+              <GlassCard style={styles.actionOuter}>
+                <View style={styles.actionRow}>
+                  <View style={styles.actionLeft}>
+                    <Ionicons name="list" size={24} color={APP_COLORS.primary} />
+                    <Text style={styles.actionText}>Manage My Listings</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textTertiary} />
+                </View>
+              </GlassCard>
             </TouchableOpacity>
           )}
         </View>
@@ -331,6 +351,9 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 100,
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -338,6 +361,7 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 16,
+    fontFamily: FONTS.regular,
     fontSize: 16,
     color: APP_COLORS.textSecondary,
   },
@@ -349,7 +373,7 @@ const styles = StyleSheet.create({
   roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f0fdf4',
+    backgroundColor: APP_COLORS.primaryDim,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -358,14 +382,15 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   roleBadgeText: {
+    fontFamily: FONTS.semiBold,
     fontSize: 12,
-    fontWeight: '600',
     color: APP_COLORS.primary,
   },
   dashboardTitle: {
+    fontFamily: FONTS.bold,
     fontSize: 22,
-    fontWeight: 'bold',
     color: APP_COLORS.text,
+    letterSpacing: -0.3,
   },
   statsSection: {
     flexDirection: 'row',
@@ -373,32 +398,33 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     gap: 12,
   },
-  statCard: {
+  statCardOuter: {
     flex: 1,
-    backgroundColor: APP_COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    padding: 0,
   },
-  activeCard: {
-    borderWidth: 2,
+  activeCardBorder: {
+    borderWidth: 1,
     borderColor: APP_COLORS.success,
   },
-  statIcon: {
+  statCardInner: {
+    alignItems: 'center',
+  },
+  statIconBg: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 8,
   },
   statValue: {
+    fontFamily: FONTS.bold,
     fontSize: 20,
-    fontWeight: 'bold',
     color: APP_COLORS.text,
     marginBottom: 4,
   },
   statLabel: {
+    fontFamily: FONTS.regular,
     fontSize: 12,
     color: APP_COLORS.textSecondary,
     textAlign: 'center',
@@ -413,14 +439,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
+    fontFamily: FONTS.semiBold,
     fontSize: 18,
-    fontWeight: '600',
     color: APP_COLORS.text,
   },
   seeAllText: {
+    fontFamily: FONTS.medium,
     fontSize: 14,
     color: APP_COLORS.primary,
-    fontWeight: '500',
   },
   categoryScroll: {
     gap: 8,
@@ -432,44 +458,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: APP_COLORS.surface,
+    backgroundColor: APP_COLORS.glass,
     borderWidth: 1.5,
     gap: 8,
     marginRight: 8,
   },
   categoryChipText: {
+    fontFamily: FONTS.medium,
     fontSize: 14,
-    fontWeight: '500',
   },
-  listingCard: {
-    backgroundColor: APP_COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
+  listingCardOuter: {
+    marginBottom: 8,
+    padding: 0,
+  },
+  listingRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   listingLeft: {
     flex: 1,
     marginRight: 16,
   },
   listingTitle: {
+    fontFamily: FONTS.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: APP_COLORS.text,
     marginBottom: 4,
   },
   listingCategory: {
+    fontFamily: FONTS.regular,
     fontSize: 12,
     color: APP_COLORS.textSecondary,
   },
   listingFarm: {
+    fontFamily: FONTS.regular,
     fontSize: 12,
     color: APP_COLORS.primary,
     marginTop: 2,
@@ -478,11 +501,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   listingPrice: {
+    fontFamily: FONTS.bold,
     fontSize: 16,
-    fontWeight: 'bold',
-    color: APP_COLORS.text,
+    color: APP_COLORS.primary,
   },
   listingUnit: {
+    fontFamily: FONTS.regular,
     fontSize: 12,
     color: APP_COLORS.textSecondary,
   },
@@ -496,22 +520,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   statusText: {
+    fontFamily: FONTS.semiBold,
     fontSize: 11,
-    fontWeight: '600',
   },
-  actionButton: {
-    backgroundColor: APP_COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
+  actionOuter: {
+    marginBottom: 8,
+    padding: 0,
+  },
+  actionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
   actionLeft: {
     flexDirection: 'row',
@@ -519,12 +538,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   actionText: {
+    fontFamily: FONTS.medium,
     fontSize: 16,
     color: APP_COLORS.text,
-    fontWeight: '500',
   },
   guestNotice: {
-    backgroundColor: '#e0f2fe',
+    backgroundColor: APP_COLORS.infoDim,
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 16,
@@ -535,11 +554,12 @@ const styles = StyleSheet.create({
   },
   guestText: {
     flex: 1,
+    fontFamily: FONTS.regular,
     fontSize: 14,
-    color: '#0369a1',
+    color: APP_COLORS.info,
   },
   offlineNotice: {
-    backgroundColor: '#fff3cd',
+    backgroundColor: APP_COLORS.warningDim,
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 16,
@@ -550,7 +570,8 @@ const styles = StyleSheet.create({
   },
   offlineText: {
     flex: 1,
+    fontFamily: FONTS.regular,
     fontSize: 14,
-    color: '#856404',
+    color: APP_COLORS.warning,
   },
 })

@@ -17,6 +17,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router'
 import { useInventoryStore } from '../../src/store/inventory-store'
 import { useInventoryPermissions } from '../../src/hooks/useInventoryPermissions'
 import { APP_COLORS, INVENTORY_DEFAULTS } from '../../src/utils/constants'
+import { FONTS } from '../../src/theme'
 import { InventoryStatusEnum, InventoryItemCreate } from '../../src/types/inventory'
 
 // Validation helper functions
@@ -289,7 +290,7 @@ export default function ItemFormScreen() {
                 value={formData.item_name}
                 onChangeText={value => updateField('item_name', value)}
                 placeholder="e.g., Fresh Tomatoes"
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
               />
               {errors.item_name && <Text style={styles.errorText}>{errors.item_name}</Text>}
             </View>
@@ -301,7 +302,7 @@ export default function ItemFormScreen() {
                 value={formData.description}
                 onChangeText={value => updateField('description', value)}
                 placeholder="Additional details about the item..."
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
                 multiline
                 numberOfLines={3}
                 textAlignVertical="top"
@@ -318,7 +319,7 @@ export default function ItemFormScreen() {
                 onChangeText={value => updateField('inventory_type_id', value)}
                 placeholder="Inventory Type ID"
                 keyboardType="numeric"
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
               />
               {errors.inventory_type_id && (
                 <Text style={styles.errorText}>{errors.inventory_type_id}</Text>
@@ -370,7 +371,7 @@ export default function ItemFormScreen() {
                   onChangeText={value => updateField('current_quantity', value)}
                   placeholder="0"
                   keyboardType="numeric"
-                  placeholderTextColor={APP_COLORS.textSecondary}
+                  placeholderTextColor={APP_COLORS.placeholder}
                 />
                 {errors.current_quantity && (
                   <Text style={styles.errorText}>{errors.current_quantity}</Text>
@@ -386,7 +387,7 @@ export default function ItemFormScreen() {
                   value={formData.unit}
                   onChangeText={value => updateField('unit', value)}
                   placeholder="kg"
-                  placeholderTextColor={APP_COLORS.textSecondary}
+                  placeholderTextColor={APP_COLORS.placeholder}
                 />
                 {errors.unit && <Text style={styles.errorText}>{errors.unit}</Text>}
               </View>
@@ -403,7 +404,7 @@ export default function ItemFormScreen() {
                   onChangeText={value => updateField('cost_per_unit', value)}
                   placeholder="0.00"
                   keyboardType="decimal-pad"
-                  placeholderTextColor={APP_COLORS.textSecondary}
+                  placeholderTextColor={APP_COLORS.placeholder}
                 />
                 {errors.cost_per_unit && (
                   <Text style={styles.errorText}>{errors.cost_per_unit}</Text>
@@ -417,7 +418,7 @@ export default function ItemFormScreen() {
                   value={formData.currency}
                   onChangeText={value => updateField('currency', value)}
                   placeholder={INVENTORY_DEFAULTS.CURRENCY}
-                  placeholderTextColor={APP_COLORS.textSecondary}
+                  placeholderTextColor={APP_COLORS.placeholder}
                 />
               </View>
             </View>
@@ -430,7 +431,7 @@ export default function ItemFormScreen() {
                 onChangeText={value => updateField('minimum_quantity', value)}
                 placeholder="Optional"
                 keyboardType="numeric"
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
               />
               <Text style={styles.helpText}>Alert when stock falls below this level</Text>
             </View>
@@ -447,7 +448,7 @@ export default function ItemFormScreen() {
                 value={formData.batch_number}
                 onChangeText={value => updateField('batch_number', value)}
                 placeholder="e.g., BATCH-2025-001"
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
               />
             </View>
 
@@ -458,7 +459,7 @@ export default function ItemFormScreen() {
                 value={formData.acquisition_date}
                 onChangeText={value => updateField('acquisition_date', value)}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
               />
               <Text style={styles.helpText}>Format: YYYY-MM-DD</Text>
             </View>
@@ -470,7 +471,7 @@ export default function ItemFormScreen() {
                 value={formData.expiry_date}
                 onChangeText={value => updateField('expiry_date', value)}
                 placeholder="YYYY-MM-DD"
-                placeholderTextColor={APP_COLORS.textSecondary}
+                placeholderTextColor={APP_COLORS.placeholder}
               />
               <Text style={styles.helpText}>Format: YYYY-MM-DD</Text>
             </View>
@@ -489,7 +490,7 @@ export default function ItemFormScreen() {
                   onChangeText={value => updateField('warehouse_id', value)}
                   placeholder="Warehouse ID"
                   keyboardType="numeric"
-                  placeholderTextColor={APP_COLORS.textSecondary}
+                  placeholderTextColor={APP_COLORS.placeholder}
                 />
                 <Text style={styles.helpText}>
                   {warehouses.length > 0
@@ -506,7 +507,7 @@ export default function ItemFormScreen() {
                   onChangeText={value => updateField('bin_id', value)}
                   placeholder="Bin ID"
                   keyboardType="numeric"
-                  placeholderTextColor={APP_COLORS.textSecondary}
+                  placeholderTextColor={APP_COLORS.placeholder}
                 />
               </View>
             </View>
@@ -523,13 +524,13 @@ export default function ItemFormScreen() {
             disabled={saving}
           >
             {saving ? (
-              <ActivityIndicator size="small" color="white" />
+              <ActivityIndicator size="small" color={APP_COLORS.textOnPrimary} />
             ) : (
               <>
                 <Ionicons
                   name={isEditMode ? 'checkmark-circle' : 'add-circle'}
                   size={20}
-                  color="white"
+                  color={APP_COLORS.textOnPrimary}
                 />
                 <Text style={styles.submitButtonText}>
                   {isEditMode ? 'Update Item' : 'Create Item'}
@@ -559,6 +560,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
   },
   scrollView: {
@@ -570,7 +572,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
     marginBottom: 16,
   },
@@ -579,7 +581,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: FONTS.medium,
     color: APP_COLORS.text,
     marginBottom: 8,
   },
@@ -587,14 +589,15 @@ const styles = StyleSheet.create({
     color: APP_COLORS.error,
   },
   input: {
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.inputBackground,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.text,
     borderWidth: 1,
-    borderColor: APP_COLORS.background,
+    borderColor: APP_COLORS.inputBorder,
   },
   inputError: {
     borderColor: APP_COLORS.error,
@@ -605,11 +608,13 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: 13,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.error,
     marginTop: 4,
   },
   helpText: {
     fontSize: 13,
+    fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
     marginTop: 4,
   },
@@ -622,9 +627,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surfaceElevated,
     borderWidth: 1,
-    borderColor: APP_COLORS.textSecondary,
+    borderColor: APP_COLORS.border,
   },
   chipSelected: {
     backgroundColor: APP_COLORS.primary,
@@ -632,11 +637,12 @@ const styles = StyleSheet.create({
   },
   chipText: {
     fontSize: 14,
+    fontFamily: FONTS.medium,
     color: APP_COLORS.textSecondary,
     textTransform: 'capitalize',
   },
   chipTextSelected: {
-    color: 'white',
+    color: APP_COLORS.textOnPrimary,
   },
   row: {
     flexDirection: 'row',
@@ -645,9 +651,9 @@ const styles = StyleSheet.create({
   footer: {
     padding: 16,
     paddingBottom: Platform.OS === 'ios' ? 0 : 16,
-    backgroundColor: 'white',
+    backgroundColor: APP_COLORS.surfaceElevated,
     borderTopWidth: 1,
-    borderTopColor: APP_COLORS.background,
+    borderTopColor: APP_COLORS.border,
   },
   submitButton: {
     flexDirection: 'row',
@@ -663,7 +669,7 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: 'white',
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
   },
 })
