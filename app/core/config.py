@@ -55,6 +55,8 @@ class Settings(BaseSettings):
                 raise ValueError("SECRET_KEY must be set to a secure value in production")
             if not self.POSTGRES_PASSWORD:
                 raise ValueError("POSTGRES_PASSWORD must be set in production")
+            if not self.GOOGLE_MAPS_API_KEY:
+                logger.warning("GOOGLE_MAPS_API_KEY not set - geocoding features will be unavailable")
             if len(self.SECRET_KEY) < 32:
                 logger.warning("SECRET_KEY should be at least 32 characters for security")
         else:
@@ -66,6 +68,11 @@ class Settings(BaseSettings):
                 self.POSTGRES_PASSWORD = "postgres"
                 logger.warning("Using default POSTGRES_PASSWORD - not suitable for production")
         return self
+
+    # Google Maps Configuration
+    GOOGLE_MAPS_API_KEY: Optional[str] = None
+    GOOGLE_MAPS_DEFAULT_COUNTRY: str = "za"
+    GOOGLE_MAPS_URL_SIGNING_SECRET: Optional[str] = None
 
     # Authentication Provider
     AUTH_USER_POOL_ID: Optional[str] = None

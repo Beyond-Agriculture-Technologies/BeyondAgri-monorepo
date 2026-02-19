@@ -17,6 +17,16 @@ class FarmerProfileData(BaseModel):
     farm_name: Optional[str] = Field(None, description="Farm name")
     farm_location: Optional[str] = Field(None, description="Farm location")
     farm_size: Optional[str] = Field(None, description="Farm size")
+    farm_address: Optional[str] = Field(None, description="Full formatted address")
+    farm_street: Optional[str] = Field(None, description="Street address")
+    farm_city: Optional[str] = Field(None, description="City")
+    farm_province: Optional[str] = Field(None, description="Province")
+    farm_postal_code: Optional[str] = Field(None, description="Postal code")
+    farm_country: Optional[str] = Field(None, description="Country")
+    farm_latitude: Optional[float] = Field(None, description="Latitude")
+    farm_longitude: Optional[float] = Field(None, description="Longitude")
+    farm_place_id: Optional[str] = Field(None, description="Google Place ID")
+    farm_elevation: Optional[float] = Field(None, description="Elevation in meters above sea level")
     certifications: Optional[Dict[str, Any]] = Field(None, description="Certifications")
     crop_types: Optional[Dict[str, Any]] = Field(None, description="Crop types")
     farming_methods: Optional[Dict[str, Any]] = Field(None, description="Farming methods")
@@ -29,6 +39,14 @@ class BusinessProfileData(BaseModel):
     business_license: Optional[str] = Field(None, description="Business license")
     business_address: Optional[str] = Field(None, description="Business address")
     business_type: Optional[str] = Field(None, description="Business type")
+    business_street: Optional[str] = Field(None, description="Street address")
+    business_city: Optional[str] = Field(None, description="City")
+    business_province: Optional[str] = Field(None, description="Province")
+    business_postal_code: Optional[str] = Field(None, description="Postal code")
+    business_country: Optional[str] = Field(None, description="Country")
+    business_latitude: Optional[float] = Field(None, description="Latitude")
+    business_longitude: Optional[float] = Field(None, description="Longitude")
+    business_place_id: Optional[str] = Field(None, description="Google Place ID")
     verification_documents: Optional[Dict[str, Any]] = Field(None, description="Verification documents")
     business_categories: Optional[Dict[str, Any]] = Field(None, description="Business categories")
     service_areas: Optional[Dict[str, Any]] = Field(None, description="Service areas")
@@ -95,6 +113,16 @@ class AccountProfile(BaseModel):
                 farm_name=account.farmer_profile.farm_name,
                 farm_location=account.farmer_profile.farm_location,
                 farm_size=account.farmer_profile.farm_size,
+                farm_address=account.farmer_profile.farm_address,
+                farm_street=account.farmer_profile.farm_street,
+                farm_city=account.farmer_profile.farm_city,
+                farm_province=account.farmer_profile.farm_province,
+                farm_postal_code=account.farmer_profile.farm_postal_code,
+                farm_country=account.farmer_profile.farm_country,
+                farm_latitude=float(account.farmer_profile.farm_latitude) if account.farmer_profile.farm_latitude else None,
+                farm_longitude=float(account.farmer_profile.farm_longitude) if account.farmer_profile.farm_longitude else None,
+                farm_place_id=account.farmer_profile.farm_place_id,
+                farm_elevation=float(account.farmer_profile.farm_elevation) if account.farmer_profile.farm_elevation else None,
                 certifications=account.farmer_profile.certifications,
                 crop_types=account.farmer_profile.crop_types,
                 farming_methods=account.farmer_profile.farming_methods,
@@ -108,6 +136,14 @@ class AccountProfile(BaseModel):
                 business_license=account.business_profile.business_license,
                 business_address=account.business_profile.business_address,
                 business_type=account.business_profile.business_type,
+                business_street=account.business_profile.business_street,
+                business_city=account.business_profile.business_city,
+                business_province=account.business_profile.business_province,
+                business_postal_code=account.business_profile.business_postal_code,
+                business_country=account.business_profile.business_country,
+                business_latitude=float(account.business_profile.business_latitude) if account.business_profile.business_latitude else None,
+                business_longitude=float(account.business_profile.business_longitude) if account.business_profile.business_longitude else None,
+                business_place_id=account.business_profile.business_place_id,
                 verification_documents=account.business_profile.verification_documents,
                 business_categories=account.business_profile.business_categories,
                 service_areas=account.business_profile.service_areas,
@@ -143,12 +179,30 @@ class AccountProfileUpdate(BaseModel):
     farm_name: Optional[str] = Field(None, description="Farm name")
     farm_location: Optional[str] = Field(None, description="Farm location")
     farm_size: Optional[str] = Field(None, description="Farm size")
+    farm_address: Optional[str] = Field(None, description="Full formatted address")
+    farm_street: Optional[str] = Field(None, description="Street address")
+    farm_city: Optional[str] = Field(None, description="City")
+    farm_province: Optional[str] = Field(None, description="Province")
+    farm_postal_code: Optional[str] = Field(None, description="Postal code")
+    farm_country: Optional[str] = Field(None, description="Country")
+    farm_latitude: Optional[float] = Field(None, description="Latitude")
+    farm_longitude: Optional[float] = Field(None, description="Longitude")
+    farm_place_id: Optional[str] = Field(None, description="Google Place ID")
+    farm_elevation: Optional[float] = Field(None, description="Elevation in meters above sea level")
 
     # Business profile updates
     business_name: Optional[str] = Field(None, description="Business name")
     business_license: Optional[str] = Field(None, description="Business license")
     business_address: Optional[str] = Field(None, description="Business address")
     business_type: Optional[str] = Field(None, description="Business type")
+    business_street: Optional[str] = Field(None, description="Street address")
+    business_city: Optional[str] = Field(None, description="City")
+    business_province: Optional[str] = Field(None, description="Province")
+    business_postal_code: Optional[str] = Field(None, description="Postal code")
+    business_country: Optional[str] = Field(None, description="Country")
+    business_latitude: Optional[float] = Field(None, description="Latitude")
+    business_longitude: Optional[float] = Field(None, description="Longitude")
+    business_place_id: Optional[str] = Field(None, description="Google Place ID")
 
     class Config:
         json_schema_extra = {

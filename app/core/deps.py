@@ -150,7 +150,8 @@ async def get_current_business_account(
 
 
 async def get_optional_current_account(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security),
+    db: Session = Depends(get_db)
 ) -> Optional[AccountProfile]:
     """
     Dependency to optionally get the current account.
@@ -160,7 +161,7 @@ async def get_optional_current_account(
         return None
 
     try:
-        return await get_current_account(credentials)
+        return await get_current_account(credentials, db)
     except HTTPException:
         return None
 

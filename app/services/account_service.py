@@ -182,12 +182,33 @@ class AccountService:
 
         # Update type-specific profiles
         if account.is_farmer and account.farmer_profile:
-            for field in ["farm_name", "farm_location", "farm_size"]:
+            farmer_fields = [
+                "farm_name", "farm_location", "farm_size",
+                "farm_address", "farm_street", "farm_city", "farm_province",
+                "farm_postal_code", "farm_country", "farm_latitude", "farm_longitude",
+                "farm_place_id", "farm_elevation",
+            ]
+            for field in farmer_fields:
                 if field in profile_data:
                     setattr(account.farmer_profile, field, profile_data[field])
 
+            # Sync legacy fields when structured data is provided
+            if "farm_address" in profile_data and profile_data["farm_address"]:
+                account.farmer_profile.farm_location = profile_data["farm_address"]
+            if "farm_latitude" in profile_data and "farm_longitude" in profile_data:
+                lat = profile_data.get("farm_latitude")
+                lng = profile_data.get("farm_longitude")
+                if lat is not None and lng is not None:
+                    account.farmer_profile.farm_coordinates = f"{lat},{lng}"
+
         elif account.is_wholesaler and account.business_profile:
-            for field in ["business_name", "business_license", "business_address", "business_type"]:
+            business_fields = [
+                "business_name", "business_license", "business_address", "business_type",
+                "business_street", "business_city", "business_province",
+                "business_postal_code", "business_country", "business_latitude",
+                "business_longitude", "business_place_id",
+            ]
+            for field in business_fields:
                 if field in profile_data:
                     setattr(account.business_profile, field, profile_data[field])
 

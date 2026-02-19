@@ -54,6 +54,18 @@ class FarmerProfile(BaseModel):
     farm_coordinates = Column(String(255), nullable=True)  # GPS coordinates as "lat,long" (e.g., "-25.7479,28.2293")
     farm_registration_number = Column(String(100), nullable=True)  # Official farm registration
 
+    # Structured address fields (from Google Maps Geocoding)
+    farm_address = Column(String(500), nullable=True)  # Full formatted address
+    farm_street = Column(String(255), nullable=True)
+    farm_city = Column(String(100), nullable=True)
+    farm_province = Column(String(100), nullable=True)
+    farm_postal_code = Column(String(20), nullable=True)
+    farm_country = Column(String(100), default="South Africa", nullable=True)
+    farm_latitude = Column(Numeric(10, 7), nullable=True)
+    farm_longitude = Column(Numeric(10, 7), nullable=True)
+    farm_place_id = Column(String(255), nullable=True)  # Google Place ID
+    farm_elevation = Column(Numeric(8, 2), nullable=True)  # Meters above sea level
+
     # Farming details (stored as JSON for flexibility)
     certifications = Column(JSONB, nullable=True)  # Organic, Fair Trade, etc.
     crop_types = Column(JSONB, nullable=True)  # What they grow
@@ -80,6 +92,16 @@ class BusinessProfile(BaseModel):
     business_license = Column(String(255), nullable=True)
     business_address = Column(Text, nullable=True)
     business_type = Column(String(100), nullable=True)  # Wholesaler, Distributor, etc.
+
+    # Structured address fields (from Google Maps Geocoding)
+    business_street = Column(String(255), nullable=True)
+    business_city = Column(String(100), nullable=True)
+    business_province = Column(String(100), nullable=True)
+    business_postal_code = Column(String(20), nullable=True)
+    business_country = Column(String(100), default="South Africa", nullable=True)
+    business_latitude = Column(Numeric(10, 7), nullable=True)
+    business_longitude = Column(Numeric(10, 7), nullable=True)
+    business_place_id = Column(String(255), nullable=True)  # Google Place ID
 
     # Business details (stored as JSON for flexibility)
     verification_documents = Column(JSONB, nullable=True)
