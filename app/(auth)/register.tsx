@@ -18,6 +18,8 @@ import { useAuthStore } from '../../src/store/auth-store'
 import { APP_COLORS, OTP_CONFIG } from '../../src/utils/constants'
 import { FONTS } from '../../src/theme'
 import { RegisterRequest } from '../../src/types'
+import { GeocodeResponse } from '../../src/types/geocoding'
+import { AddressAutocomplete } from '../../src/components/AddressAutocomplete'
 import { isValidPhoneNumber, normalizePhoneNumber } from '../../src/utils/phone-validation'
 import { getErrorMessage } from '../../src/utils/error-handler'
 
@@ -53,6 +55,7 @@ export default function RegisterScreen() {
     address: '',
   })
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [structuredAddress, setStructuredAddress] = useState<GeocodeResponse | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleRegister = async () => {
@@ -88,6 +91,12 @@ export default function RegisterScreen() {
         phone_number: normalizePhoneNumber(formData.phone_number),
         ...(formData.name && { name: formData.name }),
         ...(formData.address && { address: formData.address }),
+        ...(structuredAddress && {
+          farm_address: structuredAddress.formatted_address,
+          farm_latitude: structuredAddress.latitude,
+          farm_longitude: structuredAddress.longitude,
+          farm_place_id: structuredAddress.place_id,
+        }),
       }
 
       const result = await BackendAuthService.register(registrationData)
@@ -237,16 +246,15 @@ export default function RegisterScreen() {
               </View>
 
               {/* Address */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Address</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  value={formData.address}
-                  onChangeText={text => setFormData(prev => ({ ...prev, address: text }))}
-                  placeholder="Enter your address"
-                  placeholderTextColor={APP_COLORS.placeholder}
-                  multiline
-                  numberOfLines={3}
+              <View style={[styles.inputGroup, { zIndex: 1 }]}>
+                <AddressAutocomplete
+                  label="Address"
+                  placeholder="Search for your address"
+                  initialValue={formData.address}
+                  onAddressSelect={(address: GeocodeResponse) => {
+                    setStructuredAddress(address)
+                    setFormData(prev => ({ ...prev, address: address.formatted_address }))
+                  }}
                 />
               </View>
 
@@ -360,10 +368,6 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.regular,
     backgroundColor: APP_COLORS.inputBackground,
     color: APP_COLORS.text,
-  },
-  textArea: {
-    height: 80,
-    textAlignVertical: 'top',
   },
   roleContainer: {
     gap: 12,
