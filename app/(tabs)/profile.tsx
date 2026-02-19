@@ -11,6 +11,8 @@ import { apiClient } from '../../src/services/api'
 import { APP_COLORS } from '../../src/utils/constants'
 import { FONTS } from '../../src/theme'
 import { VerificationStatus, UserRole, Permission } from '../../src/types'
+import { GeocodeResponse } from '../../src/types/geocoding'
+import { AddressAutocomplete } from '../../src/components/AddressAutocomplete'
 
 export default function ProfileScreen() {
   const user = useAuthStore(state => state.user)
@@ -20,6 +22,9 @@ export default function ProfileScreen() {
   const [userRoles, setUserRoles] = useState<UserRole[]>([])
   const [_permissions, setPermissions] = useState<Permission[]>([])
   const [loadingAccountData, setLoadingAccountData] = useState(false)
+  const [isEditingAddress, setIsEditingAddress] = useState(false)
+  const [addressData, setAddressData] = useState<GeocodeResponse | null>(null)
+  const [isSavingAddress, setIsSavingAddress] = useState(false)
 
   useEffect(() => {
     if (isOnline && user) {
@@ -156,6 +161,42 @@ export default function ProfileScreen() {
     )
   }
 
+  const handleSaveAddress = async () => {
+    if (!addressData || !isOnline) return
+
+    setIsSavingAddress(true)
+    try {
+      const result = await apiClient.updateUserProfile({
+        profile: {
+          address: addressData.formatted_address,
+        },
+        farmer_profile: {
+          farm_address: addressData.formatted_address,
+          farm_latitude: addressData.latitude,
+          farm_longitude: addressData.longitude,
+          farm_place_id: addressData.place_id,
+        },
+      })
+
+      if (result.success) {
+        // Refetch user from backend to confirm address was persisted
+        const updatedUser = await BackendAuthService.getCurrentUser()
+        if (updatedUser) {
+          useAuthStore.getState().setUser(updatedUser)
+        }
+        setIsEditingAddress(false)
+        setAddressData(null)
+        Alert.alert('Success', 'Address updated successfully')
+      } else {
+        Alert.alert('Error', result.message || 'Failed to update address')
+      }
+    } catch {
+      Alert.alert('Error', 'An unexpected error occurred')
+    } finally {
+      setIsSavingAddress(false)
+    }
+  }
+
   const getRoleDisplayName = (role: string) => {
     switch (role.toUpperCase()) {
       case 'FARMER':
@@ -282,6 +323,65 @@ export default function ProfileScreen() {
                   <Text style={styles.verificationValue}>
                     {userRoles.map(role => role.role_name).join(', ')}
                   </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
+
+        {/* Address Section */}
+        {isOnline && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Address</Text>
+            <View style={styles.addressCard}>
+              {isEditingAddress ? (
+                <View style={{ zIndex: 1 }}>
+                  <AddressAutocomplete
+                    placeholder="Search for your address"
+                    initialValue={user?.farm_address || user?.address || ''}
+                    onAddressSelect={(address: GeocodeResponse) => {
+                      setAddressData(address)
+                    }}
+                  />
+                  <View style={styles.addressActions}>
+                    <TouchableOpacity
+                      style={styles.addressCancelButton}
+                      onPress={() => {
+                        setIsEditingAddress(false)
+                        setAddressData(null)
+                      }}
+                    >
+                      <Text style={styles.addressCancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.addressSaveButton,
+                        (!addressData || isSavingAddress) && styles.addressSaveButtonDisabled,
+                      ]}
+                      onPress={handleSaveAddress}
+                      disabled={!addressData || isSavingAddress}
+                    >
+                      <Text style={styles.addressSaveText}>
+                        {isSavingAddress ? 'Saving...' : 'Save'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.addressDisplay}>
+                  <View style={styles.addressTextContainer}>
+                    <Ionicons name="location-outline" size={20} color={APP_COLORS.primary} />
+                    <Text style={styles.addressText}>
+                      {user?.farm_address || user?.address || 'No address set'}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.addressEditButton}
+                    onPress={() => setIsEditingAddress(true)}
+                  >
+                    <Ionicons name="pencil" size={16} color={APP_COLORS.primary} />
+                    <Text style={styles.addressEditText}>Edit</Text>
+                  </TouchableOpacity>
                 </View>
               )}
             </View>
@@ -632,5 +732,73 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
+  },
+  addressCard: {
+    backgroundColor: APP_COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
+  },
+  addressDisplay: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  addressTextContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  addressText: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.text,
+    marginLeft: 12,
+    flex: 1,
+  },
+  addressEditButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  addressEditText: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.primary,
+    marginLeft: 4,
+  },
+  addressActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 12,
+    gap: 12,
+  },
+  addressCancelButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
+  },
+  addressCancelText: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.textSecondary,
+  },
+  addressSaveButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: APP_COLORS.primary,
+  },
+  addressSaveButtonDisabled: {
+    opacity: 0.5,
+  },
+  addressSaveText: {
+    fontSize: 14,
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.textOnPrimary,
   },
 })

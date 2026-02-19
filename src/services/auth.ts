@@ -11,6 +11,7 @@ import {
   ConfirmPasswordResetResponse,
   User,
   BackendApiResponse,
+  BackendUserResponse,
   RegistrationPendingResponse,
   ConfirmRegistrationRequest,
   ConfirmRegistrationResponse,
@@ -73,14 +74,21 @@ export class BackendAuthService {
           await SecureStore.setItemAsync('idToken', data.data.id_token)
         }
 
-        // Create user profile with role compatibility
-        const userProfile = createUserProfile(user)
-
-        // Update auth store
+        // Set token first so getCurrentUser() can authenticate
         const authStore = useAuthStore.getState()
-        authStore.setUser(userProfile)
         authStore.setToken(access_token)
         authStore.setAuthenticated(true)
+
+        // Fetch full user profile from /auth/me (login response may lack nested profiles)
+        const fullUser = await this.getCurrentUser()
+        if (fullUser) {
+          authStore.setUser(fullUser)
+          return { success: true, user: fullUser, data: data.data }
+        }
+
+        // Fallback to login response user if /auth/me fails
+        const userProfile = createUserProfile(user)
+        authStore.setUser(userProfile)
 
         return { success: true, user: userProfile, data: data.data }
       }
@@ -358,10 +366,13 @@ export class BackendAuthService {
         return null
       }
 
-      const data: BackendApiResponse<User> = await response.json()
+      const rawJson = await response.json()
 
-      if (data.data) {
-        return createUserProfile(data.data)
+      // Backend /auth/me returns user directly (unwrapped) or wrapped in { data: ... }
+      const rawUser: BackendUserResponse | undefined = rawJson.data || rawJson
+
+      if (rawUser?.id) {
+        return createUserProfile(rawUser)
       }
 
       return null
