@@ -83,10 +83,10 @@ cp .env.example .env
 poetry run alembic upgrade head
 
 # Start the development server
-poetry run uvicorn app.main:app --reload --port 8000
+poetry run uvicorn app.main:app --reload --port 8001
 ```
 
-The API will be available at `http://localhost:8000`. Interactive docs at `http://localhost:8000/docs`.
+The API will be available at `http://localhost:8001`. Interactive docs at `http://localhost:8000/docs`.
 
 ### Mobile
 
