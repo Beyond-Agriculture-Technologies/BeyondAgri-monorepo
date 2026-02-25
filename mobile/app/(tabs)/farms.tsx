@@ -1,23 +1,59 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useRouter } from 'expo-router'
 import { Farm } from '../../src/types'
 import { APP_COLORS } from '../../src/utils/constants'
 import { FONTS } from '../../src/theme'
 import { dbService } from '../../src/services/database'
 import { useAppStore } from '../../src/store/app-store'
+import { useAuthStore } from '../../src/store/auth-store'
 
 export default function FarmsScreen() {
+  const router = useRouter()
   const insets = useSafeAreaInsets()
-  const [farms, setFarms] = useState<Farm[]>([])
+  const [localFarms, setLocalFarms] = useState<Farm[]>([])
   const [refreshing, setRefreshing] = useState(false)
   const { isOnline } = useAppStore()
+  const user = useAuthStore(state => state.user)
+
+  // Build farm list from user profile (backend) + local SQLite farms
+  const farms = useMemo(() => {
+    const allFarms: Farm[] = []
+
+    // Add farm from user profile if it exists
+    if (user?.farm_name) {
+      allFarms.push({
+        id: 'profile-farm',
+        name: user.farm_name,
+        location: user.farm_address || user.farm_city || 'No address',
+        coordinates: {
+          latitude: user.farm_latitude || 0,
+          longitude: user.farm_longitude || 0,
+        },
+        area: user.farm_size || '0',
+        ownerId: user.id,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        syncStatus: 'synced',
+      })
+    }
+
+    // Add local farms that aren't duplicates
+    for (const farm of localFarms) {
+      if (farm.id !== 'profile-farm') {
+        allFarms.push(farm)
+      }
+    }
+
+    return allFarms
+  }, [user, localFarms])
 
   const loadFarms = async () => {
     try {
       const farmsData = await dbService.getFarms()
-      setFarms(farmsData)
+      setLocalFarms(farmsData)
     } catch (error) {
       console.error('Error loading farms:', error)
     }
@@ -34,7 +70,7 @@ export default function FarmsScreen() {
   }, [])
 
   const renderFarmItem = ({ item }: { item: Farm }) => (
-    <TouchableOpacity style={styles.farmCard}>
+    <TouchableOpacity style={styles.farmCard} onPress={() => router.push('/add-farm')}>
       <View style={styles.farmHeader}>
         <View style={styles.farmInfo}>
           <Text style={styles.farmName}>{item.name}</Text>
@@ -79,15 +115,15 @@ export default function FarmsScreen() {
       </View>
 
       <View style={styles.farmActions}>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/add-farm')}>
           <Ionicons name="eye" size={16} color={APP_COLORS.primary} />
           <Text style={styles.actionText}>View</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/(tabs)/photos')}>
           <Ionicons name="camera" size={16} color={APP_COLORS.secondary} />
           <Text style={styles.actionText}>Photo</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => router.push('/add-farm')}>
           <Ionicons name="create" size={16} color={APP_COLORS.warning} />
           <Text style={styles.actionText}>Edit</Text>
         </TouchableOpacity>
@@ -102,7 +138,7 @@ export default function FarmsScreen() {
       <Text style={styles.emptySubtitle}>
         Add your first farm to start managing your agricultural operations
       </Text>
-      <TouchableOpacity style={styles.addButton}>
+      <TouchableOpacity style={styles.addButton} onPress={() => router.push('/add-farm')}>
         <Ionicons name="add" size={20} color={APP_COLORS.textOnPrimary} />
         <Text style={styles.addButtonText}>Add Your First Farm</Text>
       </TouchableOpacity>
@@ -118,7 +154,7 @@ export default function FarmsScreen() {
             {farms.length} {farms.length === 1 ? 'farm' : 'farms'} total
           </Text>
         </View>
-        <TouchableOpacity style={styles.headerButton}>
+        <TouchableOpacity style={styles.headerButton} onPress={() => router.push('/add-farm')}>
           <Ionicons name="add" size={24} color={APP_COLORS.primary} />
         </TouchableOpacity>
       </View>

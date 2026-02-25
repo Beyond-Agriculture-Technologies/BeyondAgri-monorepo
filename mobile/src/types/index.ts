@@ -56,10 +56,18 @@ export interface User {
   phone_verified?: boolean
   phone_verified_at?: string
   address?: string
+  farm_name?: string
   farm_address?: string
+  farm_street?: string
+  farm_city?: string
+  farm_province?: string
+  farm_postal_code?: string
+  farm_country?: string
   farm_latitude?: number
   farm_longitude?: number
   farm_place_id?: string
+  farm_size?: string
+  farm_elevation?: number
   user_type: 'FARMER' | 'WHOLESALER' | 'ADMIN'
   verification_status?: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED'
   is_active?: boolean
@@ -87,10 +95,18 @@ export function createUserProfile(raw: BackendUserResponse): UserProfile {
     name: raw.name || profile?.name,
     phone_number: raw.phone_number || profile?.phone_number,
     address: raw.address || profile?.address,
+    farm_name: farmerProfile?.farm_name,
     farm_address: raw.farm_address || farmerProfile?.farm_address,
+    farm_street: farmerProfile?.farm_street,
+    farm_city: farmerProfile?.farm_city,
+    farm_province: farmerProfile?.farm_province,
+    farm_postal_code: farmerProfile?.farm_postal_code,
+    farm_country: farmerProfile?.farm_country,
     farm_latitude: raw.farm_latitude ?? farmerProfile?.farm_latitude,
     farm_longitude: raw.farm_longitude ?? farmerProfile?.farm_longitude,
     farm_place_id: raw.farm_place_id || farmerProfile?.farm_place_id,
+    farm_size: farmerProfile?.farm_size != null ? String(farmerProfile.farm_size) : undefined,
+    farm_elevation: farmerProfile?.farm_elevation,
     user_type: userType,
     role: userType,
     verification_status: raw.verification_status as User['verification_status'],

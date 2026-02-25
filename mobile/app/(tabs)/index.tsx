@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useAuthStore } from '../../src/store/auth-store'
 import { useAppStore } from '../../src/store/app-store'
@@ -9,8 +10,11 @@ import { FONTS } from '../../src/theme'
 import { dbService } from '../../src/services/database'
 import { GlassCard } from '../../src/components/ui/GlassCard'
 import { GradientCard } from '../../src/components/ui/GradientCard'
+import { WeatherWidget } from '../../src/components/WeatherWidget'
+import { useWeatherStore } from '../../src/store/weather-store'
 
 export default function DashboardScreen() {
+  const router = useRouter()
   const insets = useSafeAreaInsets()
   const user = useAuthStore(state => state.user)
   const { isOnline, farms, isSyncing } = useAppStore()
@@ -21,6 +25,8 @@ export default function DashboardScreen() {
     pendingSync: 0,
   })
 
+  const hasProfileFarm = !!user?.farm_name
+
   const loadStats = async () => {
     try {
       const farms = await dbService.getFarms()
@@ -28,7 +34,7 @@ export default function DashboardScreen() {
       const offlineActions = await dbService.getOfflineActions()
 
       setStats({
-        totalFarms: farms.length,
+        totalFarms: farms.length + (hasProfileFarm ? 1 : 0),
         totalPhotos: photos.length,
         pendingSync: offlineActions.length,
       })
@@ -40,12 +46,17 @@ export default function DashboardScreen() {
   const onRefresh = async () => {
     setRefreshing(true)
     await loadStats()
+    const lat = user?.farm_latitude
+    const lng = user?.farm_longitude
+    if (lat && lng) {
+      await useWeatherStore.getState().fetchWeather(lat, lng, true)
+    }
     setRefreshing(false)
   }
 
   useEffect(() => {
     loadStats()
-  }, [farms])
+  }, [farms, hasProfileFarm])
 
   const getRoleDisplayName = (role: string) => {
     switch (role) {
@@ -117,7 +128,12 @@ export default function DashboardScreen() {
                   ? 'Add your first farm to start tracking your agriculture.'
                   : `Managing ${stats.totalFarms} farm${stats.totalFarms > 1 ? 's' : ''} with ${stats.totalPhotos} photos captured.`}
               </Text>
-              <TouchableOpacity style={styles.heroCta}>
+              <TouchableOpacity
+                style={styles.heroCta}
+                onPress={() =>
+                  router.push(stats.totalFarms === 0 ? '/add-farm' : '/(tabs)/farms')
+                }
+              >
                 <Text style={styles.heroCtaText}>
                   {stats.totalFarms === 0 ? 'Add Farm' : 'View Farms'}
                 </Text>
@@ -125,6 +141,12 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             </View>
           </GradientCard>
+        </View>
+
+        {/* Weather */}
+        <View style={styles.weatherSection}>
+          <Text style={styles.sectionTitle}>Weather</Text>
+          <WeatherWidget />
         </View>
 
         {/* Stats Cards */}
@@ -168,7 +190,7 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.actionsGrid}>
-            <TouchableOpacity style={styles.actionCardWrapper}>
+            <TouchableOpacity style={styles.actionCardWrapper} onPress={() => router.push('/add-farm')}>
               <GlassCard style={styles.actionCardOuter}>
                 <View style={styles.actionCardInner}>
                   <View
@@ -181,7 +203,7 @@ export default function DashboardScreen() {
               </GlassCard>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCardWrapper}>
+            <TouchableOpacity style={styles.actionCardWrapper} onPress={() => router.push('/(tabs)/photos')}>
               <GlassCard style={styles.actionCardOuter}>
                 <View style={styles.actionCardInner}>
                   <View style={[styles.actionIconCircle, { backgroundColor: APP_COLORS.infoDim }]}>
@@ -192,7 +214,7 @@ export default function DashboardScreen() {
               </GlassCard>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCardWrapper}>
+            <TouchableOpacity style={styles.actionCardWrapper} onPress={() => router.push('/(tabs)/farms')}>
               <GlassCard style={styles.actionCardOuter}>
                 <View style={styles.actionCardInner}>
                   <View
@@ -205,7 +227,7 @@ export default function DashboardScreen() {
               </GlassCard>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.actionCardWrapper}>
+            <TouchableOpacity style={styles.actionCardWrapper} onPress={onRefresh}>
               <GlassCard style={styles.actionCardOuter}>
                 <View style={styles.actionCardInner}>
                   <View
@@ -283,6 +305,11 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     fontSize: 12,
     marginLeft: 4,
+  },
+  weatherSection: {
+    paddingHorizontal: 20,
+    paddingTop: 4,
+    paddingBottom: 4,
   },
   heroSection: {
     paddingHorizontal: 20,
