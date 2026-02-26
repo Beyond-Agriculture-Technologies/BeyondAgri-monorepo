@@ -318,11 +318,17 @@ class MarketplaceService:
         farmer_summary = None
         if listing.farmer_account and hasattr(listing.farmer_account, 'farmer_profile') and listing.farmer_account.farmer_profile:
             fp = listing.farmer_account.farmer_profile
+            account = listing.farmer_account
+            phone = None
+            if hasattr(account, 'profile') and account.profile:
+                phone = account.profile.phone_number
             farmer_summary = FarmerSummary(
-                id=listing.farmer_account.id,
+                id=account.id,
                 farm_name=fp.farm_name,
                 farm_location=fp.farm_location,
-                certifications=fp.certifications
+                certifications=fp.certifications,
+                email=account.email,
+                phone_number=phone,
             )
 
         return ProductListingBrowseResponse(

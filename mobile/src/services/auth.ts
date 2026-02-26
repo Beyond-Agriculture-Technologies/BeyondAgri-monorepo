@@ -18,7 +18,7 @@ import {
   ResendConfirmationRequest,
   createUserProfile,
 } from '../types'
-import { getErrorMessage } from '../utils/error-handler'
+import { getErrorMessage, extractApiErrorMessage } from '../utils/error-handler'
 
 export class BackendAuthService {
   static async signIn(identifier: string, password: string) {
@@ -59,7 +59,7 @@ export class BackendAuthService {
       const data: BackendApiResponse<LoginResponse> = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || 'Login failed')
+        throw new Error(extractApiErrorMessage(data, 'Login failed'))
       }
 
       if (data.data) {
@@ -144,7 +144,7 @@ export class BackendAuthService {
       }
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || 'Registration failed')
+        throw new Error(extractApiErrorMessage(data, 'Registration failed'))
       }
 
       // Fallback for unexpected success responses
@@ -190,7 +190,7 @@ export class BackendAuthService {
       if (!response.ok) {
         // Handle specific error cases
         if (response.status === 400) {
-          const errorMessage = data.error || data.message || 'Invalid verification code'
+          const errorMessage = extractApiErrorMessage(data, 'Invalid verification code')
           if (errorMessage.toLowerCase().includes('expired')) {
             return {
               success: false,
@@ -232,7 +232,7 @@ export class BackendAuthService {
           }
         }
 
-        throw new Error(data.error || data.message || 'Confirmation failed')
+        throw new Error(extractApiErrorMessage(data, 'Confirmation failed'))
       }
 
       return {
@@ -293,7 +293,7 @@ export class BackendAuthService {
           }
         }
 
-        throw new Error(data.error || data.message || 'Failed to resend code')
+        throw new Error(extractApiErrorMessage(data, 'Failed to resend code'))
       }
 
       return {
@@ -428,7 +428,7 @@ export class BackendAuthService {
       const data: BackendApiResponse<PasswordResetResponse> = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || 'Password reset request failed')
+        throw new Error(extractApiErrorMessage(data, 'Password reset request failed'))
       }
 
       return {
@@ -462,7 +462,7 @@ export class BackendAuthService {
       const data: BackendApiResponse<ConfirmPasswordResetResponse> = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || 'Password reset confirmation failed')
+        throw new Error(extractApiErrorMessage(data, 'Password reset confirmation failed'))
       }
 
       return {

@@ -50,7 +50,7 @@ class Account(BaseModel):
 
     # Login tracking
     last_login_at = Column(DateTime(timezone=True), nullable=True)
-    login_count = Column(Integer, default=0)
+    login_count = Column(Integer, default=0, server_default='0')
 
     # Relationships
     profile = relationship("UserProfile", back_populates="account", uselist=False, cascade="all, delete-orphan")

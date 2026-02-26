@@ -48,19 +48,42 @@ export interface ApiError {
 }
 
 /**
+ * Extracts an error message from a FastAPI/backend response body.
+ * FastAPI returns errors as { detail: string | Array<{ msg: string, ... }> }
+ * while our backend may also use { error: string } or { message: string }.
+ */
+export function extractApiErrorMessage(data: unknown, fallback: string): string {
+  if (!data || typeof data !== 'object') return fallback
+  const obj = data as Record<string, unknown>
+
+  // FastAPI detail — can be a string or array of validation errors
+  if (obj.detail) {
+    if (typeof obj.detail === 'string') return obj.detail
+    if (Array.isArray(obj.detail) && obj.detail.length > 0) {
+      const first = obj.detail[0]
+      if (first && typeof first === 'object' && 'msg' in first) {
+        return String((first as { msg: unknown }).msg)
+      }
+    }
+  }
+
+  if (typeof obj.error === 'string') return obj.error
+  if (typeof obj.message === 'string') return obj.message
+
+  return fallback
+}
+
+/**
  * Parses an API error response into a structured format
  * @param response - The API response object
  * @param status - The HTTP status code
  * @returns Structured API error
  */
 export function parseApiError(response: unknown, status: number): ApiError {
+  const errorMessage = extractApiErrorMessage(response, 'Unknown error')
+
   const errorObj =
     response && typeof response === 'object' ? (response as Record<string, unknown>) : {}
-
-  const errorMessage =
-    (typeof errorObj.error === 'string' ? errorObj.error : null) ||
-    (typeof errorObj.message === 'string' ? errorObj.message : null) ||
-    'Unknown error'
 
   return {
     code: (typeof errorObj.code === 'string' ? errorObj.code : null) || `HTTP_${status}`,

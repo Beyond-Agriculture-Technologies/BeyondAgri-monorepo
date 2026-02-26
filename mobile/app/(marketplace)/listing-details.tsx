@@ -108,13 +108,25 @@ export default function ListingDetailsScreen() {
   }
 
   const handleContact = () => {
-    if (currentListing?.farmer) {
-      Alert.alert(
-        'Contact Farmer',
-        `You can contact ${currentListing.farm_name || 'the farmer'} to inquire about this listing.`,
-        [{ text: 'OK' }]
-      )
+    if (!currentListing?.farmer) return
+
+    const farmer = currentListing.farmer
+    const name = currentListing.farm_name || farmer.farm_name || 'Farmer'
+    const parts: string[] = []
+
+    if (farmer.phone_number) {
+      parts.push(`Phone: ${farmer.phone_number}`)
     }
+    if (farmer.email) {
+      parts.push(`Email: ${farmer.email}`)
+    }
+
+    if (parts.length === 0) {
+      Alert.alert('Contact Info', `No contact details are available for ${name}.`)
+      return
+    }
+
+    Alert.alert(`Contact ${name}`, parts.join('\n'), [{ text: 'OK' }])
   }
 
   if (detailLoading || !currentListing) {

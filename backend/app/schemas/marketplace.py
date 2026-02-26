@@ -86,6 +86,8 @@ class FarmerSummary(BaseModel):
     farm_name: Optional[str] = None
     farm_location: Optional[str] = None
     certifications: Optional[Dict[str, Any]] = None
+    email: Optional[str] = None
+    phone_number: Optional[str] = None
 
     class Config:
         from_attributes = True

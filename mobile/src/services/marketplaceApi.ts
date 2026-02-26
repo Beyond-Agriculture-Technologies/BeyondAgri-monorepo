@@ -68,11 +68,16 @@ class MarketplaceApiClient {
   private async request<T>(
     endpoint: string,
     options: RequestInit = {},
-    requestKey?: string
+    requestKey?: string,
+    preserveFullResponse?: boolean
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseURL}${endpoint}`
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), this.REQUEST_TIMEOUT_MS)
+    let timedOut = false
+    const timeoutId = setTimeout(() => {
+      timedOut = true
+      controller.abort()
+    }, this.REQUEST_TIMEOUT_MS)
 
     // Track this request if key provided
     if (requestKey) {
@@ -137,7 +142,7 @@ class MarketplaceApiClient {
       const responseData = data as Record<string, unknown>
       return {
         success: true,
-        data: (responseData.data || data) as T,
+        data: (preserveFullResponse ? data : responseData.data || data) as T,
         message: responseData.message as string | undefined,
       }
     } catch (error: unknown) {
@@ -149,6 +154,16 @@ class MarketplaceApiClient {
       }
 
       const errorObj = error as Error
+
+      // Silently handle cancelled requests (duplicate request replaced by a newer one)
+      if (errorObj.name === 'AbortError' && !timedOut) {
+        return {
+          success: false,
+          data: null as unknown as T,
+          message: '',
+        }
+      }
+
       console.error('Marketplace API request error:', errorObj.message, 'Endpoint:', endpoint)
 
       let userMessage = errorObj.message || 'Network error'
@@ -193,7 +208,7 @@ class MarketplaceApiClient {
     params?: BrowseListingsParams
   ): Promise<ApiResponse<PaginatedListingsResponse>> {
     const queryString = this.buildQueryString(params as Record<string, unknown>)
-    return this.request<PaginatedListingsResponse>(`/listings${queryString}`, {}, 'browseListings')
+    return this.request<PaginatedListingsResponse>(`/listings${queryString}`, {}, 'browseListings', true)
   }
 
   /**

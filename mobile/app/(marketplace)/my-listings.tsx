@@ -105,8 +105,13 @@ export default function MyListingsScreen() {
         style: 'destructive',
         onPress: async () => {
           setActionLoadingId(listing.id)
-          await archiveListing(listing.id)
+          const success = await archiveListing(listing.id)
           setActionLoadingId(null)
+          if (success) {
+            Alert.alert('Success', 'Listing archived successfully')
+          } else {
+            Alert.alert('Error', 'Failed to archive listing')
+          }
         },
       },
     ])

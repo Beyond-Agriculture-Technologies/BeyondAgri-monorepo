@@ -159,7 +159,7 @@ class AccountProfile(BaseModel):
             is_verified=account.is_verified,
             is_active=account.is_active,
             last_login_at=account.last_login_at,
-            login_count=account.login_count,
+            login_count=account.login_count or 0,
             created_at=account.created_at,
             updated_at=account.updated_at,
             profile=profile_data,

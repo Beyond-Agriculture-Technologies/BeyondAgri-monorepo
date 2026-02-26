@@ -17,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons'
 import { router, useLocalSearchParams } from 'expo-router'
 import { useMarketplaceStore } from '../../src/store/marketplace-store'
 import { useMarketplacePermissions } from '../../src/hooks/useMarketplacePermissions'
+import { useAppStore } from '../../src/store/app-store'
+import { useInventoryStore } from '../../src/store/inventory-store'
 import { APP_COLORS } from '../../src/utils/constants'
 import { FONTS } from '../../src/theme'
 import {
@@ -25,10 +27,27 @@ import {
   UpdateListingRequest,
 } from '../../src/types/marketplace'
 import {
+  InventoryCategoryEnum,
+  InventoryItemResponse,
+} from '../../src/types/inventory'
+import {
   getCategoryLabel,
   getCategoryIcon,
   getCategoryColor,
 } from '../../src/utils/marketplace-helpers'
+
+function mapInventoryCategory(category: InventoryCategoryEnum): ProductCategoryEnum {
+  switch (category) {
+    case InventoryCategoryEnum.HARVEST:
+      return ProductCategoryEnum.HARVEST
+    case InventoryCategoryEnum.MEAT:
+      return ProductCategoryEnum.MEAT
+    case InventoryCategoryEnum.POULTRY:
+      return ProductCategoryEnum.POULTRY
+    default:
+      return ProductCategoryEnum.OTHER
+  }
+}
 
 const CATEGORIES = Object.values(ProductCategoryEnum)
 const QUALITY_GRADES = ['A', 'B', 'C']
@@ -69,6 +88,7 @@ export default function ListingFormScreen() {
   const listingId = params.id ? parseInt(params.id, 10) : null
   const isEditMode = listingId !== null
 
+  const { isOnline } = useAppStore()
   const { permissions, isFarmer } = useMarketplacePermissions()
   const {
     currentListing,
@@ -81,6 +101,14 @@ export default function ListingFormScreen() {
     provinces,
   } = useMarketplaceStore()
 
+  const {
+    items: inventoryItems,
+    itemsLoading: inventoryLoading,
+    inventoryTypes,
+    fetchItems: fetchInventoryItems,
+    fetchInventoryTypes,
+  } = useInventoryStore()
+
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
   const [saving, setSaving] = useState(false)
@@ -88,9 +116,43 @@ export default function ListingFormScreen() {
   const [showUnitPicker, setShowUnitPicker] = useState(false)
   const [showGradePicker, setShowGradePicker] = useState(false)
   const [showProvincePicker, setShowProvincePicker] = useState(false)
+  const [showInventoryPicker, setShowInventoryPicker] = useState(false)
+  const [selectedInventoryItemId, setSelectedInventoryItemId] = useState<number | null>(null)
+  const [selectedInventoryItemName, setSelectedInventoryItemName] = useState<string | null>(null)
+
+  const prefillFromInventory = (item: InventoryItemResponse) => {
+    const invType = inventoryTypes.find(t => t.id === item.inventory_type_id)
+    const category = invType
+      ? mapInventoryCategory(invType.category)
+      : ProductCategoryEnum.HARVEST
+
+    setFormData(prev => ({
+      ...prev,
+      title: item.item_name,
+      description: item.description || prev.description,
+      category,
+      available_quantity: item.current_quantity.toString(),
+      unit: item.unit || prev.unit,
+      price_per_unit: item.cost_per_unit ? item.cost_per_unit.toString() : prev.price_per_unit,
+    }))
+    setSelectedInventoryItemId(item.id)
+    setSelectedInventoryItemName(item.item_name)
+    setShowInventoryPicker(false)
+    setErrors({})
+  }
+
+  const clearInventoryLink = () => {
+    setSelectedInventoryItemId(null)
+    setSelectedInventoryItemName(null)
+  }
 
   useEffect(() => {
     fetchProvinces()
+
+    if (!isEditMode) {
+      fetchInventoryItems({ status: 'AVAILABLE' })
+      fetchInventoryTypes()
+    }
 
     if (isEditMode && listingId) {
       fetchListingDetail(listingId)
@@ -167,6 +229,11 @@ export default function ListingFormScreen() {
   }
 
   const handleSubmit = async () => {
+    if (!isOnline) {
+      Alert.alert('Offline', 'You need an internet connection to save listings.')
+      return
+    }
+
     if (!validateForm()) {
       Alert.alert('Validation Error', 'Please fix the errors in the form')
       return
@@ -215,6 +282,7 @@ export default function ListingFormScreen() {
           province: formData.province || undefined,
           city: formData.city || undefined,
           publish_immediately: formData.publish_immediately,
+          inventory_item_id: selectedInventoryItemId ?? undefined,
         }
 
         const result = await createListing(createData)
@@ -230,8 +298,10 @@ export default function ListingFormScreen() {
           Alert.alert('Error', 'Failed to create listing')
         }
       }
-    } catch (_error) {
-      Alert.alert('Error', 'Something went wrong')
+    } catch (error) {
+      console.error('Listing form submit error:', error)
+      const message = error instanceof Error ? error.message : 'Something went wrong'
+      Alert.alert('Error', message)
     } finally {
       setSaving(false)
     }
@@ -280,6 +350,79 @@ export default function ListingFormScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Import from Inventory (create mode only) */}
+          {!isEditMode && (
+            <View style={styles.fieldGroup}>
+              {selectedInventoryItemName ? (
+                <View style={styles.inventoryLinkedBadge}>
+                  <View style={styles.inventoryLinkedLeft}>
+                    <Ionicons name="link" size={18} color={APP_COLORS.primary} />
+                    <View style={styles.inventoryLinkedText}>
+                      <Text style={styles.inventoryLinkedLabel}>Linked to inventory</Text>
+                      <Text style={styles.inventoryLinkedName}>{selectedInventoryItemName}</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity onPress={clearInventoryLink} hitSlop={8}>
+                    <Ionicons name="close-circle" size={22} color={APP_COLORS.textSecondary} />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={styles.importButton}
+                  onPress={() => setShowInventoryPicker(!showInventoryPicker)}
+                >
+                  <View style={styles.importButtonLeft}>
+                    <Ionicons name="cube-outline" size={22} color={APP_COLORS.primary} />
+                    <View>
+                      <Text style={styles.importButtonTitle}>Import from Inventory</Text>
+                      <Text style={styles.importButtonSubtitle}>Pre-fill from an existing item</Text>
+                    </View>
+                  </View>
+                  <Ionicons
+                    name={showInventoryPicker ? 'chevron-up' : 'chevron-down'}
+                    size={20}
+                    color={APP_COLORS.textSecondary}
+                  />
+                </TouchableOpacity>
+              )}
+
+              {showInventoryPicker && (
+                <View style={styles.inventoryPickerContainer}>
+                  {inventoryLoading ? (
+                    <View style={styles.inventoryPickerLoading}>
+                      <ActivityIndicator size="small" color={APP_COLORS.primary} />
+                      <Text style={styles.inventoryPickerLoadingText}>Loading inventory...</Text>
+                    </View>
+                  ) : inventoryItems.length === 0 ? (
+                    <View style={styles.inventoryPickerEmpty}>
+                      <Text style={styles.inventoryPickerEmptyText}>No available inventory items</Text>
+                    </View>
+                  ) : (
+                    inventoryItems.map(item => {
+                      const invType = inventoryTypes.find(t => t.id === item.inventory_type_id)
+                      return (
+                        <TouchableOpacity
+                          key={item.id}
+                          style={styles.inventoryPickerItem}
+                          onPress={() => prefillFromInventory(item)}
+                        >
+                          <View style={styles.inventoryPickerItemInfo}>
+                            <Text style={styles.inventoryPickerItemName}>{item.item_name}</Text>
+                            <Text style={styles.inventoryPickerItemDetail}>
+                              {item.current_quantity} {item.unit}
+                              {invType ? ` \u00B7 ${invType.category}` : ''}
+                            </Text>
+                          </View>
+                          <Ionicons name="add-circle-outline" size={22} color={APP_COLORS.primary} />
+                        </TouchableOpacity>
+                      )
+                    })
+                  )}
+                </View>
+              )}
+            </View>
+          )}
+
           {/* Title */}
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Title *</Text>
@@ -814,5 +957,116 @@ const styles = StyleSheet.create({
     color: APP_COLORS.textOnPrimary,
     fontSize: 16,
     fontFamily: FONTS.semiBold,
+  },
+  importButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: APP_COLORS.primaryDim,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: APP_COLORS.glassBorder,
+  },
+  importButtonLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  importButtonTitle: {
+    fontSize: 15,
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.text,
+  },
+  importButtonSubtitle: {
+    fontSize: 12,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.textSecondary,
+    marginTop: 1,
+  },
+  inventoryLinkedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: APP_COLORS.primaryDim,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: APP_COLORS.primary + '40',
+  },
+  inventoryLinkedLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  inventoryLinkedText: {
+    flex: 1,
+  },
+  inventoryLinkedLabel: {
+    fontSize: 11,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  inventoryLinkedName: {
+    fontSize: 15,
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.text,
+    marginTop: 1,
+  },
+  inventoryPickerContainer: {
+    backgroundColor: APP_COLORS.surfaceElevated,
+    borderRadius: 12,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
+    overflow: 'hidden',
+    maxHeight: 250,
+  },
+  inventoryPickerLoading: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    gap: 8,
+  },
+  inventoryPickerLoadingText: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.textSecondary,
+  },
+  inventoryPickerEmpty: {
+    padding: 16,
+    alignItems: 'center',
+  },
+  inventoryPickerEmptyText: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.textSecondary,
+  },
+  inventoryPickerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: APP_COLORS.border,
+  },
+  inventoryPickerItemInfo: {
+    flex: 1,
+  },
+  inventoryPickerItemName: {
+    fontSize: 15,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.text,
+  },
+  inventoryPickerItemDetail: {
+    fontSize: 13,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.textSecondary,
+    marginTop: 2,
   },
 })
