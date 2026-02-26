@@ -9,6 +9,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Modal,
+  Alert,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
@@ -77,7 +78,10 @@ export default function BrowseMarketplaceScreen() {
   }
 
   const onRefresh = async () => {
-    if (!isOnline) return
+    if (!isOnline) {
+      Alert.alert('Offline', 'You need an internet connection to refresh listings.')
+      return
+    }
     setRefreshing(true)
     await fetchBrowseListings({ ...browseFilters, page: 1 })
     setRefreshing(false)
@@ -307,6 +311,14 @@ export default function BrowseMarketplaceScreen() {
         <Text style={styles.emptyText}>
           {browseError ? browseError : 'Try adjusting your filters or search query'}
         </Text>
+        {browseError && (
+          <TouchableOpacity
+            style={[styles.clearButton, { marginBottom: 12 }]}
+            onPress={() => fetchBrowseListings(browseFilters)}
+          >
+            <Text style={styles.clearButtonText}>Retry</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={styles.clearButton} onPress={handleClearFilters}>
           <Text style={styles.clearButtonText}>Clear Filters</Text>
         </TouchableOpacity>

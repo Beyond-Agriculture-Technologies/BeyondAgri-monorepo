@@ -25,6 +25,8 @@ export interface FarmerSummary {
   farm_name: string | null
   farm_location: string | null
   certifications: Record<string, unknown> | null
+  email: string | null
+  phone_number: string | null
 }
 
 // ==================== Request Types ====================

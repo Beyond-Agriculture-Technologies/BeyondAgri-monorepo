@@ -49,7 +49,7 @@ export default function MarketplaceDashboard() {
 
   const loadDashboard = async () => {
     const promises: Promise<void>[] = [
-      fetchBrowseListings({ page: 1, page_size: 5, featured_only: true }),
+      fetchBrowseListings({ page: 1, page_size: 5 }),
       fetchCategories(),
     ]
 
@@ -187,7 +187,7 @@ export default function MarketplaceDashboard() {
         {browseListings?.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Featured Listings</Text>
+              <Text style={styles.sectionTitle}>Recent Listings</Text>
               <TouchableOpacity onPress={() => router.push('/(marketplace)/browse')}>
                 <Text style={styles.seeAllText}>View All</Text>
               </TouchableOpacity>
