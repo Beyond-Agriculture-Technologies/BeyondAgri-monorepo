@@ -4,8 +4,13 @@ import { Ionicons } from '@expo/vector-icons'
 import { BlurView } from 'expo-blur'
 import { APP_COLORS } from '../../src/utils/constants'
 import { FONTS } from '../../src/theme'
+import { useAuthStore } from '../../src/store/auth-store'
 
 export default function TabsLayout() {
+  const user = useAuthStore(state => state.user)
+  const userType = (user?.user_type || 'FARMER').toUpperCase()
+  const isWholesaler = userType === 'WHOLESALER'
+
   return (
     <Tabs
       screenOptions={{
@@ -55,8 +60,20 @@ export default function TabsLayout() {
         options={{
           title: 'Farms',
           headerTitle: 'My Farms',
+          href: isWholesaler ? null : undefined,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="leaf-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="suppliers"
+        options={{
+          title: 'Suppliers',
+          headerTitle: 'My Suppliers',
+          href: isWholesaler ? undefined : null,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="people-outline" size={size} color={color} />
           ),
         }}
       />
@@ -81,10 +98,22 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="orders"
+        options={{
+          title: 'Orders',
+          headerTitle: 'My Orders',
+          href: isWholesaler ? undefined : null,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="receipt-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="photos"
         options={{
           title: 'Photos',
           headerTitle: 'Farm Photos',
+          href: isWholesaler ? null : undefined,
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="camera-outline" size={size} color={color} />
           ),

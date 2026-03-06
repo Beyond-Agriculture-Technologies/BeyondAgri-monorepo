@@ -17,6 +17,9 @@ from .marketplace import (
     ProductListing, ListingStatusEnum, ProductCategoryEnum
 )
 
+# Order models
+from .order import Order, OrderStatusEnum
+
 __all__ = [
     # Account models
     "Account", "AccountTypeEnum", "AccountStatusEnum",
@@ -29,5 +32,7 @@ __all__ = [
     "InventoryItem", "InventoryStatusEnum",
     "InventoryTransaction", "TransactionTypeEnum",
     # Marketplace models
-    "ProductListing", "ListingStatusEnum", "ProductCategoryEnum"
+    "ProductListing", "ListingStatusEnum", "ProductCategoryEnum",
+    # Order models
+    "Order", "OrderStatusEnum",
 ]

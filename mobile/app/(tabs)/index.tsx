@@ -12,8 +12,20 @@ import { GlassCard } from '../../src/components/ui/GlassCard'
 import { GradientCard } from '../../src/components/ui/GradientCard'
 import { WeatherWidget } from '../../src/components/WeatherWidget'
 import { useWeatherStore } from '../../src/store/weather-store'
+import WholesalerHome from '../../src/components/WholesalerHome'
 
 export default function DashboardScreen() {
+  const user = useAuthStore(state => state.user)
+  const userType = (user?.user_type || 'FARMER').toUpperCase()
+
+  if (userType === 'WHOLESALER') {
+    return <WholesalerHome />
+  }
+
+  return <FarmerDashboard />
+}
+
+function FarmerDashboard() {
   const router = useRouter()
   const insets = useSafeAreaInsets()
   const user = useAuthStore(state => state.user)
