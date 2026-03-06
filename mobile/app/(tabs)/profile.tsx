@@ -14,6 +14,9 @@ import { VerificationStatus, UserRole, Permission } from '../../src/types'
 import { GeocodeResponse } from '../../src/types/geocoding'
 import { AddressAutocomplete } from '../../src/components/AddressAutocomplete'
 import { BUYING_CATEGORIES, EMPLOYEE_RANGES, VOLUME_UNITS, VOLUME_PERIODS } from '../../src/utils/wholesaler-constants'
+import { GlassCard } from '../../src/components/ui/GlassCard'
+import { GradientCard } from '../../src/components/ui/GradientCard'
+import { StatusBadge } from '../../src/components/ui/StatusBadge'
 
 export default function ProfileScreen() {
   const user = useAuthStore(state => state.user)
@@ -57,15 +60,15 @@ export default function ProfileScreen() {
   }
 
   const addProduceItem = () => {
-    const item = newProduceItem.trim()
-    if (item && !preferredProduce.includes(item)) {
-      setPreferredProduce(prev => [...prev, item])
+    const trimmed = newProduceItem.trim()
+    if (trimmed && !preferredProduce.includes(trimmed)) {
+      setPreferredProduce(prev => [...prev, trimmed])
       setNewProduceItem('')
     }
   }
 
   const removeProduceItem = (item: string) => {
-    setPreferredProduce(prev => prev.filter(p => p !== item))
+    setPreferredProduce(prev => prev.filter(i => i !== item))
   }
 
   const handleSaveBusiness = async () => {
@@ -76,7 +79,7 @@ export default function ProfileScreen() {
         business_name: businessName || undefined,
         registration_number: regNumber || undefined,
         number_of_employees: employees || undefined,
-        years_in_operation: yearsOp ? parseInt(yearsOp, 10) : undefined,
+        years_in_operation: yearsOp ? parseInt(yearsOp) : undefined,
         business_categories: selectedCategories.length > 0 ? { categories: selectedCategories } : undefined,
         capacity: volumeAmount ? {
           volume_per_period: parseFloat(volumeAmount),
@@ -283,43 +286,22 @@ export default function ProfileScreen() {
     }
   }
 
-  const getRoleDescription = (role: string) => {
-    switch (role.toUpperCase()) {
-      case 'FARMER':
-        return 'Manage your own farms and agricultural operations'
-      case 'WHOLESALER':
-        return 'Access farms from multiple farmers for wholesale operations'
-      case 'ADMIN':
-        return 'Full system access and user management capabilities'
+  const getVerificationBadgeVariant = (status?: string): 'success' | 'warning' | 'error' | 'neutral' => {
+    switch (status?.toLowerCase()) {
+      case 'verified':
+        return 'success'
+      case 'pending':
+        return 'warning'
+      case 'rejected':
+        return 'error'
       default:
-        return 'Standard user access'
+        return 'neutral'
     }
   }
 
-  const getVerificationStatusColor = (status: string) => {
-    switch (status) {
-      case 'verified':
-        return APP_COLORS.success
-      case 'pending':
-        return APP_COLORS.warning
-      case 'rejected':
-        return APP_COLORS.error
-      default:
-        return APP_COLORS.textSecondary
-    }
-  }
-
-  const getVerificationStatusIcon = (status: string) => {
-    switch (status) {
-      case 'verified':
-        return 'checkmark-circle'
-      case 'pending':
-        return 'time'
-      case 'rejected':
-        return 'close-circle'
-      default:
-        return 'help-circle'
-    }
+  const getVerificationLabel = (status?: string): string => {
+    if (!status) return 'Unverified'
+    return status.charAt(0).toUpperCase() + status.slice(1)
   }
 
   return (
@@ -329,84 +311,48 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
       >
-        {/* User Info */}
-        <View style={styles.userSection}>
-          <View style={styles.avatar}>
-            <Ionicons name="person" size={40} color={APP_COLORS.primary} />
-          </View>
-          <Text style={styles.userName}>{user?.name || 'User'}</Text>
-          <Text style={styles.userEmail}>{user?.email}</Text>
-          <View style={styles.roleContainer}>
-            <Text style={styles.roleTitle}>{getRoleDisplayName(user?.user_type || '')}</Text>
-            <Text style={styles.roleDescription}>{getRoleDescription(user?.user_type || '')}</Text>
-          </View>
-        </View>
-
-        {/* Verification Status Section */}
-        {isOnline && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Account Verification</Text>
-            <View style={styles.verificationCard}>
-              {loadingAccountData ? (
-                <View style={styles.loadingContainer}>
-                  <Text style={styles.loadingText}>Loading verification status...</Text>
-                </View>
-              ) : verificationStatus ? (
-                <View style={styles.verificationRow}>
-                  <View style={styles.verificationLeft}>
-                    <Ionicons
-                      name={getVerificationStatusIcon(verificationStatus.status)}
-                      size={20}
-                      color={getVerificationStatusColor(verificationStatus.status)}
+        {/* Hero Section */}
+        <View style={styles.heroWrapper}>
+          <GradientCard style={{ borderWidth: 1, borderColor: APP_COLORS.glassBorder }}>
+            <View style={styles.heroRow}>
+              <View style={styles.avatar}>
+                <Ionicons name="person" size={28} color={APP_COLORS.primary} />
+              </View>
+              <View style={styles.heroInfo}>
+                <Text style={styles.userName}>{user?.name || 'User'}</Text>
+                <Text style={styles.userEmail}>{user?.email}</Text>
+                <View style={styles.badgeRow}>
+                  <StatusBadge
+                    label={getRoleDisplayName(user?.user_type || '')}
+                    variant="success"
+                    size="medium"
+                  />
+                  {isOnline && !loadingAccountData && (
+                    <StatusBadge
+                      label={getVerificationLabel(verificationStatus?.status)}
+                      variant={getVerificationBadgeVariant(verificationStatus?.status)}
+                      size="small"
                     />
-                    <Text style={styles.verificationLabel}>Status</Text>
-                  </View>
-                  <Text
-                    style={[
-                      styles.verificationValue,
-                      { color: getVerificationStatusColor(verificationStatus.status) },
-                    ]}
-                  >
-                    {verificationStatus.status
-                      ? verificationStatus.status.charAt(0).toUpperCase() +
-                        verificationStatus.status.slice(1)
-                      : 'Unknown'}
-                  </Text>
+                  )}
+                  {isOnline && loadingAccountData && (
+                    <StatusBadge label="Checking..." variant="neutral" size="small" />
+                  )}
                 </View>
-              ) : (
-                <View style={styles.verificationRow}>
-                  <View style={styles.verificationLeft}>
-                    <Ionicons
-                      name="information-circle"
-                      size={20}
-                      color={APP_COLORS.textSecondary}
-                    />
-                    <Text style={styles.verificationLabel}>Status</Text>
-                  </View>
-                  <Text style={styles.verificationValue}>Not Available</Text>
-                </View>
-              )}
-
-              {userRoles.length > 0 && (
-                <View style={styles.verificationRow}>
-                  <View style={styles.verificationLeft}>
-                    <Ionicons name="shield-checkmark" size={20} color={APP_COLORS.primary} />
-                    <Text style={styles.verificationLabel}>Roles</Text>
-                  </View>
-                  <Text style={styles.verificationValue}>
+                {userRoles.length > 0 && (
+                  <Text style={styles.rolesText}>
                     {userRoles.map(role => role.role_name).join(', ')}
                   </Text>
-                </View>
-              )}
+                )}
+              </View>
             </View>
-          </View>
-        )}
+          </GradientCard>
+        </View>
 
         {/* Address Section */}
         {isOnline && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Address</Text>
-            <View style={styles.addressCard}>
+            <GlassCard>
               {isEditingAddress ? (
                 <View style={{ zIndex: 1 }}>
                   <AddressAutocomplete
@@ -418,23 +364,23 @@ export default function ProfileScreen() {
                   />
                   <View style={styles.addressActions}>
                     <TouchableOpacity
-                      style={styles.addressCancelButton}
+                      style={styles.cancelButton}
                       onPress={() => {
                         setIsEditingAddress(false)
                         setAddressData(null)
                       }}
                     >
-                      <Text style={styles.addressCancelText}>Cancel</Text>
+                      <Text style={styles.cancelButtonText}>Cancel</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                       style={[
-                        styles.addressSaveButton,
-                        (!addressData || isSavingAddress) && styles.addressSaveButtonDisabled,
+                        styles.saveButton,
+                        (!addressData || isSavingAddress) && styles.saveButtonDisabled,
                       ]}
                       onPress={handleSaveAddress}
                       disabled={!addressData || isSavingAddress}
                     >
-                      <Text style={styles.addressSaveText}>
+                      <Text style={styles.saveButtonText}>
                         {isSavingAddress ? 'Saving...' : 'Save'}
                       </Text>
                     </TouchableOpacity>
@@ -442,39 +388,36 @@ export default function ProfileScreen() {
                 </View>
               ) : (
                 <View style={styles.addressDisplay}>
-                  <View style={styles.addressTextContainer}>
-                    <Ionicons name="location-outline" size={20} color={APP_COLORS.primary} />
+                  <View style={[styles.iconCircle, { backgroundColor: APP_COLORS.infoDim }]}>
+                    <Ionicons name="location" size={20} color={APP_COLORS.info} />
+                  </View>
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={styles.fieldLabelSmall}>Location</Text>
                     <Text style={styles.addressText}>
                       {user?.farm_address || user?.address || 'No address set'}
                     </Text>
                   </View>
                   <TouchableOpacity
-                    style={styles.addressEditButton}
+                    style={styles.editIconButton}
                     onPress={() => setIsEditingAddress(true)}
                   >
                     <Ionicons name="pencil" size={16} color={APP_COLORS.primary} />
-                    <Text style={styles.addressEditText}>Edit</Text>
                   </TouchableOpacity>
                 </View>
               )}
-            </View>
+            </GlassCard>
           </View>
         )}
 
         {/* Wholesaler Business Profile */}
         {isWholesaler && isOnline && (
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Business Profile</Text>
-              {!isEditingBusiness && (
-                <TouchableOpacity onPress={() => setIsEditingBusiness(true)}>
-                  <Ionicons name="pencil" size={18} color={APP_COLORS.primary} />
-                </TouchableOpacity>
-              )}
-            </View>
+            <Text style={styles.sectionTitle}>Business Profile</Text>
 
             {isEditingBusiness ? (
-              <View style={styles.businessCard}>
+              <GlassCard>
+                <View style={styles.editAccentBar} />
+
                 {/* Company Details */}
                 <Text style={styles.fieldLabel}>Business Name</Text>
                 <TextInput
@@ -611,24 +554,37 @@ export default function ProfileScreen() {
                 {/* Save / Cancel */}
                 <View style={styles.businessActions}>
                   <TouchableOpacity
-                    style={styles.addressCancelButton}
+                    style={styles.cancelButton}
                     onPress={() => setIsEditingBusiness(false)}
                   >
-                    <Text style={styles.addressCancelText}>Cancel</Text>
+                    <Text style={styles.cancelButtonText}>Cancel</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.addressSaveButton, isSavingBusiness && styles.addressSaveButtonDisabled]}
+                    style={[styles.saveButton, isSavingBusiness && styles.saveButtonDisabled]}
                     onPress={handleSaveBusiness}
                     disabled={isSavingBusiness}
                   >
-                    <Text style={styles.addressSaveText}>
+                    <Text style={styles.saveButtonText}>
                       {isSavingBusiness ? 'Saving...' : 'Save'}
                     </Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </GlassCard>
             ) : (
-              <View style={styles.businessCard}>
+              <GlassCard>
+                <View style={styles.businessHeader}>
+                  <View style={[styles.iconCircle, { backgroundColor: APP_COLORS.purpleDim }]}>
+                    <Ionicons name="storefront-outline" size={20} color={APP_COLORS.purple} />
+                  </View>
+                  <Text style={styles.businessHeaderTitle}>Company Details</Text>
+                  <TouchableOpacity
+                    style={styles.editIconButton}
+                    onPress={() => setIsEditingBusiness(true)}
+                  >
+                    <Ionicons name="pencil" size={16} color={APP_COLORS.primary} />
+                  </TouchableOpacity>
+                </View>
+
                 <View style={styles.businessRow}>
                   <Text style={styles.businessLabel}>Business Name</Text>
                   <Text style={styles.businessValue}>{user?.business_name || 'Not set'}</Text>
@@ -686,7 +642,7 @@ export default function ProfileScreen() {
                     </View>
                   </View>
                 )}
-              </View>
+              </GlassCard>
             )}
           </View>
         )}
@@ -694,57 +650,59 @@ export default function ProfileScreen() {
         {/* Status Section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Status</Text>
-
-          <View style={styles.statusCard}>
+          <GlassCard>
             <View style={styles.statusRow}>
-              <View style={styles.statusLeft}>
+              <View style={[styles.iconCircle, { backgroundColor: isOnline ? APP_COLORS.successDim : APP_COLORS.warningDim }]}>
                 <Ionicons
                   name={isOnline ? 'wifi' : 'cloud-offline'}
                   size={20}
                   color={isOnline ? APP_COLORS.success : APP_COLORS.warning}
                 />
-                <Text style={styles.statusLabel}>Connection</Text>
               </View>
-              <Text
-                style={[
-                  styles.statusValue,
-                  { color: isOnline ? APP_COLORS.success : APP_COLORS.warning },
-                ]}
-              >
-                {isOnline ? 'Online' : 'Offline'}
-              </Text>
+              <Text style={styles.statusLabel}>Connection</Text>
+              <StatusBadge
+                label={isOnline ? 'Online' : 'Offline'}
+                variant={isOnline ? 'success' : 'warning'}
+                size="small"
+              />
             </View>
 
             <View style={styles.statusRow}>
-              <View style={styles.statusLeft}>
+              <View style={[styles.iconCircle, { backgroundColor: APP_COLORS.primaryDim }]}>
                 <Ionicons
                   name="sync"
                   size={20}
                   color={isSyncing ? APP_COLORS.primary : APP_COLORS.textSecondary}
                 />
-                <Text style={styles.statusLabel}>Sync Status</Text>
               </View>
-              <Text style={styles.statusValue}>{isSyncing ? 'Syncing...' : 'Up to date'}</Text>
+              <Text style={styles.statusLabel}>Sync Status</Text>
+              <StatusBadge
+                label={isSyncing ? 'Syncing...' : 'Up to date'}
+                variant={isSyncing ? 'info' : 'neutral'}
+                size="small"
+              />
             </View>
 
             {offlineActions.length > 0 && (
               <View style={styles.statusRow}>
-                <View style={styles.statusLeft}>
+                <View style={[styles.iconCircle, { backgroundColor: APP_COLORS.warningDim }]}>
                   <Ionicons name="time" size={20} color={APP_COLORS.warning} />
-                  <Text style={styles.statusLabel}>Pending Actions</Text>
                 </View>
-                <Text style={[styles.statusValue, { color: APP_COLORS.warning }]}>
-                  {offlineActions.length} items
-                </Text>
+                <Text style={styles.statusLabel}>Pending Actions</Text>
+                <StatusBadge
+                  label={`${offlineActions.length} items`}
+                  variant="warning"
+                  size="small"
+                />
               </View>
             )}
-          </View>
+          </GlassCard>
         </View>
 
         {/* App Info */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>App Information</Text>
-          <View style={styles.infoCard}>
+          <GlassCard>
             <View style={styles.infoRow}>
               <Text style={styles.infoLabel}>Version</Text>
               <Text style={styles.infoValue}>1.0.0</Text>
@@ -753,75 +711,79 @@ export default function ProfileScreen() {
               <Text style={styles.infoLabel}>Database</Text>
               <Text style={styles.infoValue}>SQLite</Text>
             </View>
-            <View style={styles.infoRow}>
+            <View style={[styles.infoRow, { borderBottomWidth: 0 }]}>
               <Text style={styles.infoLabel}>Authentication</Text>
               <Text style={styles.infoValue}>Backend API</Text>
             </View>
-          </View>
+          </GlassCard>
         </View>
 
         {/* Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Actions</Text>
-
-          {isOnline && (
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={loadAccountData}
-              disabled={loadingAccountData}
-            >
-              <View style={styles.actionLeft}>
-                <Ionicons name="refresh" size={20} color={APP_COLORS.primary} />
-                <Text style={styles.actionText}>
+          <GlassCard>
+            {isOnline && (
+              <TouchableOpacity
+                style={styles.actionRow}
+                onPress={loadAccountData}
+                disabled={loadingAccountData}
+              >
+                <View style={[styles.iconCircleSmall, { backgroundColor: APP_COLORS.primaryDim }]}>
+                  <Ionicons name="refresh" size={16} color={APP_COLORS.primary} />
+                </View>
+                <Text style={[styles.actionText, { flex: 1 }]}>
                   {loadingAccountData ? 'Refreshing Account...' : 'Refresh Account Data'}
                 </Text>
+                <Ionicons name="chevron-forward" size={18} color={APP_COLORS.textTertiary} />
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity style={styles.actionRow}>
+              <View style={[styles.iconCircleSmall, { backgroundColor: APP_COLORS.infoDim }]}>
+                <Ionicons name="sync" size={16} color={APP_COLORS.info} />
               </View>
-              <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
+              <Text style={[styles.actionText, { flex: 1 }]}>Force Sync</Text>
+              <Ionicons name="chevron-forward" size={18} color={APP_COLORS.textTertiary} />
             </TouchableOpacity>
-          )}
 
-          <TouchableOpacity style={styles.actionButton}>
-            <View style={styles.actionLeft}>
-              <Ionicons name="sync" size={20} color={APP_COLORS.primary} />
-              <Text style={styles.actionText}>Force Sync</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
-          </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionRow, { borderBottomWidth: 0 }]} onPress={handleClearData}>
+              <View style={[styles.iconCircleSmall, { backgroundColor: APP_COLORS.warningDim }]}>
+                <Ionicons name="trash" size={16} color={APP_COLORS.warning} />
+              </View>
+              <Text style={[styles.actionText, { flex: 1 }]}>Clear Local Data</Text>
+              <Ionicons name="chevron-forward" size={18} color={APP_COLORS.textTertiary} />
+            </TouchableOpacity>
+          </GlassCard>
 
-          <TouchableOpacity style={styles.actionButton} onPress={handleClearData}>
-            <View style={styles.actionLeft}>
-              <Ionicons name="trash" size={20} color={APP_COLORS.warning} />
-              <Text style={styles.actionText}>Clear Local Data</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
-          </TouchableOpacity>
+          {/* Danger Zone */}
+          <GlassCard style={{ marginTop: 12 }}>
+            {isOnline && (
+              <TouchableOpacity
+                style={styles.actionRow}
+                onPress={handleDeleteAccount}
+              >
+                <View style={[styles.iconCircleSmall, { backgroundColor: APP_COLORS.errorDim }]}>
+                  <Ionicons name="close-circle" size={16} color={APP_COLORS.error} />
+                </View>
+                <Text style={[styles.actionText, { flex: 1, color: APP_COLORS.error }]}>Delete Account</Text>
+                <Ionicons name="chevron-forward" size={18} color={APP_COLORS.textTertiary} />
+              </TouchableOpacity>
+            )}
 
-          {isOnline && (
             <TouchableOpacity
-              style={[styles.actionButton, styles.deleteAccountButton]}
-              onPress={handleDeleteAccount}
+              style={[styles.actionRow, { borderBottomWidth: 0 }]}
+              onPress={handleLogout}
+              disabled={isLoggingOut}
             >
-              <View style={styles.actionLeft}>
-                <Ionicons name="close-circle" size={20} color={APP_COLORS.error} />
-                <Text style={[styles.actionText, styles.deleteAccountText]}>Delete Account</Text>
+              <View style={[styles.iconCircleSmall, { backgroundColor: APP_COLORS.errorDim }]}>
+                <Ionicons name="log-out" size={16} color={APP_COLORS.error} />
               </View>
-              <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            style={[styles.actionButton, styles.logoutButton]}
-            onPress={handleLogout}
-            disabled={isLoggingOut}
-          >
-            <View style={styles.actionLeft}>
-              <Ionicons name="log-out" size={20} color={APP_COLORS.error} />
-              <Text style={[styles.actionText, styles.logoutText]}>
+              <Text style={[styles.actionText, { flex: 1, color: APP_COLORS.error }]}>
                 {isLoggingOut ? 'Signing Out...' : 'Sign Out'}
               </Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textSecondary} />
-          </TouchableOpacity>
+              <Ionicons name="chevron-forward" size={18} color={APP_COLORS.textTertiary} />
+            </TouchableOpacity>
+          </GlassCard>
         </View>
 
         {/* Footer */}
@@ -842,235 +804,100 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  userSection: {
-    backgroundColor: APP_COLORS.surface,
-    padding: 24,
+
+  // Hero
+  heroWrapper: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+  },
+  heroRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: APP_COLORS.border,
+    padding: 24,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: APP_COLORS.primaryDim,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+  },
+  heroInfo: {
+    flex: 1,
+    marginLeft: 16,
   },
   userName: {
-    fontSize: 24,
+    fontSize: 22,
     fontFamily: FONTS.bold,
     color: APP_COLORS.text,
-    marginBottom: 4,
+    letterSpacing: -0.3,
   },
   userEmail: {
-    fontSize: 16,
-    fontFamily: FONTS.regular,
-    color: APP_COLORS.textSecondary,
-    marginBottom: 16,
-  },
-  roleContainer: {
-    alignItems: 'center',
-  },
-  roleTitle: {
-    fontSize: 16,
-    fontFamily: FONTS.semiBold,
-    color: APP_COLORS.primary,
-    marginBottom: 4,
-  },
-  roleDescription: {
     fontSize: 14,
     fontFamily: FONTS.regular,
     color: APP_COLORS.textSecondary,
-    textAlign: 'center',
-    lineHeight: 18,
+    marginTop: 2,
   },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 10,
+  },
+  rolesText: {
+    fontSize: 12,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.textTertiary,
+    marginTop: 6,
+  },
+
+  // Sections
   section: {
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   sectionTitle: {
     fontSize: 18,
     fontFamily: FONTS.semiBold,
     color: APP_COLORS.text,
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  statusCard: {
-    backgroundColor: APP_COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: APP_COLORS.border,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  statusLeft: {
-    flexDirection: 'row',
+
+  // Icon circles
+  iconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  statusLabel: {
-    fontSize: 14,
-    fontFamily: FONTS.regular,
-    color: APP_COLORS.text,
-    marginLeft: 12,
-  },
-  statusValue: {
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    color: APP_COLORS.text,
-  },
-  infoCard: {
-    backgroundColor: APP_COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: APP_COLORS.border,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: APP_COLORS.borderLight,
-  },
-  infoLabel: {
-    fontSize: 14,
-    fontFamily: FONTS.regular,
-    color: APP_COLORS.text,
-  },
-  infoValue: {
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    color: APP_COLORS.textSecondary,
-  },
-  actionButton: {
-    backgroundColor: APP_COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: APP_COLORS.border,
-  },
-  actionLeft: {
-    flexDirection: 'row',
+  iconCircleSmall: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  actionText: {
-    fontSize: 16,
-    fontFamily: FONTS.regular,
-    color: APP_COLORS.text,
-    marginLeft: 12,
-  },
-  deleteAccountButton: {
-    marginTop: 8,
-  },
-  deleteAccountText: {
-    color: APP_COLORS.error,
-  },
-  logoutButton: {
-    marginTop: 8,
-    backgroundColor: APP_COLORS.errorDim,
-    borderColor: APP_COLORS.errorDim,
-  },
-  logoutText: {
-    color: APP_COLORS.error,
-  },
-  footer: {
-    padding: 24,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    color: APP_COLORS.text,
-    marginBottom: 4,
-  },
-  footerSubtext: {
-    fontSize: 12,
-    fontFamily: FONTS.regular,
-    color: APP_COLORS.textSecondary,
-    textAlign: 'center',
-  },
-  verificationCard: {
-    backgroundColor: APP_COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: APP_COLORS.border,
-  },
-  verificationRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  verificationLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  verificationLabel: {
-    fontSize: 14,
-    fontFamily: FONTS.regular,
-    color: APP_COLORS.text,
-    marginLeft: 12,
-  },
-  verificationValue: {
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    color: APP_COLORS.text,
-  },
-  loadingContainer: {
-    padding: 16,
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 14,
-    fontFamily: FONTS.regular,
-    color: APP_COLORS.textSecondary,
-  },
-  addressCard: {
-    backgroundColor: APP_COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: APP_COLORS.border,
-  },
+
+  // Address
   addressDisplay: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  addressTextContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+  fieldLabelSmall: {
+    fontSize: 12,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.textTertiary,
+    marginBottom: 2,
   },
   addressText: {
     fontSize: 14,
     fontFamily: FONTS.regular,
     color: APP_COLORS.text,
-    marginLeft: 12,
-    flex: 1,
   },
-  addressEditButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  addressEditText: {
-    fontSize: 14,
-    fontFamily: FONTS.medium,
-    color: APP_COLORS.primary,
-    marginLeft: 4,
+  editIconButton: {
+    padding: 8,
   },
   addressActions: {
     flexDirection: 'row',
@@ -1078,44 +905,54 @@ const styles = StyleSheet.create({
     marginTop: 12,
     gap: 12,
   },
-  addressCancelButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
+
+  // Shared buttons
+  cancelButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: APP_COLORS.border,
+    borderColor: APP_COLORS.glassBorder,
+    backgroundColor: APP_COLORS.glass,
   },
-  addressCancelText: {
+  cancelButtonText: {
     fontSize: 14,
     fontFamily: FONTS.medium,
     color: APP_COLORS.textSecondary,
   },
-  addressSaveButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
+  saveButton: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
     backgroundColor: APP_COLORS.primary,
   },
-  addressSaveButtonDisabled: {
+  saveButtonDisabled: {
     opacity: 0.5,
   },
-  addressSaveText: {
+  saveButtonText: {
     fontSize: 14,
     fontFamily: FONTS.semiBold,
     color: APP_COLORS.textOnPrimary,
   },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+
+  // Business Profile
+  editAccentBar: {
+    height: 3,
+    backgroundColor: APP_COLORS.primary,
+    borderRadius: 2,
     marginBottom: 16,
   },
-  businessCard: {
-    backgroundColor: APP_COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: APP_COLORS.border,
+  businessHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  businessHeaderTitle: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: FONTS.semiBold,
+    color: APP_COLORS.text,
+    marginLeft: 12,
   },
   businessRow: {
     flexDirection: 'row',
@@ -1148,6 +985,8 @@ const styles = StyleSheet.create({
     marginTop: 16,
     gap: 12,
   },
+
+  // Form inputs
   fieldLabel: {
     fontSize: 13,
     fontFamily: FONTS.medium,
@@ -1157,7 +996,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     backgroundColor: APP_COLORS.background,
-    borderRadius: 8,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: APP_COLORS.border,
     paddingHorizontal: 12,
@@ -1180,7 +1019,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
-    backgroundColor: APP_COLORS.glassBackground,
+    backgroundColor: APP_COLORS.glass,
     borderWidth: 1,
     borderColor: APP_COLORS.glassBorder,
   },
@@ -1202,7 +1041,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 16,
-    backgroundColor: APP_COLORS.glassBackground,
+    backgroundColor: APP_COLORS.glass,
     borderWidth: 1,
     borderColor: APP_COLORS.glassBorder,
   },
@@ -1229,7 +1068,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: 40,
     height: 40,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: APP_COLORS.primary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1249,5 +1088,72 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: FONTS.medium,
     color: APP_COLORS.primary,
+  },
+
+  // Status
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    gap: 12,
+  },
+  statusLabel: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.text,
+    flex: 1,
+  },
+
+  // Info
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: APP_COLORS.borderLight,
+  },
+  infoLabel: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.text,
+  },
+  infoValue: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.textSecondary,
+  },
+
+  // Actions
+  actionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: APP_COLORS.borderLight,
+  },
+  actionText: {
+    fontSize: 15,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.text,
+  },
+
+  // Footer
+  footer: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.text,
+    marginBottom: 4,
+  },
+  footerSubtext: {
+    fontSize: 12,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.textSecondary,
+    textAlign: 'center',
   },
 })
