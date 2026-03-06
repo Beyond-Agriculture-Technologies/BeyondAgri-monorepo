@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useMarketplaceStore } from '../../src/store/marketplace-store'
+import { useOrderStore } from '../../src/store/order-store'
 import { useAppStore } from '../../src/store/app-store'
 import { useMarketplacePermissions } from '../../src/hooks/useMarketplacePermissions'
 import { APP_COLORS } from '../../src/utils/constants'
@@ -38,6 +39,10 @@ export default function MarketplaceDashboard() {
     fetchCategories,
     categories,
   } = useMarketplaceStore()
+  const {
+    incomingOrders,
+    fetchIncomingOrders,
+  } = useOrderStore()
 
   const [refreshing, setRefreshing] = useState(false)
 
@@ -55,6 +60,7 @@ export default function MarketplaceDashboard() {
 
     if (isFarmer) {
       promises.push(fetchMyListings())
+      promises.push(fetchIncomingOrders({ status: 'PENDING' as any }))
     }
 
     await Promise.all(promises)
@@ -71,6 +77,7 @@ export default function MarketplaceDashboard() {
   const activeListings = myListings.filter(l => l.status === ListingStatusEnum.ACTIVE).length
   const draftListings = myListings.filter(l => l.status === ListingStatusEnum.DRAFT).length
   const pausedListings = myListings.filter(l => l.status === ListingStatusEnum.PAUSED).length
+  const pendingOrderCount = incomingOrders.length
 
   const isLoading =
     (myListingsLoading || browseLoading) && myListings?.length === 0 && browseListings?.length === 0
@@ -307,6 +314,25 @@ export default function MarketplaceDashboard() {
           </TouchableOpacity>
 
           {isFarmer && (
+            <TouchableOpacity onPress={() => router.push('/(marketplace)/incoming-orders')}>
+              <GlassCard style={styles.actionOuter}>
+                <View style={styles.actionRow}>
+                  <View style={styles.actionLeft}>
+                    <Ionicons name="receipt" size={24} color={pendingOrderCount > 0 ? APP_COLORS.warning : APP_COLORS.primary} />
+                    <Text style={styles.actionText}>Incoming Orders</Text>
+                    {pendingOrderCount > 0 && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{pendingOrderCount}</Text>
+                      </View>
+                    )}
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={APP_COLORS.textTertiary} />
+                </View>
+              </GlassCard>
+            </TouchableOpacity>
+          )}
+
+          {isFarmer && (
             <TouchableOpacity onPress={() => router.push('/(marketplace)/my-listings')}>
               <GlassCard style={styles.actionOuter}>
                 <View style={styles.actionRow}>
@@ -541,6 +567,20 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.medium,
     fontSize: 16,
     color: APP_COLORS.text,
+  },
+  badge: {
+    backgroundColor: APP_COLORS.warning,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+  },
+  badgeText: {
+    fontFamily: FONTS.bold,
+    fontSize: 11,
+    color: '#FFFFFF',
   },
   guestNotice: {
     backgroundColor: APP_COLORS.infoDim,

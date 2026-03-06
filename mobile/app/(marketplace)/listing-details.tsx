@@ -375,12 +375,26 @@ export default function ListingDetailsScreen() {
       </ScrollView>
 
       {/* Bottom CTA for non-owners */}
-      {!isOwnListing && permissions.canContactFarmers && (
+      {!isOwnListing && (
         <View style={styles.bottomCTA}>
-          <TouchableOpacity style={styles.ctaButton} onPress={handleContact}>
-            <Ionicons name="chatbubble" size={20} color={APP_COLORS.textOnPrimary} />
-            <Text style={styles.ctaButtonText}>Contact Seller</Text>
-          </TouchableOpacity>
+          {permissions.canContactFarmers && (
+            <View style={styles.ctaRow}>
+              <TouchableOpacity
+                style={[styles.ctaButton, styles.ctaButtonSecondary]}
+                onPress={handleContact}
+              >
+                <Ionicons name="chatbubble" size={20} color={APP_COLORS.primary} />
+                <Text style={[styles.ctaButtonText, { color: APP_COLORS.primary }]}>Contact</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.ctaButton, { flex: 2 }]}
+                onPress={() => router.push(`/(orders)/place-order?listingId=${listingId}`)}
+              >
+                <Ionicons name="cart" size={20} color={APP_COLORS.textOnPrimary} />
+                <Text style={styles.ctaButtonText}>Place Order</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       )}
     </SafeAreaView>
@@ -670,7 +684,12 @@ const styles = StyleSheet.create({
     borderTopColor: APP_COLORS.border,
     backgroundColor: APP_COLORS.surfaceElevated,
   },
+  ctaRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
   ctaButton: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -678,6 +697,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
     gap: 8,
+  },
+  ctaButtonSecondary: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: APP_COLORS.primary,
   },
   ctaButtonText: {
     color: APP_COLORS.textOnPrimary,

@@ -18,7 +18,12 @@ from app.core.config import Settings
 from app.db.base import Base
 
 # Import all models to ensure they are registered with SQLAlchemy
-from app.models import Account, UserProfile, FarmerProfile, BusinessProfile, VerificationRecord, Role, AccountRole
+from app.models import (
+    Account, UserProfile, FarmerProfile, BusinessProfile, VerificationRecord, Role, AccountRole,
+    InventoryType, Warehouse, StorageBin, InventoryItem, InventoryTransaction,
+    ProductListing,
+    Order,
+)
 
 # Create fresh settings instance
 settings = Settings()
