@@ -103,11 +103,17 @@ class BusinessProfile(BaseModel):
     business_longitude = Column(Numeric(10, 7), nullable=True)
     business_place_id = Column(String(255), nullable=True)  # Google Place ID
 
+    # Company details
+    registration_number = Column(String(100), nullable=True)  # Company reg / CIPC number
+    number_of_employees = Column(String(50), nullable=True)  # Range: "1-10", "11-50", etc.
+    years_in_operation = Column(Integer, nullable=True)
+
     # Business details (stored as JSON for flexibility)
     verification_documents = Column(JSONB, nullable=True)
     business_categories = Column(JSONB, nullable=True)  # What products they deal with
     service_areas = Column(JSONB, nullable=True)  # Geographic areas served
     capacity = Column(JSONB, nullable=True)  # Storage, transport capacity
+    preferred_produce = Column(JSONB, nullable=True)  # ["tomatoes", "onions", ...]
 
     # Relationships
     account = relationship("Account", back_populates="business_profile")
