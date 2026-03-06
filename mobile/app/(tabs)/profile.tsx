@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, TextInput } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
@@ -13,6 +13,7 @@ import { FONTS } from '../../src/theme'
 import { VerificationStatus, UserRole, Permission } from '../../src/types'
 import { GeocodeResponse } from '../../src/types/geocoding'
 import { AddressAutocomplete } from '../../src/components/AddressAutocomplete'
+import { BUYING_CATEGORIES, EMPLOYEE_RANGES, VOLUME_UNITS, VOLUME_PERIODS } from '../../src/utils/wholesaler-constants'
 
 export default function ProfileScreen() {
   const user = useAuthStore(state => state.user)
@@ -25,6 +26,82 @@ export default function ProfileScreen() {
   const [isEditingAddress, setIsEditingAddress] = useState(false)
   const [addressData, setAddressData] = useState<GeocodeResponse | null>(null)
   const [isSavingAddress, setIsSavingAddress] = useState(false)
+
+  // Wholesaler business profile state
+  const isWholesaler = user?.user_type === 'WHOLESALER'
+  const [isEditingBusiness, setIsEditingBusiness] = useState(false)
+  const [isSavingBusiness, setIsSavingBusiness] = useState(false)
+  const [businessName, setBusinessName] = useState(user?.business_name || '')
+  const [regNumber, setRegNumber] = useState(user?.registration_number || '')
+  const [employees, setEmployees] = useState(user?.number_of_employees || '')
+  const [yearsOp, setYearsOp] = useState(user?.years_in_operation?.toString() || '')
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    (user?.business_categories as { categories?: string[] })?.categories || []
+  )
+  const [volumeAmount, setVolumeAmount] = useState(
+    (user?.capacity as { volume_per_period?: number })?.volume_per_period?.toString() || ''
+  )
+  const [volumeUnit, setVolumeUnit] = useState(
+    (user?.capacity as { volume_unit?: string })?.volume_unit || 'kg'
+  )
+  const [volumePeriod, setVolumePeriod] = useState(
+    (user?.capacity as { period?: string })?.period || 'weekly'
+  )
+  const [preferredProduce, setPreferredProduce] = useState<string[]>(user?.preferred_produce || [])
+  const [newProduceItem, setNewProduceItem] = useState('')
+
+  const toggleCategory = (value: string) => {
+    setSelectedCategories(prev =>
+      prev.includes(value) ? prev.filter(c => c !== value) : [...prev, value]
+    )
+  }
+
+  const addProduceItem = () => {
+    const item = newProduceItem.trim()
+    if (item && !preferredProduce.includes(item)) {
+      setPreferredProduce(prev => [...prev, item])
+      setNewProduceItem('')
+    }
+  }
+
+  const removeProduceItem = (item: string) => {
+    setPreferredProduce(prev => prev.filter(p => p !== item))
+  }
+
+  const handleSaveBusiness = async () => {
+    if (!isOnline) return
+    setIsSavingBusiness(true)
+    try {
+      const result = await apiClient.updateUserProfile({
+        business_name: businessName || undefined,
+        registration_number: regNumber || undefined,
+        number_of_employees: employees || undefined,
+        years_in_operation: yearsOp ? parseInt(yearsOp, 10) : undefined,
+        business_categories: selectedCategories.length > 0 ? { categories: selectedCategories } : undefined,
+        capacity: volumeAmount ? {
+          volume_per_period: parseFloat(volumeAmount),
+          volume_unit: volumeUnit,
+          period: volumePeriod,
+        } : undefined,
+        preferred_produce: preferredProduce.length > 0 ? preferredProduce : undefined,
+      })
+
+      if (result.success) {
+        const updatedUser = await BackendAuthService.getCurrentUser()
+        if (updatedUser) {
+          useAuthStore.getState().setUser(updatedUser)
+        }
+        setIsEditingBusiness(false)
+        Alert.alert('Success', 'Business profile updated')
+      } else {
+        Alert.alert('Error', result.message || 'Failed to update profile')
+      }
+    } catch {
+      Alert.alert('Error', 'An unexpected error occurred')
+    } finally {
+      setIsSavingBusiness(false)
+    }
+  }
 
   useEffect(() => {
     if (isOnline && user) {
@@ -167,15 +244,11 @@ export default function ProfileScreen() {
     setIsSavingAddress(true)
     try {
       const result = await apiClient.updateUserProfile({
-        profile: {
-          address: addressData.formatted_address,
-        },
-        farmer_profile: {
-          farm_address: addressData.formatted_address,
-          farm_latitude: addressData.latitude,
-          farm_longitude: addressData.longitude,
-          farm_place_id: addressData.place_id,
-        },
+        address: addressData.formatted_address,
+        farm_address: addressData.formatted_address,
+        farm_latitude: addressData.latitude,
+        farm_longitude: addressData.longitude,
+        farm_place_id: addressData.place_id,
       })
 
       if (result.success) {
@@ -385,6 +458,236 @@ export default function ProfileScreen() {
                 </View>
               )}
             </View>
+          </View>
+        )}
+
+        {/* Wholesaler Business Profile */}
+        {isWholesaler && isOnline && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Business Profile</Text>
+              {!isEditingBusiness && (
+                <TouchableOpacity onPress={() => setIsEditingBusiness(true)}>
+                  <Ionicons name="pencil" size={18} color={APP_COLORS.primary} />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {isEditingBusiness ? (
+              <View style={styles.businessCard}>
+                {/* Company Details */}
+                <Text style={styles.fieldLabel}>Business Name</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={businessName}
+                  onChangeText={setBusinessName}
+                  placeholder="Company name"
+                  placeholderTextColor={APP_COLORS.textTertiary}
+                />
+
+                <Text style={styles.fieldLabel}>Registration Number (CIPC)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={regNumber}
+                  onChangeText={setRegNumber}
+                  placeholder="e.g. 2020/123456/07"
+                  placeholderTextColor={APP_COLORS.textTertiary}
+                />
+
+                <Text style={styles.fieldLabel}>Number of Employees</Text>
+                <View style={styles.chipRow}>
+                  {EMPLOYEE_RANGES.map(range => (
+                    <TouchableOpacity
+                      key={range}
+                      style={[styles.chip, employees === range && styles.chipActive]}
+                      onPress={() => setEmployees(range)}
+                    >
+                      <Text style={[styles.chipText, employees === range && styles.chipTextActive]}>
+                        {range}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Text style={styles.fieldLabel}>Years in Operation</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={yearsOp}
+                  onChangeText={setYearsOp}
+                  placeholder="e.g. 5"
+                  keyboardType="number-pad"
+                  placeholderTextColor={APP_COLORS.textTertiary}
+                />
+
+                {/* Buying Categories */}
+                <Text style={[styles.fieldLabel, { marginTop: 8 }]}>Buying Categories</Text>
+                <View style={styles.chipRow}>
+                  {BUYING_CATEGORIES.map(cat => (
+                    <TouchableOpacity
+                      key={cat.value}
+                      style={[styles.chip, selectedCategories.includes(cat.value) && styles.chipActive]}
+                      onPress={() => toggleCategory(cat.value)}
+                    >
+                      <Ionicons
+                        name={cat.icon}
+                        size={14}
+                        color={selectedCategories.includes(cat.value) ? APP_COLORS.textOnPrimary : APP_COLORS.textSecondary}
+                      />
+                      <Text style={[styles.chipText, selectedCategories.includes(cat.value) && styles.chipTextActive]}>
+                        {cat.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {/* Volume Requirements */}
+                <Text style={[styles.fieldLabel, { marginTop: 8 }]}>Estimated Volume Requirements</Text>
+                <View style={styles.volumeRow}>
+                  <TextInput
+                    style={[styles.textInput, { flex: 1 }]}
+                    value={volumeAmount}
+                    onChangeText={setVolumeAmount}
+                    placeholder="Amount"
+                    keyboardType="numeric"
+                    placeholderTextColor={APP_COLORS.textTertiary}
+                  />
+                  <View style={styles.volumeSelectors}>
+                    <View style={styles.chipRow}>
+                      {VOLUME_UNITS.map(u => (
+                        <TouchableOpacity
+                          key={u}
+                          style={[styles.chipSmall, volumeUnit === u && styles.chipActive]}
+                          onPress={() => setVolumeUnit(u)}
+                        >
+                          <Text style={[styles.chipTextSmall, volumeUnit === u && styles.chipTextActive]}>{u}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    <View style={styles.chipRow}>
+                      {VOLUME_PERIODS.map(p => (
+                        <TouchableOpacity
+                          key={p}
+                          style={[styles.chipSmall, volumePeriod === p && styles.chipActive]}
+                          onPress={() => setVolumePeriod(p)}
+                        >
+                          <Text style={[styles.chipTextSmall, volumePeriod === p && styles.chipTextActive]}>{p}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+
+                {/* Preferred Produce */}
+                <Text style={[styles.fieldLabel, { marginTop: 8 }]}>Preferred Produce</Text>
+                <View style={styles.produceInputRow}>
+                  <TextInput
+                    style={[styles.textInput, { flex: 1, marginBottom: 0 }]}
+                    value={newProduceItem}
+                    onChangeText={setNewProduceItem}
+                    placeholder="e.g. Tomatoes"
+                    placeholderTextColor={APP_COLORS.textTertiary}
+                    onSubmitEditing={addProduceItem}
+                    returnKeyType="done"
+                  />
+                  <TouchableOpacity style={styles.addButton} onPress={addProduceItem}>
+                    <Ionicons name="add" size={20} color={APP_COLORS.textOnPrimary} />
+                  </TouchableOpacity>
+                </View>
+                {preferredProduce.length > 0 && (
+                  <View style={styles.chipRow}>
+                    {preferredProduce.map(item => (
+                      <TouchableOpacity
+                        key={item}
+                        style={[styles.chip, styles.chipActive]}
+                        onPress={() => removeProduceItem(item)}
+                      >
+                        <Text style={styles.chipTextActive}>{item}</Text>
+                        <Ionicons name="close" size={14} color={APP_COLORS.textOnPrimary} />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
+
+                {/* Save / Cancel */}
+                <View style={styles.businessActions}>
+                  <TouchableOpacity
+                    style={styles.addressCancelButton}
+                    onPress={() => setIsEditingBusiness(false)}
+                  >
+                    <Text style={styles.addressCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.addressSaveButton, isSavingBusiness && styles.addressSaveButtonDisabled]}
+                    onPress={handleSaveBusiness}
+                    disabled={isSavingBusiness}
+                  >
+                    <Text style={styles.addressSaveText}>
+                      {isSavingBusiness ? 'Saving...' : 'Save'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.businessCard}>
+                <View style={styles.businessRow}>
+                  <Text style={styles.businessLabel}>Business Name</Text>
+                  <Text style={styles.businessValue}>{user?.business_name || 'Not set'}</Text>
+                </View>
+                <View style={styles.businessRow}>
+                  <Text style={styles.businessLabel}>Registration No.</Text>
+                  <Text style={styles.businessValue}>{user?.registration_number || 'Not set'}</Text>
+                </View>
+                <View style={styles.businessRow}>
+                  <Text style={styles.businessLabel}>Employees</Text>
+                  <Text style={styles.businessValue}>{user?.number_of_employees || 'Not set'}</Text>
+                </View>
+                <View style={styles.businessRow}>
+                  <Text style={styles.businessLabel}>Years in Operation</Text>
+                  <Text style={styles.businessValue}>
+                    {user?.years_in_operation ? `${user.years_in_operation} years` : 'Not set'}
+                  </Text>
+                </View>
+
+                {selectedCategories.length > 0 && (
+                  <View style={styles.businessTagSection}>
+                    <Text style={styles.businessLabel}>Buying Categories</Text>
+                    <View style={styles.chipRow}>
+                      {selectedCategories.map(cat => {
+                        const catInfo = BUYING_CATEGORIES.find(c => c.value === cat)
+                        return (
+                          <View key={cat} style={styles.displayTag}>
+                            <Ionicons name={catInfo?.icon || 'ellipsis-horizontal'} size={13} color={APP_COLORS.primary} />
+                            <Text style={styles.displayTagText}>{catInfo?.label || cat}</Text>
+                          </View>
+                        )
+                      })}
+                    </View>
+                  </View>
+                )}
+
+                {volumeAmount && (
+                  <View style={styles.businessRow}>
+                    <Text style={styles.businessLabel}>Volume Requirements</Text>
+                    <Text style={styles.businessValue}>
+                      {volumeAmount} {volumeUnit} / {volumePeriod}
+                    </Text>
+                  </View>
+                )}
+
+                {preferredProduce.length > 0 && (
+                  <View style={styles.businessTagSection}>
+                    <Text style={styles.businessLabel}>Preferred Produce</Text>
+                    <View style={styles.chipRow}>
+                      {preferredProduce.map(item => (
+                        <View key={item} style={styles.displayTag}>
+                          <Text style={styles.displayTagText}>{item}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
           </View>
         )}
 
@@ -800,5 +1103,151 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: FONTS.semiBold,
     color: APP_COLORS.textOnPrimary,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  businessCard: {
+    backgroundColor: APP_COLORS.surface,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
+  },
+  businessRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: APP_COLORS.borderLight,
+  },
+  businessLabel: {
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.textSecondary,
+  },
+  businessValue: {
+    fontSize: 14,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.text,
+    maxWidth: '55%',
+    textAlign: 'right',
+  },
+  businessTagSection: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: APP_COLORS.borderLight,
+  },
+  businessActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 16,
+    gap: 12,
+  },
+  fieldLabel: {
+    fontSize: 13,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.textSecondary,
+    marginBottom: 6,
+    marginTop: 4,
+  },
+  textInput: {
+    backgroundColor: APP_COLORS.background,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: APP_COLORS.border,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    fontFamily: FONTS.regular,
+    color: APP_COLORS.text,
+    marginBottom: 12,
+  },
+  chipRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 4,
+  },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: APP_COLORS.glassBackground,
+    borderWidth: 1,
+    borderColor: APP_COLORS.glassBorder,
+  },
+  chipActive: {
+    backgroundColor: APP_COLORS.primary,
+    borderColor: APP_COLORS.primary,
+  },
+  chipText: {
+    fontSize: 13,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.textSecondary,
+  },
+  chipTextActive: {
+    fontSize: 13,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.textOnPrimary,
+  },
+  chipSmall: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 16,
+    backgroundColor: APP_COLORS.glassBackground,
+    borderWidth: 1,
+    borderColor: APP_COLORS.glassBorder,
+  },
+  chipTextSmall: {
+    fontSize: 12,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.textSecondary,
+  },
+  volumeRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  volumeSelectors: {
+    gap: 6,
+  },
+  produceInputRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    backgroundColor: APP_COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  displayTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: APP_COLORS.primaryDim,
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.25)',
+  },
+  displayTagText: {
+    fontSize: 13,
+    fontFamily: FONTS.medium,
+    color: APP_COLORS.primary,
   },
 })

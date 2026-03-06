@@ -47,10 +47,14 @@ class BusinessProfileData(BaseModel):
     business_latitude: Optional[float] = Field(None, description="Latitude")
     business_longitude: Optional[float] = Field(None, description="Longitude")
     business_place_id: Optional[str] = Field(None, description="Google Place ID")
+    registration_number: Optional[str] = Field(None, description="Company registration / CIPC number")
+    number_of_employees: Optional[str] = Field(None, description="Employee count range")
+    years_in_operation: Optional[int] = Field(None, description="Years in operation")
     verification_documents: Optional[Dict[str, Any]] = Field(None, description="Verification documents")
-    business_categories: Optional[Dict[str, Any]] = Field(None, description="Business categories")
+    business_categories: Optional[Dict[str, Any]] = Field(None, description="Buying categories")
     service_areas: Optional[Dict[str, Any]] = Field(None, description="Service areas")
-    capacity: Optional[Dict[str, Any]] = Field(None, description="Capacity information")
+    capacity: Optional[Dict[str, Any]] = Field(None, description="Volume/capacity requirements")
+    preferred_produce: Optional[List[str]] = Field(None, description="Preferred produce items")
 
 
 class AccountProfile(BaseModel):
@@ -144,10 +148,14 @@ class AccountProfile(BaseModel):
                 business_latitude=float(account.business_profile.business_latitude) if account.business_profile.business_latitude else None,
                 business_longitude=float(account.business_profile.business_longitude) if account.business_profile.business_longitude else None,
                 business_place_id=account.business_profile.business_place_id,
+                registration_number=account.business_profile.registration_number,
+                number_of_employees=account.business_profile.number_of_employees,
+                years_in_operation=account.business_profile.years_in_operation,
                 verification_documents=account.business_profile.verification_documents,
                 business_categories=account.business_profile.business_categories,
                 service_areas=account.business_profile.service_areas,
-                capacity=account.business_profile.capacity
+                capacity=account.business_profile.capacity,
+                preferred_produce=account.business_profile.preferred_produce,
             )
 
         return cls(
@@ -203,6 +211,12 @@ class AccountProfileUpdate(BaseModel):
     business_latitude: Optional[float] = Field(None, description="Latitude")
     business_longitude: Optional[float] = Field(None, description="Longitude")
     business_place_id: Optional[str] = Field(None, description="Google Place ID")
+    registration_number: Optional[str] = Field(None, description="Company registration / CIPC number")
+    number_of_employees: Optional[str] = Field(None, description="Employee count range")
+    years_in_operation: Optional[int] = Field(None, description="Years in operation")
+    business_categories: Optional[Dict[str, Any]] = Field(None, description="Buying categories")
+    capacity: Optional[Dict[str, Any]] = Field(None, description="Volume/capacity requirements")
+    preferred_produce: Optional[List[str]] = Field(None, description="Preferred produce items")
 
     class Config:
         json_schema_extra = {

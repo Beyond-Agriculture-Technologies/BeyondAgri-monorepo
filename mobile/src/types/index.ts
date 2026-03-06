@@ -21,6 +21,28 @@ export interface BackendFarmerProfile {
   farm_elevation?: number
 }
 
+export interface BackendBusinessProfile {
+  business_name?: string
+  business_license?: string
+  business_address?: string
+  business_type?: string
+  business_street?: string
+  business_city?: string
+  business_province?: string
+  business_postal_code?: string
+  business_country?: string
+  business_latitude?: number
+  business_longitude?: number
+  business_place_id?: string
+  registration_number?: string
+  number_of_employees?: string
+  years_in_operation?: number
+  business_categories?: Record<string, unknown>
+  service_areas?: Record<string, unknown>
+  capacity?: Record<string, unknown>
+  preferred_produce?: string[]
+}
+
 // Raw backend response shape from GET /auth/me
 export interface BackendUserResponse {
   id: number | string
@@ -35,7 +57,7 @@ export interface BackendUserResponse {
   // Nested profiles from /auth/me
   profile?: BackendBasicProfile
   farmer_profile?: BackendFarmerProfile
-  business_profile?: unknown
+  business_profile?: BackendBusinessProfile
   // Flat fields (from login response)
   name?: string
   phone_number?: string
@@ -68,6 +90,15 @@ export interface User {
   farm_place_id?: string
   farm_size?: string
   farm_elevation?: number
+  // Wholesaler / business fields
+  business_name?: string
+  business_address?: string
+  registration_number?: string
+  number_of_employees?: string
+  years_in_operation?: number
+  business_categories?: Record<string, unknown>
+  capacity?: Record<string, unknown>
+  preferred_produce?: string[]
   user_type: 'FARMER' | 'WHOLESALER' | 'ADMIN'
   verification_status?: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED'
   is_active?: boolean
@@ -87,6 +118,7 @@ export interface UserProfile extends User {
 export function createUserProfile(raw: BackendUserResponse): UserProfile {
   const profile = raw.profile
   const farmerProfile = raw.farmer_profile
+  const businessProfile = raw.business_profile
   const userType = (raw.account_type || raw.user_type || 'FARMER') as User['user_type']
 
   return {
@@ -107,6 +139,15 @@ export function createUserProfile(raw: BackendUserResponse): UserProfile {
     farm_place_id: raw.farm_place_id || farmerProfile?.farm_place_id,
     farm_size: farmerProfile?.farm_size != null ? String(farmerProfile.farm_size) : undefined,
     farm_elevation: farmerProfile?.farm_elevation,
+    // Wholesaler / business fields
+    business_name: businessProfile?.business_name,
+    business_address: businessProfile?.business_address,
+    registration_number: businessProfile?.registration_number,
+    number_of_employees: businessProfile?.number_of_employees,
+    years_in_operation: businessProfile?.years_in_operation,
+    business_categories: businessProfile?.business_categories,
+    capacity: businessProfile?.capacity,
+    preferred_produce: businessProfile?.preferred_produce,
     user_type: userType,
     role: userType,
     verification_status: raw.verification_status as User['verification_status'],

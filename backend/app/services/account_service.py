@@ -207,6 +207,8 @@ class AccountService:
                 "business_street", "business_city", "business_province",
                 "business_postal_code", "business_country", "business_latitude",
                 "business_longitude", "business_place_id",
+                "registration_number", "number_of_employees", "years_in_operation",
+                "preferred_produce", "business_categories", "capacity",
             ]
             for field in business_fields:
                 if field in profile_data:
